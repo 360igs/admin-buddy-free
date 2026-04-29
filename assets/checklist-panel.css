@@ -1,0 +1,318 @@
+/* Admin Buddy - Checklist panel.
+ *
+ * Panel chrome (.ab-slide-panel, .ab-backdrop, .ab-slide-panel__header,
+ * __title, __close, __body) is provided by admin.css and loaded via the
+ * ab-checklist -> admin-buddy-core dependency chain. This file adds:
+ *
+ *  1) Full-viewport backdrop + high z-index (like Snippets modal), so the
+ *     blur covers the entire screen instead of just the content area.
+ *  2) Bulletproof scroll on the body via grid + explicit max-height.
+ *  3) #ab-checklist-panel ID-scoped rules that override class-colours.php's
+ *     admin_head inline !important injections — without the ID prefix the
+ *     class-colours rules tie on specificity and win on load order, which
+ *     caused the backend header to be lavender-tinted and the "Fix" button
+ *     text to render in primary-colour on primary-colour (invisible).
+ *  4) Explicit typography / button styling so the panel looks IDENTICAL on
+ *     the front-end (where WP's .wp-core-ui .button CSS doesn't load) and
+ *     the admin (where class-colours tries to retheme every .button).
+ */
+
+/* Body scroll lock while the panel is open. */
+body.ab-modal-open { overflow: hidden; }
+
+
+/* =============================================================================
+   1. z-index above WP admin chrome
+   ============================================================================= */
+
+/* The Checklist renders via admin_footer / wp_footer — outside .ab-wrap,
+ * so the .ab-wrap z-index bumps in admin.css don't apply. Without these,
+ * --ab-z-backdrop (200) sits below WP admin menu (9990) and admin bar
+ * (99999) and the backdrop only covers the content area. 160010/160020
+ * matches the Snippets editor modal so the backdrop covers the whole
+ * viewport consistently.
+ *
+ * Full-viewport panel height is now handled by the shared .ab-slide-panel
+ * rule in admin.css — no admin-bar offset override needed here. */
+#ab-checklist-backdrop { z-index: 160010; }
+#ab-checklist-panel    { z-index: 160020; }
+
+
+/* =============================================================================
+   2. Bulletproof scrollable body
+   ============================================================================= */
+
+/* Strategy:
+ *   - display:grid with `auto 1fr` rows => body gets EXACTLY the remaining
+ *     vertical space (unambiguous, unlike flex:1 + min-height:0 which can
+ *     fail on certain content/basis combos).
+ *   - max-height: calc(100dvh - 56px) on the body as a belt-and-braces
+ *     hard cap so the scrollbar appears even if grid sizing fails for any
+ *     reason. 56px matches the header (padding 16px + content ~24px).
+ *   - 100dvh (dynamic viewport height) handles mobile URL-bar collapse
+ *     better than 100vh; falls back automatically in older browsers. */
+#ab-checklist-panel {
+    display:               grid;
+    grid-template-rows:    auto 1fr;
+    grid-template-columns: 1fr;
+}
+
+#ab-checklist-panel .ab-slide-panel__body {
+    min-height: 0;
+    max-height: calc(100vh - 56px);
+    max-height: calc(100dvh - 56px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+/* =============================================================================
+   3. Panel chrome — override class-colours.php inline injections
+   ============================================================================= */
+
+/* Panel body / text colour overrides. The header tint is now handled by
+ * the shared "Single source of truth for slide-panel header tint" rule in
+ * admin.css — do NOT set a background on __header here; that would undo
+ * the tint and bring back the frontend/backend inconsistency.
+ *
+ * ID-prefixed so these beat class-colours.php's admin_head !important
+ * injections (which tie on specificity with un-prefixed .ab-slide-panel*
+ * selectors). */
+#ab-checklist-panel,
+#ab-checklist-panel .ab-slide-panel__body {
+    background: var(--ab-surface, #ffffff) !important;
+    color:      var(--ab-text-body, #374151);
+}
+
+#ab-checklist-panel .ab-slide-panel__title {
+    color: var(--ab-text-heading, #0f172a) !important;
+}
+
+#ab-checklist-panel .ab-slide-panel__close {
+    color: var(--ab-text-muted, #94a3b8) !important;
+}
+#ab-checklist-panel .ab-slide-panel__close:hover {
+    color: var(--ab-text-body, #374151) !important;
+}
+
+
+/* =============================================================================
+   4. Theme-CSS isolation (front-end parity)
+   ============================================================================= */
+
+#ab-checklist-panel,
+#ab-checklist-panel * {
+    box-sizing: border-box;
+}
+
+#ab-checklist-panel {
+    font-family: var(--ab-font-base, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+    line-height: var(--ab-leading-normal, 1.5);
+}
+
+#ab-checklist-panel h2,
+#ab-checklist-panel h3 {
+    margin:      0;
+    padding:     0;
+    font-family: inherit;
+    line-height: var(--ab-leading-tight, 1.25);
+}
+
+/* Reset list + list-item + section margins. Flex `gap` stacks on top of
+ * individual item margins, so a theme that ships `li { margin-bottom: Npx }`
+ * (common) makes the visible row gap Npx larger on the front-end than on
+ * the admin, even though --ab-space-2 is locked. Same for section margins
+ * between SEO / Debug / Email / Content buckets. */
+#ab-checklist-panel ul,
+#ab-checklist-panel ol,
+#ab-checklist-panel li,
+#ab-checklist-panel section {
+    list-style: none;
+    margin:     0;
+    padding:    0;
+}
+
+
+/* =============================================================================
+   5. Score badge in the panel header
+   ============================================================================= */
+
+#ab-checklist-panel .ab-checklist-score {
+    font-size:     var(--ab-text-xs, 11px);
+    font-weight:   var(--ab-font-semibold, 600);
+    color:         var(--ab-text-secondary, #6b7280) !important;
+    background:    var(--ab-surface-raised, #f4f6f9) !important;
+    border:        1px solid var(--ab-border, #e4e6eb);
+    border-radius: var(--ab-radius-full, 999px);
+    padding:       2px var(--ab-space-3, 10px);
+    white-space:   nowrap;
+}
+
+
+/* =============================================================================
+   6. Sections
+   ============================================================================= */
+
+/* ID-prefixed so the universal `#ab-checklist-panel section { margin:0 }`
+ * reset above doesn't strip the inter-section spacing. */
+#ab-checklist-panel .ab-checklist-section + .ab-checklist-section {
+    margin-top: var(--ab-space-5, 20px);
+}
+
+.ab-checklist-section__title {
+    margin:         0 0 var(--ab-space-2, 8px);
+    font-size:      var(--ab-text-xs, 11px);
+    font-weight:    var(--ab-font-semibold, 600);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color:          var(--ab-text-secondary, #6b7280);
+}
+
+
+/* =============================================================================
+   7. Rows
+   ============================================================================= */
+
+.ab-checklist-rows {
+    list-style:     none;
+    margin:         0;
+    padding:        0;
+    display:        flex;
+    flex-direction: column;
+    gap:            var(--ab-space-2, 6px);
+}
+
+/* ID-prefixed so the `#ab-checklist-panel li { padding:0 }` reset above
+ * doesn't strip the card padding. .ab-checklist-row IS a <li>, so without
+ * the ID bump the reset wins on specificity and the cards render flush —
+ * the dot and Fix button end up touching the card border. */
+#ab-checklist-panel .ab-checklist-row {
+    display:               grid;
+    grid-template-columns: 10px 1fr auto;
+    align-items:           start;
+    gap:                   var(--ab-space-3, 12px);
+    padding:               var(--ab-space-2-5, 10px);
+    background:            var(--ab-surface, #ffffff);
+    border:                1px solid var(--ab-border, #e4e6eb);
+    border-radius:         var(--ab-radius-md, 6px);
+}
+
+.ab-checklist-row__dot {
+    margin-top:    6px;
+    width:         10px;
+    height:        10px;
+    border-radius: 50%;
+    background:    var(--ab-text-muted, #cbd5e1);
+    box-shadow:    0 0 0 2px var(--ab-surface, #fff);
+}
+/* Three tiers:
+ *   ok       → green (healthy)
+ *   critical → red   (active risk: security, launch-blocker, locked-out admin)
+ *   warning  → amber (defense-in-depth, cosmetic, pre-launch polish)
+ * Severity is assigned per check in class-checklist.php::get_checks(). */
+.ab-checklist-row--ok       .ab-checklist-row__dot { background: var(--ab-success, #16a34a); }
+.ab-checklist-row--critical .ab-checklist-row__dot { background: var(--ab-danger,  #dc2626); }
+.ab-checklist-row--warning  .ab-checklist-row__dot { background: var(--ab-warning, #d97706); }
+
+.ab-checklist-row__main  { min-width: 0; }
+
+.ab-checklist-row__label {
+    font-size:   var(--ab-text-sm, 13px);
+    font-weight: var(--ab-font-semibold, 600);
+    color:       var(--ab-text-heading, #1d2327);
+}
+
+.ab-checklist-row__value {
+    margin-top: 2px;
+    font-size:  var(--ab-text-xs, 12px);
+    color:      var(--ab-text-body, #3c434a);
+    word-break: break-word;
+}
+
+.ab-checklist-row__why {
+    margin-top:  var(--ab-space-2, 6px);
+    font-size:   var(--ab-text-xs, 11.5px);
+    line-height: 1.45;
+    color:       var(--ab-text-secondary, #6b7280);
+}
+
+
+/* =============================================================================
+   8. Fix / Settings button  (beat class-colours + front-end parity)
+   ============================================================================= */
+
+/* Render emits: <a class="ab-checklist-row__fix button button-small">Fix</a>.
+ *
+ * On the admin, class-colours.php line 1335 emits
+ *   .wp-core-ui .button:not(.button-primary) { color: $p1 !important }
+ * with specificity (0,3,0). My plain rule
+ *   .ab-checklist-row__fix.button.button-small
+ * is also (0,3,0) — so with !important tied, load order decides, and the
+ * class-colours admin_head style wins, forcing the text to primary-colour
+ * (purple) on top of our primary-colour background = invisible text.
+ *
+ * ID-prefixing with #ab-checklist-panel lifts specificity to (1,3,0) so we
+ * win cleanly without an !important arms race for color. */
+#ab-checklist-panel .ab-checklist-row__fix,
+#ab-checklist-panel .ab-checklist-row__fix.button,
+#ab-checklist-panel .ab-checklist-row__fix.button.button-small {
+    display:         inline-flex !important;
+    align-items:     center;
+    justify-content: center;
+    flex-shrink:     0;
+    align-self:      center;
+    white-space:     nowrap;
+    padding:         4px 10px !important;
+    min-height:      26px;
+    font-family:     inherit !important;
+    font-size:       var(--ab-text-xs, 12px) !important;
+    font-weight:     var(--ab-font-semibold, 600) !important;
+    line-height:     1.2 !important;
+    text-decoration: none !important;
+    text-shadow:     none !important;
+    color:           #ffffff !important;
+    background:      var(--ab-accent, #7c3aed) !important;
+    border:          1px solid transparent !important;
+    border-radius:   var(--ab-radius-md, 6px) !important;
+    box-shadow:      none !important;
+    cursor:          pointer;
+    transition:      background 0.15s ease, color 0.15s ease;
+}
+#ab-checklist-panel .ab-checklist-row__fix:hover,
+#ab-checklist-panel .ab-checklist-row__fix.button:hover,
+#ab-checklist-panel .ab-checklist-row__fix.button.button-small:hover {
+    background: var(--ab-accent-hover, #6d28d9) !important;
+    color:      #ffffff !important;
+}
+#ab-checklist-panel .ab-checklist-row__fix:focus,
+#ab-checklist-panel .ab-checklist-row__fix.button:focus,
+#ab-checklist-panel .ab-checklist-row__fix.button.button-small:focus {
+    outline:    2px solid var(--ab-accent, #7c3aed);
+    outline-offset: 2px;
+    box-shadow: none !important;
+}
+
+/* OK rows: soft secondary styling so "Settings" doesn't shout. */
+#ab-checklist-panel .ab-checklist-row--ok .ab-checklist-row__fix,
+#ab-checklist-panel .ab-checklist-row--ok .ab-checklist-row__fix.button,
+#ab-checklist-panel .ab-checklist-row--ok .ab-checklist-row__fix.button.button-small {
+    background:   var(--ab-surface-raised, #f9fafb) !important;
+    color:        var(--ab-text-secondary, #64748b) !important;
+    border-color: var(--ab-border, #e2e8f0) !important;
+}
+#ab-checklist-panel .ab-checklist-row--ok .ab-checklist-row__fix:hover,
+#ab-checklist-panel .ab-checklist-row--ok .ab-checklist-row__fix.button:hover,
+#ab-checklist-panel .ab-checklist-row--ok .ab-checklist-row__fix.button.button-small:hover {
+    background: var(--ab-surface, #ffffff) !important;
+    color:      var(--ab-text-body, #374151) !important;
+}
+
+
+/* =============================================================================
+   9. Responsive
+   ============================================================================= */
+
+@media (max-width: 600px) {
+    .ab-checklist-row        { grid-template-columns: 10px 1fr; }
+    .ab-checklist-row__fix   { grid-column: 2; margin-top: var(--ab-space-2, 6px); justify-self: start; }
+}

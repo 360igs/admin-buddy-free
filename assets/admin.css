@@ -1,0 +1,4453 @@
+/*
+ * Admin Buddy - admin.css
+ *
+ * Phase 3: DRY cleanup + token consolidation.
+ *
+ * All values consume tokens from assets/tokens.css.
+ * Shadow elevation scale tokenised (--ab-shadow-xs … --ab-shadow-xl).
+ * Modal rules consolidated (no duplicates).
+ * Segmented control (.ab-seg) replaces .ab-pill toggle collision.
+ *
+ * Sections:
+ *   1.  Reset / base
+ *   2.  Layout shell   (.ab-frame, .ab-topbar, .ab-nav, .ab-canvas)
+ *   3.  Nav             (.ab-nav__item, active, icons)
+ *   4.  Topbar
+ *   5.  Section / card  (.ab-section, .ab-card)
+ *   6.  Subnav          (.ab-subnav, .ab-subnav__item, .ab-pane)
+ *   7.  Grid            (.ab-grid, .ab-grid--ruled)
+ *   8.  Accordion       (.ab-accordion, __trigger, __body)
+ *   9.  Buttons         (.ab-btn, variants, icon-only)
+ *  10.  Forms           (inputs, select, textarea, toggle, colour-input)
+ *  11.  Save bar        (.ab-save-bar)
+ *  12.  Notices         (.ab-notice, variants)
+ *  13.  Modal           (.ab-modal, .ab-modal__box / __dialog)
+ *  14.  Slide panel     (.ab-slide-panel, .ab-backdrop)
+ *  15.  Dropdown        (.ab-dropdown, .ab-dropdown__menu)
+ *  16.  Toast           (#ab-toast, .ab-toast)
+ *  17.  Badge / pill    (.ab-badge, .ab-pill - badge modifier only)
+ *  18.  Table           (.ab-table)
+ *  19.  Drag handle     (.ab-drag-handle)
+ *  20.  Loader / spinner
+ *  21.  Empty state     (.ab-empty)
+ *  22.  Tab: Colours
+ *  23.  Tab: Custom Pages
+ *  24.  Tab: Menu Customiser
+ *  25.  Tab: Roles
+ *  26.  Tab: SMTP
+ *  27.  Tab: Snippets
+ *  28.  Tab: SVG Library
+ *  29.  Utilities
+ *  30.  WP admin overrides
+ */
+
+
+/* =============================================================================
+   1. Reset / base
+   ============================================================================= */
+
+.ab-wrap *,
+.ab-wrap *::before,
+.ab-wrap *::after {
+	box-sizing: border-box;
+}
+
+.ab-wrap {
+	font-family: var(--ab-font-base);
+	font-size:   var(--ab-text-sm);
+	color:       var(--ab-text-body);
+	line-height: var(--ab-leading-normal);
+}
+
+/* Hide frame until JS confirms correct tab - prevents flicker on load */
+.ab-wrap.ab-loading .ab-frame {
+	visibility: hidden;
+}
+
+/* text-wrap: balance - prevents orphan words on wrapped lines.
+   Applied to all short label/heading/description elements throughout the UI. */
+.ab-wrap .ab-card__title,
+.ab-wrap .ab-section__title,
+.ab-wrap .ab-section__description,
+.ab-wrap .ab-field-label,
+.ab-wrap .ab-qs-row__label,
+.ab-wrap .ab-qs-row__desc,
+.ab-wrap .ab-demo-crow__label,
+.ab-wrap .ab-demo-crow__desc,
+.ab-wrap .ab-export-row__label,
+.ab-wrap .ab-module-card__label,
+.ab-wrap .ab-empty__description,
+.ab-wrap .ab-notice p,
+.ab-wrap .ab-notice span,
+.ab-wrap .description,
+.ab-wrap th,
+.ab-wrap label {
+	text-wrap: balance;
+}
+
+
+/* =============================================================================
+   2. Layout shell
+   ============================================================================= */
+
+/* Full-height frame (was .ab-layout) */
+.ab-frame {
+	display:               grid;
+	grid-template-columns: var(--ab-sidebar-width) 1fr;
+	grid-auto-rows:        1fr;
+	background:            var(--ab-surface-sunken);
+	align-items:           stretch;
+	min-height:            calc(100vh - var(--ab-topbar-height) - 32px);
+}
+
+/* Full-bleed: remove WP's default content padding on AB's settings page */
+.ab-wrap ~ .clear,
+.ab-wrap ~ br { display: none; }
+
+/* Topbar row (was .ab-header) */
+.ab-topbar {
+	display:         flex;
+	align-items:     center;
+	padding:         0 var(--ab-space-6);
+	background:      var(--ab-surface);
+	border-bottom:   1px solid var(--ab-border);
+	height:          var(--ab-topbar-height);
+	position:        sticky;
+	top:             0;
+	z-index:         var(--ab-z-dropdown);
+}
+
+/* Nav sidebar (was .ab-sidebar) */
+.ab-nav {
+	grid-column:  1;
+	background:   var(--ab-surface);
+	border-left:  1px solid var(--ab-border);
+	padding:      var(--ab-space-4) 0;
+	overflow-y:   visible;
+	min-height:   100%;
+	align-self:   stretch;
+}
+
+/* Main canvas area (was .ab-panel, canvas meaning) */
+.ab-canvas {
+	grid-column: 2;
+	padding:     var(--ab-space-8);
+}
+
+
+/* =============================================================================
+   3. Nav
+   ============================================================================= */
+
+/* Nav item (was .ab-sidebar__item) */
+/* =============================================================================
+   NAV ITEMS (beta49 — clean pill with right-edge accent bar)
+   ============================================================================= */
+#wpwrap .ab-nav__item {
+	display:         flex;
+	align-items:     center;
+	gap:             var(--ab-space-3);
+	margin:          1px var(--ab-space-2);
+	padding:         9px var(--ab-space-3);
+	font-size:       var(--ab-text-sm);
+	font-weight:     500;
+	color:           var(--ab-text-body);
+	text-decoration: none;
+	border-radius:   var(--ab-radius-md);
+	cursor:          pointer;
+	position:        relative;
+	transition:      background var(--ab-transition-base),
+	                 color var(--ab-transition-base);
+}
+
+#wpwrap .ab-nav__item:hover {
+	background: var(--ab-surface-sunken);
+	color:      var(--ab-text-body);
+}
+
+#wpwrap .ab-nav__item.is-active,
+#wpwrap .ab-nav__item[aria-current="page"] {
+	background:    var(--ab-surface-sunken);
+	color:         var(--ab-text-heading);
+	font-weight:   600;
+}
+
+/* Right-edge accent bar on active items - the only brand colour in the nav */
+#wpwrap .ab-nav__item.is-active::after,
+#wpwrap .ab-nav__item[aria-current="page"]::after {
+	content:       '';
+	position:      absolute;
+	right:         -2px;
+	top:           50%;
+	transform:     translateY(-50%);
+	width:         3px;
+	height:        60%;
+	background:    var(--ab-accent);
+	border-radius: 3px 0 0 3px;
+}
+
+#wpwrap .ab-nav__item.is-active:hover,
+#wpwrap .ab-nav__item[aria-current="page"]:hover {
+	background:    var(--ab-surface-sunken);
+	color:         var(--ab-text-heading);
+}
+
+#wpwrap .ab-nav__item:focus,
+#wpwrap .ab-nav__item:focus-visible {
+	outline:    2px solid var(--ab-accent);
+	outline-offset: -2px;
+	box-shadow: none;
+}
+
+.ab-nav__item svg {
+	width:    var(--ab-icon-md);
+	height:   var(--ab-icon-md);
+	flex-shrink: 0;
+}
+
+.ab-nav__label {
+	flex:        1;
+	white-space: nowrap;
+	overflow:    hidden;
+	text-overflow: ellipsis;
+}
+
+.ab-nav__badge {
+	display:         inline-flex;
+	align-items:     center;
+	justify-content: center;
+	padding:         1px var(--ab-space-1-5);
+	border-radius:   var(--ab-radius-sm);
+	font-size:       10px;
+	font-weight:     var(--ab-font-semibold);
+	line-height:     1.4;
+	background:      var(--ab-accent);
+	color:           var(--ab-text-on-accent);
+	min-width:       18px;
+	text-align:      center;
+}
+
+.ab-nav__sep {
+	height:     1px;
+	margin:     var(--ab-space-2) var(--ab-space-5);
+	border:     none;
+	border-top: 1px dotted var(--ab-border);
+	opacity:    0.8;
+}
+
+/* Standalone nav items (Modules, Plugin Data, License) - below groups */
+.ab-nav__item--standalone {
+	font-weight: var(--ab-font-semibold);
+}
+
+/* Dotted divider between accordion groups and the always-visible standalone items */
+.ab-nav__divider {
+	border-top:    1px dashed var(--ab-border);
+	margin:        20px var(--ab-space-3);
+}
+
+/* Drag-sortable nav items (Menu Customiser) */
+.ab-nav__item.sortable-ghost {
+	opacity:    0.4;
+	background: var(--ab-surface-sunken);
+}
+
+.ab-nav__item.sortable-chosen {
+	background: var(--ab-surface-raised);
+	box-shadow: var(--ab-shadow-sm);
+}
+
+
+/* =============================================================================
+   4. Topbar
+   ============================================================================= */
+
+.ab-topbar__logo {
+	display:      flex;
+	align-items:  center;
+	color:        var(--ab-text-heading);
+	text-decoration: none;
+	margin-right: var(--ab-space-6);
+	flex-shrink:  0;
+}
+
+.ab-topbar__logo svg {
+	height:    28px;
+	width:     auto;
+	max-width: 180px;
+	color:     var(--ab-text-heading);
+}
+
+.ab-topbar__version {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+}
+.ab-topbar__pro-label {
+	color: inherit;
+	font-weight: 600;
+	margin-left: 2px;
+}
+
+.ab-topbar__status {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+	margin-left: var(--ab-space-4);
+}
+
+.ab-topbar__status-badge {
+	display:         inline-flex;
+	align-items:     center;
+	gap:             var(--ab-space-1);
+	font-size:       0.65rem;
+	padding:         2px var(--ab-space-2);
+	text-decoration: none;
+	cursor:          pointer;
+	transition:      opacity var(--ab-transition-fast);
+}
+
+/* When the badge is a <button> (Checklist), drop only the browser and
+ * WP-admin button chrome that breaks visual parity with the anchor
+ * siblings. Font-size, line-height, padding etc. all inherit from the
+ * shared .ab-badge + .ab-topbar__status-badge rules so the pill is
+ * identical in size to Remote / Noindex / Debug. !important is required
+ * because WP core's button rules are more specific (#wpbody button {...}).
+ */
+button.ab-topbar__status-badge {
+	/* Do NOT set background here - .ab-badge--success / --danger rules
+	 * paint it, and a button-selector override would win on specificity
+	 * and leave the pill transparent (showing the white topbar through).
+	 */
+	border:      0 !important;
+	box-shadow:  none !important;
+	font-family: inherit;
+	color:       inherit;
+}
+button.ab-topbar__status-badge:focus,
+button.ab-topbar__status-badge:focus-visible {
+	outline:        2px solid currentColor;
+	outline-offset: 2px;
+	box-shadow:     none !important;
+}
+
+/* Semantic status dot — inherits its colour from the pill's .ab-badge--*
+ * modifier so every topbar pill (Checklist, Demo Data, Remote, Maintenance,
+ * Coming Soon, Noindex, Debug) communicates state through one consistent
+ * signal. Previously hardcoded to --ab-success, which rendered green even
+ * when the pill itself was red (e.g., Checklist with critical issues).
+ *
+ * The .ab-badge--* classes are applied to the pill itself — the compound
+ * `.ab-topbar__status-badge.ab-badge--<tier>::after` selector lets each
+ * pill type drive its own dot colour without any new markup. Default
+ * (unmodified pill or explicit --success) stays green. */
+.ab-topbar__status-badge::after {
+	content:       '';
+	display:       inline-block;
+	width:         6px;
+	height:        6px;
+	border-radius: 50%;
+	background:    var(--ab-success);
+	flex-shrink:   0;
+	margin-left:   var(--ab-space-1);
+}
+.ab-topbar__status-badge.ab-badge--danger::after  { background: var(--ab-danger,  #dc2626); }
+.ab-topbar__status-badge.ab-badge--warning::after { background: var(--ab-warning, #d97706); }
+.ab-topbar__status-badge.ab-badge--info::after    { background: var(--ab-info,    #2563eb); }
+.ab-topbar__status-badge.ab-badge--neutral::after { background: var(--ab-text-muted, #94a3b8); }
+
+.ab-topbar__status-badge:hover {
+	opacity: 0.8;
+}
+
+.ab-topbar__status-badge svg {
+	flex-shrink: 0;
+}
+
+/* Updates Centre button */
+.ab-topbar__updates-btn {
+	position:      relative;
+	display:       inline-flex;
+	align-items:   center;
+	justify-content: center;
+	background:    none;
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	padding:       var(--ab-space-1) var(--ab-space-2);
+	cursor:        pointer;
+	color:         var(--ab-text-secondary);
+	transition:    color var(--ab-transition-fast), border-color var(--ab-transition-fast);
+	height:        var(--ab-btn-height-sm);
+	margin-left:   var(--ab-space-4);
+	margin-right:  var(--ab-space-2);
+}
+
+.ab-topbar__updates-btn:hover {
+	color:         var(--ab-text-body);
+	border-color:  var(--ab-text-muted);
+}
+
+.ab-topbar__search-btn {
+	display:       inline-flex;
+	align-items:   center;
+	justify-content: center;
+	background:    none;
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	padding:       var(--ab-space-1) var(--ab-space-2);
+	cursor:        pointer;
+	color:         var(--ab-text-secondary);
+	transition:    color var(--ab-transition-fast), border-color var(--ab-transition-fast);
+	height:        var(--ab-btn-height-sm);
+	margin-left:   var(--ab-space-2);
+}
+.ab-topbar__search-btn:hover {
+	color:         var(--ab-text-body);
+	border-color:  var(--ab-text-muted);
+}
+
+.ab-topbar__updates-count {
+	position:    absolute;
+	top:         -6px;
+	right:       -6px;
+	min-width:   16px;
+	height:      16px;
+	padding:     0 var(--ab-space-1);
+	border-radius: var(--ab-radius-sm);
+	background:  var(--ab-warning);
+	color:       #fff;
+	font-size:   10px;
+	font-weight: var(--ab-font-bold);
+	line-height: 16px;
+	text-align:  center;
+}
+
+/* Updates panel - force button text visible regardless of colour module overrides */
+#ab-updates-panel .ab-btn--primary,
+#ab-updates-panel .ab-btn--primary:visited,
+#ab-updates-panel .ab-btn--primary:hover {
+	color: #ffffff !important;
+}
+#ab-updates-panel .ab-btn--secondary,
+#ab-updates-panel .ab-btn--secondary:visited {
+	color: var(--ab-text-body) !important;
+}
+
+/* Updates Centre panel content */
+.ab-updates-section {
+	margin-bottom: var(--ab-space-5);
+}
+
+.ab-updates-section__title {
+	font-size:      var(--ab-text-xs);
+	font-weight:    var(--ab-font-semibold);
+	text-transform: uppercase;
+	letter-spacing: .05em;
+	color:          var(--ab-text-muted);
+	margin:         0 0 var(--ab-space-2);
+	padding-bottom: var(--ab-space-2);
+	border-bottom:  1px solid var(--ab-border);
+}
+
+.ab-updates-item {
+	display:         flex;
+	align-items:     center;
+	justify-content: space-between;
+	gap:             var(--ab-space-3);
+	padding:         var(--ab-space-2-5) 0;
+	border-bottom:   1px solid var(--ab-border-subtle);
+}
+
+.ab-updates-item:last-child { border-bottom: none; }
+
+.ab-updates-item__info {
+	display:        flex;
+	flex-direction: column;
+	gap:            2px;
+	min-width:      0;
+}
+
+.ab-updates-item__name {
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-heading);
+	white-space: nowrap;
+	overflow:    hidden;
+	text-overflow: ellipsis;
+}
+
+.ab-updates-item__versions {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+}
+
+.ab-topbar__actions {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+	margin-left: auto;
+}
+
+/* Green dot on topbar save button when there are unsaved changes */
+.ab-topbar__actions .ab-btn.has-changes {
+	position: relative;
+}
+.ab-topbar__actions .ab-btn.has-changes::before {
+	content:       '';
+	position:      absolute;
+	left:          -12px;
+	top:           50%;
+	transform:     translateY(-50%);
+	width:         8px;
+	height:        8px;
+	border-radius: 50%;
+	background:    var(--ab-success);
+}
+
+.ab-topbar__spacer {
+	flex: 1;
+}
+
+
+/* =============================================================================
+   5. Section / card
+   ============================================================================= */
+
+/*
+ * .ab-section  - settings groups (form-bearing containers, sticky save bar)
+ * .ab-card     - presentational cards (preset cards, module cards, export items)
+ * Both keep their own class; .ab-section is NOT a rename of .ab-card.
+ */
+
+.ab-section {
+	background:    var(--ab-surface);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	margin-bottom: var(--ab-space-6);
+	overflow:      hidden;
+}
+
+.ab-section__header {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+	padding:     var(--ab-space-4) var(--ab-space-6);
+	border-bottom: 1px solid var(--ab-border-subtle);
+}
+
+.ab-section__icon {
+	width:  var(--ab-icon-md);
+	height: var(--ab-icon-md);
+	color:  var(--ab-text-secondary);
+	flex-shrink: 0;
+}
+
+.ab-section__title {
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-heading);
+	margin:      0;
+}
+
+.ab-section__description {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+	margin:    var(--ab-space-1) 0 0;
+}
+
+.ab-section__body {
+	padding:  var(--ab-space-5) var(--ab-space-6);
+	overflow: hidden;
+}
+
+.ab-section__body + .ab-section__body {
+	border-top: 1px solid var(--ab-border-subtle);
+}
+
+/* Presentational card (presets, module grid items, export list) */
+
+/* Inline help trigger (? button) and expandable detail block */
+.ab-tooltip-trigger {
+	display:        inline-flex;
+	align-items:    center;
+	justify-content:center;
+	width:          18px;
+	height:         18px;
+	padding:        0;
+	border:         1px solid var(--ab-border);
+	border-radius:  50%;
+	background:     var(--ab-surface-sunken);
+	color:          var(--ab-text-muted);
+	font-size:      11px;
+	font-weight:    var(--ab-font-semibold);
+	line-height:    1;
+	cursor:         pointer;
+	vertical-align: middle;
+	margin-left:    6px;
+	transition:     background 0.15s, color 0.15s, border-color 0.15s;
+}
+.ab-tooltip-trigger:hover,
+.ab-tooltip-trigger:focus-visible {
+	background:   var(--ab-accent, #7c3aed);
+	color:        var(--ab-text-on-accent);
+	border-color: var(--ab-accent, #7c3aed);
+	outline:      none;
+}
+.ab-tooltip-trigger[aria-expanded="true"],
+.ab-tooltip-trigger.is-active {
+	background:   var(--ab-accent, #7c3aed);
+	color:        var(--ab-text-on-accent);
+	border-color: var(--ab-accent, #7c3aed);
+}
+.ab-tooltip-content {
+	margin:        var(--ab-space-3) 0 0;
+	padding:       var(--ab-space-4) var(--ab-space-5);
+	background:    var(--ab-surface-sunken);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	font-size:     var(--ab-text-xs);
+	line-height:   1.6;
+	color:         var(--ab-text-secondary);
+}
+.ab-section__body .ab-tooltip-content {
+	margin-top: var(--ab-space-3);
+}
+
+.ab-card {
+	background:    var(--ab-surface);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	padding:       var(--ab-space-4);
+	transition:    border-color var(--ab-transition-base),
+	               box-shadow var(--ab-transition-base);
+}
+
+.ab-card:hover {
+	border-color: var(--ab-border-focus);
+}
+
+.ab-card--selected {
+	border-color: var(--ab-accent);
+	box-shadow:   0 0 0 2px var(--ab-accent-subtle);
+}
+
+.ab-card__title {
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-heading);
+	margin:      0 0 var(--ab-space-1);
+}
+
+.ab-card__meta {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+}
+
+
+/* =============================================================================
+   6. Subnav  (was .ab-colour-subtabs / .ab-colour-panel - now generic)
+   ============================================================================= */
+
+.ab-subnav {
+	display:         flex;
+	gap:             2px;
+	padding:         var(--ab-space-1);
+	background:      var(--ab-surface-sunken);
+	border-radius:   var(--ab-radius-md);
+	border:          1px solid var(--ab-border-subtle);
+	margin-bottom:   var(--ab-space-5);
+	flex-wrap:       wrap;
+}
+
+/* Subnav item (was .ab-colour-subtab) */
+.ab-subnav__item {
+	display:         flex;
+	align-items:     center;
+	gap:             var(--ab-space-2);
+	padding:         var(--ab-space-1-5) var(--ab-space-3);
+	font-size:       var(--ab-text-sm);
+	font-weight:     var(--ab-font-medium);
+	color:           var(--ab-text-secondary);
+	border-radius:   var(--ab-radius-sm);
+	cursor:          pointer;
+	border:          none;
+	background:      transparent;
+	text-decoration: none;
+	transition:      background var(--ab-transition-fast),
+	                 color var(--ab-transition-fast);
+	white-space:     nowrap;
+}
+
+.ab-subnav__item:hover {
+	background: var(--ab-surface);
+	color:      var(--ab-text-body);
+}
+
+.ab-subnav__item.is-active,
+.ab-subnav__item[aria-selected="true"] {
+	background: var(--ab-surface);
+	color:      var(--ab-text-heading);
+	font-weight: var(--ab-font-semibold);
+	box-shadow: var(--ab-shadow-xs);
+}
+
+/* Pane - content area associated with a subnav (was .ab-colour-panel) */
+.ab-pane {
+	display: none;
+}
+
+.ab-pane.is-active,
+.ab-pane:not(.ab-hidden) {
+	display: block;
+}
+
+
+/* =============================================================================
+   7. Grid
+   ============================================================================= */
+
+.ab-grid {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--ab-grid-min, var(--ab-grid-min-module)), 1fr));
+	gap:                   var(--ab-space-4);
+}
+
+/* Ruled grid - gap-as-border pattern */
+.ab-grid--ruled {
+	gap:        0;
+	border-top: 1px solid var(--ab-border-subtle);
+	border-left: 1px solid var(--ab-border-subtle);
+}
+
+.ab-grid--ruled > * {
+	border-bottom: 1px solid var(--ab-border-subtle);
+	border-right:  1px solid var(--ab-border-subtle);
+}
+
+/* Per-context overrides via custom property */
+.ab-grid--cards     { --ab-grid-min: var(--ab-grid-min-card);    }
+.ab-grid--presets   { --ab-grid-min: var(--ab-grid-min-preset);  }
+.ab-grid--export    { --ab-grid-min: var(--ab-grid-min-export);  }
+.ab-grid--caps      { --ab-grid-min: var(--ab-grid-min-cap);     }
+.ab-grid--icons-sm  { --ab-grid-min: var(--ab-grid-min-icon-sm); }
+.ab-grid--icons-lg  { --ab-grid-min: var(--ab-grid-min-icon-lg); }
+.ab-grid--svglib    { --ab-grid-min: var(--ab-grid-min-svglib);  }
+.ab-grid--module    { --ab-grid-min: var(--ab-grid-min-module);  }
+.ab-grid--qs        { --ab-grid-min: var(--ab-grid-min-qs);      }
+
+
+/* =============================================================================
+   8. Accordion
+   ============================================================================= */
+
+/*
+ * Accordion lives inside .ab-section__body only - not at top level.
+ * Uses native <details>/<summary> for keyboard accessibility + no JS.
+ */
+
+.ab-accordion {
+	border:        1px solid var(--ab-border-subtle);
+	border-radius: var(--ab-radius-md);
+	overflow:      hidden;
+}
+
+.ab-accordion + .ab-accordion {
+	margin-top: var(--ab-space-2);
+}
+
+.ab-accordion[open] > .ab-accordion__trigger {
+	border-bottom: 1px solid var(--ab-border-subtle);
+}
+
+/* <summary> trigger */
+.ab-accordion__trigger {
+	display:         flex;
+	align-items:     center;
+	justify-content: space-between;
+	gap:             var(--ab-space-3);
+	padding:         var(--ab-space-3) var(--ab-space-4);
+	font-size:       var(--ab-text-sm);
+	font-weight:     var(--ab-font-medium);
+	color:           var(--ab-text-heading);
+	cursor:          pointer;
+	list-style:      none;
+	background:      var(--ab-surface-sunken);
+	transition:      background var(--ab-transition-fast);
+	user-select:     none;
+}
+
+.ab-accordion__trigger::-webkit-details-marker {
+	display: none;
+}
+
+.ab-accordion__trigger:hover {
+	background: var(--ab-surface-raised);
+}
+
+/* Chevron icon auto-rotates on open */
+.ab-accordion__trigger .ab-accordion__chevron {
+	width:      var(--ab-icon-sm);
+	height:     var(--ab-icon-sm);
+	flex-shrink: 0;
+	transition:  transform var(--ab-duration-base) var(--ab-ease-default);
+}
+
+details[open] .ab-accordion__trigger .ab-accordion__chevron {
+	transform: rotate(180deg);
+}
+
+.ab-accordion__body {
+	padding: var(--ab-space-4);
+}
+
+
+/* =============================================================================
+   9. Buttons
+   ============================================================================= */
+
+.ab-btn {
+	display:         inline-flex;
+	align-items:     center;
+	justify-content: center;
+	gap:             var(--ab-space-2);
+	height:          var(--ab-btn-height);
+	padding:         0 var(--ab-space-4);
+	font-family:     var(--ab-font-base);
+	font-size:       var(--ab-text-sm);
+	font-weight:     var(--ab-font-medium);
+	border-radius:   var(--ab-radius-md);
+	border:          1px solid transparent;
+	cursor:          pointer;
+	text-decoration: none;
+	white-space:     nowrap;
+	transition:      background   var(--ab-transition-base),
+	                 border-color var(--ab-transition-base),
+	                 color        var(--ab-transition-base),
+	                 box-shadow   var(--ab-transition-base);
+}
+
+.ab-btn:focus-visible {
+	outline:        2px solid var(--ab-border-focus);
+	outline-offset: 2px;
+}
+
+.ab-btn:disabled,
+.ab-btn[aria-disabled="true"] {
+	opacity: 0.5;
+	cursor:  not-allowed;
+	pointer-events: none;
+}
+
+/* Primary */
+.ab-btn--primary {
+	background: var(--ab-accent);
+	color:      var(--ab-text-on-accent);
+	border-color: var(--ab-accent);
+}
+
+.ab-btn--primary:hover {
+	background: var(--ab-accent-hover);
+	border-color: var(--ab-accent-hover);
+}
+
+/* Secondary */
+.ab-btn--secondary {
+	background:   var(--ab-surface);
+	color:        var(--ab-text-body);
+	border-color: var(--ab-border);
+}
+
+.ab-btn--secondary:hover {
+	background:   var(--ab-surface-sunken);
+	border-color: var(--ab-border-focus);
+}
+
+/* Override for anchors styled as buttons. WP admin core has
+ * `#wpbody-content a { color: ... }` (and `#wpcontent a` in some screens)
+ * which beats class-only selectors on specificity, so an `<a class="ab-btn">`
+ * picks up WP's link blue instead of the variant's colour. Matching WP's
+ * specificity (ID + class) restores the variant colour. Covers :visited too
+ * because WP's rule applies there. */
+#wpbody-content a.ab-btn--secondary,
+#wpbody-content a.ab-btn--secondary:visited,
+#wpcontent a.ab-btn--secondary,
+#wpcontent a.ab-btn--secondary:visited {
+	color: var(--ab-text-body);
+}
+#wpbody-content a.ab-btn--primary,
+#wpbody-content a.ab-btn--primary:visited,
+#wpcontent a.ab-btn--primary,
+#wpcontent a.ab-btn--primary:visited,
+#wpbody-content a.ab-btn--danger,
+#wpbody-content a.ab-btn--danger:visited,
+#wpcontent a.ab-btn--danger,
+#wpcontent a.ab-btn--danger:visited {
+	color: var(--ab-text-on-accent);
+}
+
+/* Ghost */
+.ab-btn--ghost {
+	background:   transparent;
+	color:        var(--ab-text-secondary);
+	border-color: transparent;
+}
+
+.ab-btn--ghost:hover {
+	background: var(--ab-surface-sunken);
+	color:      var(--ab-text-body);
+}
+
+/* Danger (replaces old .ab-danger-btn) */
+.ab-btn--danger {
+	background:   var(--ab-danger);
+	color:        var(--ab-text-on-accent);
+	border-color: var(--ab-danger);
+}
+
+.ab-btn--danger:hover {
+	background:   var(--ab-danger-hover);
+	border-color: var(--ab-danger-hover);
+}
+
+/* Danger ghost */
+.ab-btn--danger-ghost {
+	background:   transparent;
+	color:        var(--ab-danger);
+	border-color: var(--ab-danger);
+}
+
+.ab-btn--danger-ghost:hover {
+	background: var(--ab-danger-bg);
+}
+
+/* Success */
+.ab-btn--success {
+	background:   var(--ab-success);
+	color:        var(--ab-text-on-accent);
+	border-color: var(--ab-success);
+}
+
+.ab-btn--success:hover {
+	background:   var(--ab-success-hover);
+	border-color: var(--ab-success-hover);
+}
+
+/* Small modifier */
+.ab-btn--sm {
+	height:       var(--ab-btn-height-sm);
+	padding:      0 var(--ab-space-3);
+	font-size:    var(--ab-text-xs);
+	border-radius: var(--ab-radius-sm);
+}
+
+/* Icon-only (square) */
+.ab-btn--icon {
+	width:   var(--ab-btn-height);
+	padding: 0;
+}
+
+.ab-btn--icon.ab-btn--sm {
+	width: var(--ab-btn-height-sm);
+}
+
+/* Button group */
+.ab-btn-group {
+	display: flex;
+	gap:     var(--ab-space-2);
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+
+/* =============================================================================
+   10. Forms
+   ============================================================================= */
+
+/* Field wrapper */
+.ab-field {
+	display:       flex;
+	flex-direction: column;
+	gap:           var(--ab-space-1-5);
+	margin-bottom: var(--ab-space-5);
+}
+
+.ab-field:last-child {
+	margin-bottom: 0;
+}
+
+/* Inline field (label + control side by side) */
+.ab-field--inline {
+	flex-direction: row;
+	align-items:    center;
+	justify-content: space-between;
+}
+
+.ab-field--inline .ab-label {
+	margin-bottom: 0;
+	flex:          1;
+}
+
+/* Label */
+.ab-label {
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-strong);
+}
+
+.ab-label-hint {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+	font-weight: var(--ab-font-normal);
+}
+
+/* Base input / select / textarea */
+.ab-input,
+.ab-select,
+.ab-textarea {
+	width:         100%;
+	height:        var(--ab-input-height);
+	padding:       0 var(--ab-space-3);
+	font-family:   var(--ab-font-base);
+	font-size:     var(--ab-text-sm);
+	color:         var(--ab-text-body);
+	background:    var(--ab-surface);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	transition:    border-color var(--ab-transition-fast),
+	               box-shadow   var(--ab-transition-fast);
+	appearance:    none;
+}
+
+.ab-textarea {
+	height:     auto;
+	padding:    var(--ab-space-2-5) var(--ab-space-3);
+	resize:     vertical;
+	min-height: 80px;
+	line-height: var(--ab-leading-relaxed);
+}
+
+.ab-input::placeholder,
+.ab-textarea::placeholder {
+	color: var(--ab-text-placeholder);
+}
+
+.ab-input:focus,
+.ab-select:focus,
+.ab-textarea:focus {
+	outline:      none;
+	border-color: var(--ab-border-focus);
+	box-shadow:   0 0 0 3px var(--ab-accent-subtle);
+}
+
+.ab-input:disabled,
+.ab-select:disabled,
+.ab-textarea:disabled {
+	opacity:    0.6;
+	cursor:     not-allowed;
+	background: var(--ab-surface-sunken);
+	color:      var(--ab-text-disabled);
+}
+
+.ab-input--error,
+.ab-select--error,
+.ab-textarea--error {
+	border-color: var(--ab-danger);
+}
+
+.ab-input--error:focus,
+.ab-select--error:focus,
+.ab-textarea--error:focus {
+	box-shadow: 0 0 0 3px var(--ab-danger-bg);
+}
+
+.ab-select {
+	padding-right: var(--ab-space-8);
+	background-image:    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+	background-repeat:   no-repeat;
+	background-position: right var(--ab-space-3) center;
+	cursor: pointer;
+}
+
+/* Dark surface: use a light chevron */
+.ab-wrap .ab-select {
+	background-image: var(--ab-select-chevron, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"));
+}
+
+/* Field hint / error text */
+.ab-field-hint {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+}
+
+.ab-field-error {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-danger-text);
+}
+
+/* Toolbar - reusable toolbar component for tab content areas */
+.ab-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--ab-space-3);
+	flex-wrap: wrap;
+	margin-bottom: var(--ab-space-5);
+	padding: var(--ab-space-3) var(--ab-space-4);
+	background: var(--ab-surface);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+}
+.ab-toolbar__left {
+	display: flex;
+	align-items: center;
+	gap: var(--ab-space-3);
+	flex-wrap: wrap;
+}
+.ab-toolbar__right {
+	display: flex;
+	align-items: center;
+	gap: var(--ab-space-2);
+	flex-wrap: wrap;
+}
+.ab-toolbar__label {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: var(--ab-neutral-700);
+	white-space: nowrap;
+}
+
+/* Toggle / switch */
+.ab-toggle {
+	position:   relative;
+	display:    inline-block;
+	width:      var(--ab-toggle-width);
+	height:     var(--ab-toggle-height);
+	flex-shrink: 0;
+}
+
+.ab-toggle input {
+	position: absolute;
+	opacity:  0;
+	width:    0;
+	height:   0;
+	margin:   0;
+	padding:  0;
+	clip:     rect(0, 0, 0, 0);
+	pointer-events: none;
+}
+
+.ab-toggle__track {
+	position:      absolute;
+	inset:         0;
+	background:    var(--ab-border);
+	border-radius: var(--ab-toggle-height);
+	cursor:        pointer;
+	transition:    background var(--ab-transition-base);
+}
+
+.ab-toggle__thumb {
+	position:        absolute;
+	top:             calc((var(--ab-toggle-height) - var(--ab-toggle-thumb)) / 2);
+	left:            calc((var(--ab-toggle-height) - var(--ab-toggle-thumb)) / 2);
+	width:           var(--ab-toggle-thumb);
+	height:          var(--ab-toggle-thumb);
+	background:      white;
+	border-radius:   50%;
+	transition:      transform var(--ab-transition-base);
+	pointer-events:  none;
+	box-shadow:      0 1px 3px rgba(0,0,0,0.2);
+}
+
+.ab-toggle input:checked ~ .ab-toggle__track {
+	background: var(--ab-accent);
+}
+
+.ab-toggle input:checked ~ .ab-toggle__thumb {
+	transform: translateX(calc(var(--ab-toggle-width) - var(--ab-toggle-thumb) - (var(--ab-toggle-height) - var(--ab-toggle-thumb))));
+}
+
+.ab-toggle input:focus-visible ~ .ab-toggle__track {
+	outline:        2px solid var(--ab-border-focus);
+	outline-offset: 2px;
+}
+
+.ab-toggle input:disabled ~ .ab-toggle__track,
+.ab-toggle input:disabled ~ .ab-toggle__thumb {
+	opacity: 0.5;
+	cursor:  not-allowed;
+}
+
+/* Colour swatch input */
+.ab-colour-input {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+}
+
+.ab-colour-input__swatch {
+	width:         var(--ab-btn-height-sm);
+	height:        var(--ab-btn-height-sm);
+	border-radius: var(--ab-radius-sm);
+	border:        1px solid var(--ab-border);
+	padding:       2px;
+	cursor:        pointer;
+	background:    none;
+}
+
+.ab-colour-input__swatch input[type="color"] {
+	width:   100%;
+	height:  100%;
+	border:  none;
+	padding: 0;
+	cursor:  pointer;
+	background: none;
+}
+
+.ab-colour-input__value {
+	font-size:   var(--ab-text-xs);
+	font-family: var(--ab-font-mono);
+	color:       var(--ab-text-secondary);
+	width:       7ch;
+}
+
+
+/* =============================================================================
+   11. Save bar
+   ============================================================================= */
+
+.ab-save-bar {
+	display:         flex;
+	align-items:     center;
+	justify-content: flex-end;
+	gap:             var(--ab-space-3);
+	padding:         var(--ab-space-3) var(--ab-space-6);
+	background:      var(--ab-surface);
+	border-top:      1px solid var(--ab-border-subtle);
+	position:        sticky;
+	bottom:          0;
+	z-index:         50;   /* above canvas content, below overlays */
+	box-shadow: var(--ab-shadow-bar);
+}
+
+.ab-save-bar__status {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+	flex:      1;
+}
+
+.ab-save-bar__status.is-saved {
+	color: var(--ab-success-text);
+}
+
+.ab-save-bar__status.is-error {
+	color: var(--ab-danger-text);
+}
+
+
+/* =============================================================================
+   12. Notices
+   ============================================================================= */
+
+/* .ab-notice replaces .ab-alert (deleted - same semantics, one component) */
+.ab-notice {
+	display:       flex;
+	align-items:   center;
+	gap:           var(--ab-space-3);
+	padding:       var(--ab-space-3) var(--ab-space-4);
+	border-radius: var(--ab-radius-md);
+	border-left:   4px solid currentColor;
+	font-size:     var(--ab-text-sm);
+	line-height:   var(--ab-leading-relaxed);
+}
+
+.ab-notice__icon {
+	flex-shrink: 0;
+	width:       var(--ab-icon-md);
+	height:      var(--ab-icon-md);
+}
+
+.ab-notice__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.ab-notice__title {
+	font-weight:   var(--ab-font-semibold);
+	margin-bottom: var(--ab-space-1);
+}
+
+.ab-notice__actions {
+	display: flex;
+	gap:     var(--ab-space-2);
+	margin-top: var(--ab-space-2);
+}
+
+/* Variants */
+.ab-notice--info {
+	background: var(--ab-info-bg);
+	color:      var(--ab-info-text);
+}
+
+.ab-notice--success {
+	background: var(--ab-success-bg);
+	color:      var(--ab-success-text);
+}
+
+.ab-notice--warning {
+	background: var(--ab-warning-bg);
+	color:      var(--ab-warning-text);
+}
+
+.ab-notice--error {
+	background: var(--ab-danger-bg);
+	color:      var(--ab-danger-text);
+}
+
+/* Dismissible */
+.ab-notice--dismissible {
+	position: relative;
+	padding-right: var(--ab-space-10);
+}
+
+.ab-notice__dismiss {
+	position:   absolute;
+	top:        var(--ab-space-2);
+	right:      var(--ab-space-3);
+	background: none;
+	border:     none;
+	cursor:     pointer;
+	color:      currentColor;
+	opacity:    0.6;
+	padding:    var(--ab-space-1);
+	border-radius: var(--ab-radius-sm);
+	transition: opacity var(--ab-transition-fast);
+}
+
+.ab-notice__dismiss:hover {
+	opacity: 1;
+}
+
+
+/* =============================================================================
+   13. Modal
+   ============================================================================= */
+
+/* Fixed fullscreen overlay - the element with id=ab-confirm-modal */
+.ab-modal {
+	position:        fixed;
+	inset:           0;
+	z-index:         170000; /* beats slide panels (160001), WP admin bar (99999), everything */
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	padding:         var(--ab-space-4);
+}
+
+.ab-modal.ab-hidden {
+	display: none !important;
+}
+
+/* Semi-transparent backdrop layer inside the overlay */
+.ab-modal__backdrop {
+	position:             fixed;
+	inset:                0;
+	background:           rgba(0,0,0,0.45);
+	z-index:              -1;
+	backdrop-filter:      blur(2px);
+	-webkit-backdrop-filter: blur(2px);
+}
+
+/* The white dialog box */
+.ab-modal__box,
+.ab-modal__dialog {
+	background:    var(--ab-surface);
+	border-radius: var(--ab-radius-xl);
+	border:        1px solid var(--ab-border);
+	width:         100%;
+	max-width:     var(--ab-panel-sm);
+	max-height:    90vh;
+	overflow-y:    auto;
+	position:      relative;
+	z-index:       1;
+	box-shadow:    var(--ab-shadow-xl);
+}
+
+.ab-modal__header {
+	display:       flex;
+	align-items:   center;
+	gap:           var(--ab-space-3);
+	padding:       var(--ab-space-5) var(--ab-space-6);
+	border-bottom: 1px solid var(--ab-border-subtle);
+}
+.ab-modal__header h3 { margin: 0; font-size: var(--ab-text-base); }
+
+.ab-modal__title {
+	font-size:   var(--ab-text-base);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-heading);
+	flex:        1;
+	margin:      0;
+}
+
+.ab-modal__body {
+	padding: var(--ab-space-5) var(--ab-space-6);
+}
+.ab-modal__fields {
+	padding: var(--ab-space-5) var(--ab-space-6);
+}
+.ab-modal__actions {
+	display:         flex;
+	align-items:     center;
+	justify-content: flex-end;
+	gap:             var(--ab-space-2);
+	padding:         var(--ab-space-4) var(--ab-space-6) var(--ab-space-5);
+	border-top:      1px solid var(--ab-border-subtle);
+}
+
+.ab-modal__close {
+	background:    transparent;
+	border:        none;
+	cursor:        pointer;
+	color:         var(--ab-text-muted);
+	padding:       var(--ab-space-1);
+	border-radius: var(--ab-radius-sm);
+	transition:    color var(--ab-transition-fast);
+	line-height:   1;
+}
+
+.ab-modal__close:hover {
+	color: var(--ab-text-body);
+}
+
+.ab-modal__footer {
+	display:         flex;
+	align-items:     center;
+	justify-content: flex-end;
+	gap:             var(--ab-space-3);
+	padding:         var(--ab-space-4) var(--ab-space-6);
+	border-top:      1px solid var(--ab-border-subtle);
+}
+
+/* Modal header: flex row with title left, close button right */
+.ab-modal__dialog .ab-modal__header {
+	justify-content: space-between;
+}
+
+.ab-modal--md,
+.ab-modal--md .ab-modal__dialog {
+	max-width: var(--ab-panel-md);
+}
+
+.ab-modal--lg,
+.ab-modal--lg .ab-modal__dialog {
+	max-width: var(--ab-panel-lg);
+}
+
+/* Confirm dialog variant - clean borderless interior, tighter spacing */
+.ab-modal--confirm .ab-modal__box {
+	max-width: 420px;
+}
+
+.ab-modal--confirm .ab-modal__header {
+	border-bottom: none;
+	padding-bottom: 0;
+}
+
+.ab-modal--confirm .ab-modal__body {
+	padding-top: var(--ab-space-2);
+	color:       var(--ab-text-secondary);
+}
+
+.ab-modal--confirm .ab-modal__actions {
+	border-top: none;
+	justify-content: flex-end;
+	gap: var(--ab-space-2);
+	padding-top: var(--ab-space-3);
+}
+
+
+/* =============================================================================
+   14. Slide panel  (unified - was .ab-email-panel and .ab-cp-panel)
+   ============================================================================= */
+
+.ab-backdrop {
+	position:   fixed;
+	inset:      0;
+	background: rgba(0,0,0,0.4);
+	/* Soft blur behind the panel - matches the original Checklist look
+	 * and the Bricks Quick Settings overlay (.ab-qs-overlay). */
+	backdrop-filter:         blur(2px);
+	-webkit-backdrop-filter: blur(2px);
+	z-index:    var(--ab-z-backdrop);
+	opacity:    0;
+	pointer-events: none;
+	transition: opacity var(--ab-duration-backdrop) var(--ab-ease-default);
+}
+
+.ab-backdrop.is-open {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.ab-slide-panel {
+	position:   fixed;
+	top:        0;
+	right:      0;
+	height:     100%;
+	width:      min(var(--ab-panel-md), 95vw);
+	background: var(--ab-surface);
+	border-left: 1px solid var(--ab-border);
+	box-shadow: var(--ab-shadow-panel);
+	z-index:    var(--ab-z-panel);
+	display:    flex;
+	flex-direction: column;
+	transform:  translateX(100%);
+	transition: transform var(--ab-duration-panel) var(--ab-ease-out);
+	overflow:   hidden;
+	/* Lock text-size AND spacing tokens to px inside the panel. On front-end
+	 * the host theme may set html { font-size: 10px } (rem-hack themes) which
+	 * would otherwise shrink rem-based tokens like 0.75rem = 7.5px. Without
+	 * locking the spacing tokens too, padding / gap / margin compute smaller
+	 * on rem-hack front-ends than they do in the admin — same CSS, visually
+	 * inconsistent spacing between identical panels. Values below match what
+	 * the rem tokens resolve to at the WP admin default html=16px. */
+	--ab-text-xs:   12px;
+	--ab-text-sm:   14px;
+	--ab-text-base: 16px;
+	--ab-text-lg:   18px;
+	--ab-space-1:   4px;
+	--ab-space-1-5: 6px;
+	--ab-space-2:   8px;
+	--ab-space-2-5: 10px;
+	--ab-space-3:   12px;
+	--ab-space-4:   16px;
+	--ab-space-5:   20px;
+	--ab-space-6:   24px;
+	--ab-space-8:   32px;
+	--ab-space-10:  40px;
+	--ab-space-12:  48px;
+}
+
+.ab-slide-panel.is-open {
+	transform: translateX(0);
+}
+
+/* Full-viewport by design. Earlier revisions offset .ab-slide-panel by
+ * the admin-bar height (32px / 46px) so the WP toolbar stayed visible
+ * while a panel was open. That produced an inconsistency: off-label
+ * panels built before the shared system (.ab-snippet-modal, .ab-email-panel,
+ * .ab-cp-panel) all use top:0/bottom:0 and cover the admin bar — while
+ * Activity Log / Updates / Source / Checklist got the offset and rendered
+ * visibly shorter. Panels have their own close control, so covering the
+ * bar is the right default. Consolidated on full-viewport everywhere. */
+
+.ab-slide-panel--sm {
+	width: min(var(--ab-panel-sm), 95vw);
+}
+
+.ab-slide-panel--lg {
+	width: min(var(--ab-panel-lg), 95vw);
+}
+
+.ab-slide-panel--xl {
+	width: min(var(--ab-panel-xl), 95vw);
+}
+
+.ab-slide-panel__header {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+	padding:     var(--ab-space-4) var(--ab-space-5);
+	border-bottom: 1px solid var(--ab-border);
+	flex-shrink: 0;
+}
+
+/* Single source of truth for slide-panel header tint.
+ *
+ * .ab-slide-panel__header used to have NO static background and relied
+ * entirely on class-colours.php injecting `background: $sr !important`
+ * at admin_head. That broke on the front-end (Checklist opens from the
+ * admin bar on any page), where class-colours doesn't run and the header
+ * rendered plain white.
+ *
+ * Before the 2026 panel consolidation there were three parallel class
+ * families (.ab-snippet-modal, .ab-email-panel, .ab-cp-panel) each with
+ * their own tint rule — DRY-violating and a frequent "why do these look
+ * different" bug source. All three have since been migrated to
+ * .ab-slide-panel, so this is now one rule, full stop.
+ *
+ * var(--ab-surface-raised) is overridden per-theme by class-colours.php
+ * line 1804, so colour scheme theming still flows through automatically. */
+.ab-slide-panel__header {
+	background: var(--ab-surface-raised);
+}
+
+.ab-slide-panel__title {
+	font-size:   var(--ab-text-base);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-heading);
+	flex:        1;
+	margin:      0;
+}
+
+.ab-slide-panel__close {
+	background: none;
+	border:     none;
+	cursor:     pointer;
+	color:      var(--ab-text-muted);
+	padding:    var(--ab-space-1);
+	border-radius: var(--ab-radius-sm);
+	transition: color var(--ab-transition-fast);
+}
+
+.ab-slide-panel__close:hover {
+	color: var(--ab-text-body);
+}
+
+.ab-slide-panel__body {
+	flex:       1;
+	/* min-height:0 lets a flex-column child shrink below its content size so
+	 * overflow-y:auto can actually engage. Without it, the body grows to fit
+	 * its content and the parent's overflow:hidden clips — no scrollbar. */
+	min-height: 0;
+	overflow-y: auto;
+	padding:    var(--ab-space-5);
+}
+
+.ab-slide-panel__footer {
+	padding:     var(--ab-space-4) var(--ab-space-5);
+	border-top:  1px solid var(--ab-border);
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+	flex-shrink: 0;
+	justify-content: flex-end;
+}
+
+/* Shared checkbox-pill for panel footers (Snippets "Active" + "Share",
+ * Custom Pages "Enabled"). Used across tabs — defined here rather than
+ * tab-*.css because tab CSS only loads on its own tab, and the CP panel
+ * uses a class named after Snippets for historical reasons. */
+.ab-snippet-active-label {
+	display:       inline-flex;
+	align-items:   center;
+	gap:           var(--ab-space-2);
+	padding:       var(--ab-space-1-5) var(--ab-space-2-5);
+	font-size:     var(--ab-text-sm);
+	font-weight:   var(--ab-font-medium, 500);
+	color:         var(--ab-text-body);
+	background:    var(--ab-surface);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	cursor:        pointer;
+	user-select:   none;
+}
+.ab-snippet-active-label input[type="checkbox"] {
+	margin:      0;
+	width:       15px;
+	height:      15px;
+	flex-shrink: 0;
+	cursor:      pointer;
+}
+
+
+/* =============================================================================
+   15. Dropdown
+   ============================================================================= */
+
+.ab-dropdown {
+	position: relative;
+	display:  inline-block;
+}
+
+.ab-dropdown__menu {
+	position:      absolute;
+	top:           calc(100% + var(--ab-space-1));
+	left:          0;
+	min-width:     180px;
+	background:    var(--ab-surface);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	box-shadow: var(--ab-shadow-lg);
+	z-index:       var(--ab-z-dropdown);
+	padding:       var(--ab-space-1);
+	opacity:       0;
+	transform:     translateY(-4px);
+	pointer-events: none;
+	transition:    opacity   var(--ab-duration-dropdown) var(--ab-ease-default),
+	               transform var(--ab-duration-dropdown) var(--ab-ease-default);
+}
+
+.ab-dropdown.is-open .ab-dropdown__menu,
+.ab-dropdown__menu.is-open {
+	opacity:        1;
+	transform:      translateY(0);
+	pointer-events: auto;
+}
+
+.ab-dropdown__menu--right {
+	left:  auto;
+	right: 0;
+}
+
+.ab-dropdown__item {
+	display:         flex;
+	align-items:     center;
+	gap:             var(--ab-space-2);
+	padding:         var(--ab-space-2) var(--ab-space-3);
+	font-size:       var(--ab-text-sm);
+	color:           var(--ab-text-body);
+	border-radius:   var(--ab-radius-sm);
+	cursor:          pointer;
+	text-decoration: none;
+	border:          none;
+	background:      none;
+	width:           100%;
+	text-align:      left;
+	transition:      background var(--ab-transition-fast);
+}
+
+.ab-dropdown__item:hover {
+	background: var(--ab-surface-sunken);
+}
+
+.ab-dropdown__item--danger {
+	color: var(--ab-danger-text);
+}
+
+.ab-dropdown__item--danger:hover {
+	background: var(--ab-danger-bg);
+}
+
+.ab-dropdown__divider {
+	height:  1px;
+	background: var(--ab-border-subtle);
+	margin:  var(--ab-space-1) 0;
+}
+
+
+/* =============================================================================
+   16. Toast
+   ============================================================================= */
+
+#ab-toast {
+	position:   fixed;
+	top:        var(--ab-space-6);
+	left:       50%;
+	transform:  translateX(-50%);
+	z-index:    var(--ab-z-toast);
+	display:    flex;
+	flex-direction: column;
+	align-items: center;
+	gap:        var(--ab-space-2);
+	max-width:  var(--ab-toast-max-w);
+	width:      auto;
+	pointer-events: none;
+}
+
+/* Push toast below WP admin bar */
+.admin-bar #ab-toast {
+	top: calc(32px + var(--ab-space-4));
+}
+@media screen and (max-width: 782px) {
+	.admin-bar #ab-toast { top: calc(46px + var(--ab-space-4)); }
+}
+
+.ab-toast {
+	display:       flex;
+	align-items:   flex-start;
+	gap:           var(--ab-space-3);
+	padding:       var(--ab-space-3) var(--ab-space-4);
+	background:    var(--ab-surface);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	box-shadow: var(--ab-shadow-md);
+	pointer-events: auto;
+	font-size:     var(--ab-text-sm);
+	line-height:   var(--ab-leading-relaxed);
+	animation:     ab-toast-in var(--ab-duration-base) var(--ab-ease-out) both;
+}
+
+.ab-toast.is-leaving {
+	animation: ab-toast-out var(--ab-duration-base) var(--ab-ease-default) forwards;
+}
+
+@keyframes ab-toast-in {
+	from { opacity: 0; transform: translateY(-12px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ab-toast-out {
+	from { opacity: 1; transform: translateY(0); }
+	to   { opacity: 0; transform: translateY(-12px); }
+}
+
+div.ab-toast.ab-toast--success { background: var(--ab-success-bg-emphasis); border-color: var(--ab-success); color: var(--ab-success-text); }
+div.ab-toast.ab-toast--warning { background: var(--ab-warning-bg-emphasis); border-color: var(--ab-warning); color: var(--ab-warning-text); }
+div.ab-toast.ab-toast--error   { background: var(--ab-danger-bg-emphasis);  border-color: var(--ab-danger);  color: var(--ab-danger-text); }
+div.ab-toast.ab-toast--info    { background: var(--ab-info-bg-emphasis);    border-color: var(--ab-info);    color: var(--ab-info-text); }
+
+.ab-toast__icon {
+	flex-shrink: 0;
+	width:  var(--ab-icon-md);
+	height: var(--ab-icon-md);
+}
+
+.ab-toast__body {
+	flex: 1;
+	min-width: 0;
+}
+
+.ab-toast__dismiss {
+	background: none;
+	border:     none;
+	cursor:     pointer;
+	color:      var(--ab-text-muted);
+	padding:    0;
+	flex-shrink: 0;
+	opacity:    0.6;
+	transition: opacity var(--ab-transition-fast);
+}
+
+.ab-toast__dismiss:hover {
+	opacity: 1;
+}
+
+
+/* =============================================================================
+   17. Badge / pill
+   ============================================================================= */
+
+.ab-badge {
+	display:       inline-flex;
+	align-items:   center;
+	gap:           var(--ab-space-1);
+	padding:       2px var(--ab-space-2);
+	font-size:     var(--ab-text-xs);
+	font-weight:   var(--ab-font-medium);
+	border-radius: var(--ab-radius-sm);
+	white-space:   nowrap;
+	line-height:   1.4;
+}
+
+.ab-badge--success  { background: var(--ab-success-bg-emphasis, #dcfce7);  color: var(--ab-success-strong, #166534) !important;  }
+.ab-badge--warning  { background: var(--ab-warning-bg-emphasis, #fef3c7);  color: var(--ab-warning-strong, #92400e) !important;  }
+.ab-badge--danger   { background: var(--ab-danger-bg-emphasis, #fee2e2);   color: var(--ab-danger-text, #991b1b) !important;    }
+.ab-badge--info     { background: var(--ab-info-bg-emphasis, #dbeafe);     color: var(--ab-info-strong, #1e40af) !important;     }
+.ab-badge--neutral  { background: var(--ab-surface-sunken); color: var(--ab-text-secondary); }
+
+/* Pill - wider rounded badge */
+.ab-pill {
+	border-radius: 9999px;
+}
+
+
+/* =============================================================================
+   18. Table
+   ============================================================================= */
+
+.ab-table-wrap {
+	overflow-x:    auto;
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+}
+
+.ab-table {
+	width:           100%;
+	border-collapse: collapse;
+	font-size:       var(--ab-text-sm);
+}
+
+.ab-table th {
+	text-align:    left;
+	padding:       var(--ab-space-3) var(--ab-space-4);
+	font-weight:   var(--ab-font-semibold);
+	color:         var(--ab-text-secondary);
+	font-size:     var(--ab-text-xs);
+	border-bottom: 1px solid var(--ab-border);
+	background:    var(--ab-surface-sunken);
+	white-space:   nowrap;
+}
+
+.ab-table td {
+	padding:       var(--ab-space-3) var(--ab-space-4);
+	border-bottom: 1px solid var(--ab-border-subtle);
+	color:         var(--ab-text-body);
+	vertical-align: middle;
+}
+
+.ab-table tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.ab-table tbody tr:hover td {
+	background: var(--ab-surface-sunken);
+}
+
+.ab-table--fixed {
+	table-layout: fixed;
+}
+
+
+/* =============================================================================
+   19. Drag handle
+   ============================================================================= */
+
+.ab-drag-handle {
+	display:     inline-flex;
+	align-items: center;
+	justify-content: center;
+	width:       var(--ab-icon-md);
+	height:      var(--ab-icon-md);
+	color:       var(--ab-text-muted);
+	cursor:      grab;
+	flex-shrink: 0;
+	transition:  color var(--ab-transition-fast);
+}
+
+.ab-drag-handle:hover,
+.ab-drag-handle:active {
+	color: var(--ab-text-secondary);
+}
+
+.ab-drag-handle:active {
+	cursor: grabbing;
+}
+
+
+/* =============================================================================
+   20. Loader / spinner
+   ============================================================================= */
+
+.ab-spinner {
+	width:  var(--ab-icon-md);
+	height: var(--ab-icon-md);
+	border: 2px solid var(--ab-border);
+	border-top-color: var(--ab-accent);
+	border-radius: 50%;
+	animation: ab-spin 0.7s linear infinite;
+	flex-shrink: 0;
+}
+
+.ab-spinner--sm {
+	width:  var(--ab-icon-sm);
+	height: var(--ab-icon-sm);
+}
+
+.ab-spinner--lg {
+	width:  32px;
+	height: 32px;
+	border-width: 3px;
+}
+
+@keyframes ab-spin {
+	to { transform: rotate(360deg); }
+}
+
+.ab-spin { animation: ab-spin 0.7s linear infinite; }
+
+/* -- Search highlight pulse - scroll-to target from Alt+K search ------- */
+@keyframes ab-highlight-pulse {
+	0%   { background: color-mix(in srgb, var(--ab-primary, #7c3aed) 18%, transparent); }
+	40%  { background: color-mix(in srgb, var(--ab-primary, #7c3aed) 12%, transparent); }
+	100% { background: transparent; }
+}
+.ab-highlight-pulse {
+	animation:     ab-highlight-pulse 3.5s ease-out;
+	border-radius: var(--ab-radius-sm, 4px);
+}
+
+/* -- FieldRegistry - new field type styles ----------------------------- */
+.ab-field-media { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ab-field-media__preview img { max-width: 200px; max-height: 150px; border-radius: 4px; display: block; }
+.ab-field-media__preview a { word-break: break-all; }
+.ab-field-media__thumb { position: relative; display: inline-block; }
+.ab-field-media__remove-x { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border: none; background: #b32d2e; color: #fff; font-size: 15px; line-height: 1; border-radius: 50%; cursor: pointer; padding: 0; opacity: 0; transition: opacity .15s; }
+.ab-field-media__thumb:hover .ab-field-media__remove-x { opacity: 1; }
+.ab-field-media__remove-x:hover { background: #d63638; }
+
+.ab-field-gallery__grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 8px; }
+.ab-field-gallery__item { position: relative; aspect-ratio: 1; border-radius: 4px; overflow: hidden; border: 1px solid var(--ab-border, #ddd); }
+.ab-field-gallery__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-field-gallery__remove { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; border: none; background: #b32d2e; color: #fff; font-size: 14px; line-height: 1; border-radius: 50%; cursor: pointer; padding: 0; opacity: 0; transition: opacity .15s; }
+.ab-field-gallery__item:hover .ab-field-gallery__remove { opacity: 1; }
+.ab-field-gallery__remove:hover { background: #d63638; }
+
+.ab-field-currency { display: inline-flex; align-items: center; gap: 4px; }
+.ab-field-currency__symbol { font-weight: 600; color: var(--ab-text-muted, #666); font-size: 14px; }
+
+.ab-field-range { display: inline-flex; align-items: center; gap: 10px; }
+.ab-field-range output { min-width: 3ch; text-align: center; font-size: 13px; font-weight: 600; }
+
+.ab-field-password { display: inline-flex; align-items: center; gap: 6px; }
+
+.ab-field-radio-group, .ab-field-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.ab-field-radio, .ab-field-checkbox { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; font-size: 13px; }
+
+.ab-field-link { display: flex; flex-direction: column; gap: 0; }
+.ab-field-link label { font-size: 12px; cursor: pointer; }
+
+.ab-field-country { max-width: 300px; }
+
+/* Page-level loading overlay */
+.ab-loading-overlay {
+	position:       absolute;
+	inset:          0;
+	background:     rgba(255,255,255,0.7);
+	display:        flex;
+	align-items:    center;
+	justify-content: center;
+	z-index:        var(--ab-z-content);
+	border-radius:  inherit;
+}
+
+
+/* =============================================================================
+   21. Empty state
+   ============================================================================= */
+
+.ab-empty {
+	display:         flex;
+	flex-direction:  column;
+	align-items:     center;
+	justify-content: center;
+	gap:             var(--ab-space-3);
+	padding:         var(--ab-space-12) var(--ab-space-6);
+	text-align:      center;
+}
+
+.ab-empty__icon {
+	width:   40px;
+	height:  40px;
+	color:   var(--ab-text-muted);
+	opacity: 0.5;
+}
+
+.ab-empty__title {
+	font-size:   var(--ab-text-base);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-heading);
+	margin:      0;
+}
+
+.ab-empty__description {
+	font-size:  var(--ab-text-sm);
+	color:      var(--ab-text-muted);
+	max-width:  360px;
+	margin:     0;
+}
+
+
+/* =============================================================================
+   22. Tab: Colours
+   ============================================================================= */
+
+/* Colour swatch grid */
+.ab-colour-swatches {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--ab-grid-min-card), 1fr));
+	gap:                   var(--ab-space-3);
+}
+
+.ab-colour-swatch {
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	overflow:      hidden;
+	cursor:        pointer;
+	transition:    border-color var(--ab-transition-base),
+	               transform    var(--ab-duration-fast) var(--ab-ease-out);
+}
+
+.ab-colour-swatch:hover {
+	border-color: var(--ab-border-focus);
+	transform:    translateY(-1px);
+}
+
+.ab-colour-swatch.is-selected {
+	border-color: var(--ab-accent);
+	box-shadow:   0 0 0 2px var(--ab-accent-subtle);
+}
+
+.ab-colour-swatch__preview {
+	height:   56px;
+	width:    100%;
+}
+
+.ab-colour-swatch__label {
+	padding:     var(--ab-space-2) var(--ab-space-3);
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-body);
+}
+
+/* Colour cap - the 4-swatch "cap" shown in the colour grid item */
+.ab-colour-cap {
+	display:               grid;
+	grid-template-columns: repeat(4, 1fr);
+	height:                40px;
+	border-radius:         var(--ab-radius-sm);
+	overflow:              hidden;
+}
+
+/* Colours live preview panel */
+.ab-colour-preview {
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	overflow:      hidden;
+}
+
+.ab-colour-preview__bar {
+	height:     8px;
+	background: linear-gradient(to right, var(--ab-accent), var(--ab-accent-hover));
+}
+
+.ab-colour-preview__body {
+	padding: var(--ab-space-4);
+}
+
+/* Custom colour builder */
+.ab-colour-builder {
+	display:     grid;
+	gap:         var(--ab-space-4);
+	grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 600px) {
+	.ab-colour-builder {
+		grid-template-columns: 1fr;
+	}
+}
+
+.ab-colour-builder__group {
+	display:       flex;
+	flex-direction: column;
+	gap:           var(--ab-space-2);
+}
+
+.ab-colour-builder__group-title {
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+
+/* =============================================================================
+   23. Tab: Custom Pages
+   ============================================================================= */
+
+/* Page list */
+.ab-cp-list {
+	display:        flex;
+	flex-direction: column;
+	gap:            var(--ab-space-2);
+}
+
+.ab-cp-item {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+	padding:     var(--ab-space-3) var(--ab-space-4);
+	background:  var(--ab-surface);
+	border:      1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	transition:  border-color var(--ab-transition-fast);
+}
+
+.ab-cp-item:hover {
+	border-color: var(--ab-border-focus);
+}
+
+.ab-cp-item__icon {
+	flex-shrink: 0;
+	width:  var(--ab-icon-md);
+	height: var(--ab-icon-md);
+	color:  var(--ab-text-muted);
+}
+
+.ab-cp-item__title {
+	flex:        1;
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-body);
+	min-width:   0;
+	overflow:    hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ab-cp-item__meta {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+}
+
+.ab-cp-item__actions {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-1);
+	flex-shrink: 0;
+}
+
+/* Icon picker (inside slide panel) */
+.ab-icon-picker {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--ab-grid-min-icon-sm), 1fr));
+	gap:                   var(--ab-space-2);
+	max-height:            320px;
+	overflow-y:            auto;
+}
+
+.ab-icon-picker__item {
+	display:         flex;
+	flex-direction:  column;
+	align-items:     center;
+	gap:             var(--ab-space-1);
+	padding:         var(--ab-space-2);
+	border:          1px solid transparent;
+	border-radius:   var(--ab-radius-md);
+	cursor:          pointer;
+	transition:      border-color var(--ab-transition-fast),
+	                 background   var(--ab-transition-fast);
+}
+
+.ab-icon-picker__item:hover {
+	background:   var(--ab-surface-sunken);
+	border-color: var(--ab-border);
+}
+
+.ab-icon-picker__item.is-selected {
+	border-color: var(--ab-accent);
+	background:   var(--ab-accent-subtle);
+}
+
+.ab-icon-picker__item svg {
+	width:  var(--ab-icon-lg);
+	height: var(--ab-icon-lg);
+}
+
+.ab-icon-picker__label {
+	font-size:  var(--ab-text-xs);
+	color:      var(--ab-text-muted);
+	text-align: center;
+	line-height: var(--ab-leading-tight);
+}
+
+.ab-icon-picker__search {
+	margin-bottom: var(--ab-space-3);
+}
+
+
+/* =============================================================================
+   24. Tab: Menu Customiser
+   ============================================================================= */
+
+/* Sortable menu list */
+.ab-menu-list {
+	display:        flex;
+	flex-direction: column;
+	gap:            var(--ab-space-1);
+	margin:         0;
+	padding:        0;
+	list-style:     none;
+}
+
+.ab-menu-item {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+	padding:     var(--ab-space-2-5) var(--ab-space-4);
+	background:  var(--ab-surface);
+	border:      1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	transition:  border-color var(--ab-transition-fast),
+	             box-shadow   var(--ab-transition-fast);
+}
+
+.ab-menu-item:hover {
+	border-color: var(--ab-border-focus);
+}
+
+.ab-menu-item.ui-sortable-helper {
+	box-shadow: var(--ab-shadow-md);
+	border-color: var(--ab-border-focus);
+}
+
+.ab-menu-item.ui-sortable-placeholder {
+	visibility: visible !important;
+	border:     2px dashed var(--ab-border);
+	background: var(--ab-surface-sunken);
+}
+
+.ab-menu-item__icon {
+	width:    var(--ab-icon-md);
+	height:   var(--ab-icon-md);
+	flex-shrink: 0;
+	color:    var(--ab-text-muted);
+}
+
+.ab-menu-item__label {
+	flex:        1;
+	font-size:   var(--ab-text-sm);
+	color:       var(--ab-text-body);
+	min-width:   0;
+	overflow:    hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ab-menu-item__actions {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-1);
+}
+
+/* Rename inline input */
+.ab-menu-item__rename-input {
+	flex:          1;
+	font-size:     var(--ab-text-sm);
+	border:        1px solid var(--ab-border-focus);
+	border-radius: var(--ab-radius-sm);
+	padding:       var(--ab-space-1) var(--ab-space-2);
+	background:    var(--ab-surface);
+	color:         var(--ab-text-body);
+	min-width:     0;
+}
+
+.ab-menu-item__rename-input:focus {
+	outline:    none;
+	box-shadow: 0 0 0 2px var(--ab-accent-subtle);
+}
+
+
+/* =============================================================================
+   25. Tab: Roles
+   ============================================================================= */
+
+/* Capability matrix table */
+.ab-roles-matrix {
+	overflow-x: auto;
+}
+
+.ab-roles-matrix .ab-table th:first-child,
+.ab-roles-matrix .ab-table td:first-child {
+	position:   sticky;
+	left:       0;
+	background: var(--ab-surface);
+	z-index:    1;
+	border-right: 1px solid var(--ab-border-subtle);
+	min-width:  180px;
+}
+
+.ab-roles-matrix .ab-table th:first-child {
+	background: var(--ab-surface-sunken);
+}
+
+/* Capability checkbox cell */
+.ab-cap-cell {
+	text-align: center;
+	min-width:  56px;
+}
+
+.ab-cap-check {
+	width:   var(--ab-icon-md);
+	height:  var(--ab-icon-md);
+	cursor:  pointer;
+	accent-color: var(--ab-accent);
+}
+
+/* Role header - role name + user count */
+.ab-role-header {
+	display:         flex;
+	flex-direction:  column;
+	align-items:     center;
+	gap:             2px;
+	padding:         var(--ab-space-2) var(--ab-space-2);
+}
+
+.ab-role-header__name {
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-heading);
+}
+
+.ab-role-header__count {
+	font-size: 10px;
+	color:     var(--ab-text-muted);
+}
+
+/* Capability group label row */
+.ab-cap-group-row td {
+	background:  var(--ab-surface-sunken);
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	padding:     var(--ab-space-2) var(--ab-space-4);
+}
+
+
+/* =============================================================================
+   26. Tab: SMTP
+   ============================================================================= */
+
+/* Connection status indicator */
+.ab-smtp-status {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+	font-size:   var(--ab-text-sm);
+}
+
+.ab-smtp-status__dot {
+	width:         8px;
+	height:        8px;
+	border-radius: 50%;
+	flex-shrink:   0;
+}
+
+.ab-smtp-status--connected    .ab-smtp-status__dot { background: var(--ab-success); }
+.ab-smtp-status--disconnected .ab-smtp-status__dot { background: var(--ab-danger); }
+.ab-smtp-status--unknown      .ab-smtp-status__dot { background: var(--ab-warning); }
+
+/* Test result log */
+.ab-smtp-log {
+	background:    var(--ab-surface-sunken);
+	border:        1px solid var(--ab-border-subtle);
+	border-radius: var(--ab-radius-md);
+	padding:       var(--ab-space-3) var(--ab-space-4);
+	font-family:   var(--ab-font-mono);
+	font-size:     var(--ab-text-xs);
+	line-height:   var(--ab-leading-relaxed);
+	color:         var(--ab-text-body);
+	max-height:    240px;
+	overflow-y:    auto;
+	white-space:   pre-wrap;
+}
+
+.ab-smtp-log__line--ok    { color: var(--ab-success-text); }
+.ab-smtp-log__line--error { color: var(--ab-danger-text);  }
+.ab-smtp-log__line--info  { color: var(--ab-info-text);    }
+
+/* Provider cards (Gmail, SendGrid, etc.) */
+.ab-smtp-providers {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--ab-grid-min-card), 1fr));
+	gap:                   var(--ab-space-3);
+	margin-bottom:         var(--ab-space-5);
+}
+
+.ab-smtp-provider {
+	display:       flex;
+	flex-direction: column;
+	align-items:   center;
+	gap:           var(--ab-space-2);
+	padding:       var(--ab-space-4);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	cursor:        pointer;
+	text-align:    center;
+	transition:    border-color var(--ab-transition-base),
+	               background   var(--ab-transition-base);
+}
+
+.ab-smtp-provider:hover {
+	border-color: var(--ab-border-focus);
+	background:   var(--ab-surface-sunken);
+}
+
+.ab-smtp-provider.is-selected {
+	border-color: var(--ab-accent);
+	background:   var(--ab-accent-subtle);
+}
+
+.ab-smtp-provider__icon {
+	width:  32px;
+	height: 32px;
+}
+
+.ab-smtp-provider__name {
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-body);
+}
+
+
+/* =============================================================================
+   27. Tab: Snippets
+   ============================================================================= */
+
+/* Snippet list */
+.ab-snippet-list {
+	display:        flex;
+	flex-direction: column;
+	gap:            var(--ab-space-2);
+}
+
+.ab-snippet-item {
+	display:       grid;
+	grid-template-columns: auto 1fr auto;
+	grid-template-rows:    auto auto;
+	align-items:   center;
+	column-gap:    var(--ab-space-3);
+	row-gap:       2px;
+	padding:       var(--ab-space-3) var(--ab-space-4);
+	background:    var(--ab-surface);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	transition:    border-color var(--ab-transition-fast);
+}
+
+.ab-snippet-item:hover {
+	border-color: var(--ab-border-focus);
+}
+
+.ab-snippet-item__drag {
+	grid-row: 1 / 3;
+}
+
+.ab-snippet-item__title {
+	grid-column:  2;
+	grid-row:     1;
+	font-size:    var(--ab-text-sm);
+	font-weight:  var(--ab-font-medium);
+	color:        var(--ab-text-body);
+	overflow:     hidden;
+	text-overflow: ellipsis;
+	white-space:  nowrap;
+}
+
+.ab-snippet-item__meta {
+	grid-column:  2;
+	grid-row:     2;
+	font-size:    var(--ab-text-xs);
+	color:        var(--ab-text-muted);
+	display:      flex;
+	gap:          var(--ab-space-3);
+	align-items:  center;
+}
+
+.ab-snippet-item__actions {
+	grid-row:    1 / 3;
+	grid-column: 3;
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-1);
+}
+
+/* Code editor area */
+.ab-snippet-editor {
+	font-family: var(--ab-font-mono);
+	font-size:   var(--ab-text-xs);
+	line-height: var(--ab-leading-relaxed);
+	background:  var(--ab-surface-sunken);
+	border:      1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	padding:     var(--ab-space-3);
+	resize:      vertical;
+	min-height:  160px;
+	width:       100%;
+	color:       var(--ab-text-body);
+	tab-size:    2;
+}
+
+.ab-snippet-editor:focus {
+	outline:      none;
+	border-color: var(--ab-border-focus);
+	box-shadow:   0 0 0 3px var(--ab-accent-subtle);
+}
+
+/* Hook/location badges */
+.ab-snippet-hook {
+	display:       inline-flex;
+	align-items:   center;
+	gap:           4px;
+	padding:       2px var(--ab-space-2);
+	background:    var(--ab-info-bg);
+	color:         var(--ab-info-text);
+	border-radius: var(--ab-radius-sm);
+	font-size:     var(--ab-text-xs);
+	font-family:   var(--ab-font-mono);
+}
+
+
+/* =============================================================================
+   28. Tab: SVG Library
+   ============================================================================= */
+
+/* SVG icon grid */
+.ab-svglib-grid {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--ab-grid-min-svglib), 1fr));
+	gap:                   var(--ab-space-3);
+}
+
+.ab-svglib-item {
+	display:        flex;
+	flex-direction: column;
+	align-items:    center;
+	gap:            var(--ab-space-2);
+	padding:        var(--ab-space-3);
+	border:         1px solid var(--ab-border);
+	border-radius:  var(--ab-radius-md);
+	cursor:         pointer;
+	background:     var(--ab-surface);
+	transition:     border-color var(--ab-transition-fast),
+	                background   var(--ab-transition-fast),
+	                transform    var(--ab-duration-fast) var(--ab-ease-out);
+	text-align:     center;
+}
+
+.ab-svglib-item:hover {
+	border-color: var(--ab-border-focus);
+	background:   var(--ab-surface-sunken);
+	transform:    translateY(-1px);
+}
+
+.ab-svglib-item.is-selected {
+	border-color: var(--ab-accent);
+	background:   var(--ab-accent-subtle);
+}
+
+.ab-svglib-item__preview {
+	width:  var(--ab-grid-min-icon-lg);
+	height: var(--ab-grid-min-icon-lg);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.ab-svglib-item__preview svg {
+	max-width:  100%;
+	max-height: 100%;
+}
+
+.ab-svglib-item__name {
+	font-size:  var(--ab-text-xs);
+	color:      var(--ab-text-muted);
+	overflow:   hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width:  100%;
+}
+
+/* Upload zone */
+.ab-svglib-upload {
+	border:        2px dashed var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	padding:       var(--ab-space-8);
+	text-align:    center;
+	cursor:        pointer;
+	transition:    border-color var(--ab-transition-base),
+	               background   var(--ab-transition-base);
+}
+
+.ab-svglib-upload:hover,
+.ab-svglib-upload.is-dragover {
+	border-color: var(--ab-accent);
+	background:   var(--ab-accent-subtle);
+}
+
+.ab-svglib-upload__icon {
+	width:   40px;
+	height:  40px;
+	color:   var(--ab-text-muted);
+	margin:  0 auto var(--ab-space-3);
+}
+
+.ab-svglib-upload__label {
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-body);
+	margin-bottom: var(--ab-space-1);
+}
+
+.ab-svglib-upload__hint {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-muted);
+}
+
+/* Iconset selector */
+.ab-svglib-iconsets {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--ab-grid-min-icon-lg), 1fr));
+	gap:                   var(--ab-space-3);
+	margin-bottom:         var(--ab-space-5);
+}
+
+.ab-svglib-iconset {
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	padding:       var(--ab-space-3);
+	cursor:        pointer;
+	text-align:    center;
+	transition:    border-color var(--ab-transition-base),
+	               background   var(--ab-transition-base);
+}
+
+.ab-svglib-iconset:hover {
+	border-color: var(--ab-border-focus);
+}
+
+.ab-svglib-iconset.is-active {
+	border-color: var(--ab-accent);
+	background:   var(--ab-accent-subtle);
+}
+
+.ab-svglib-iconset__name {
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-body);
+	margin-top:  var(--ab-space-2);
+}
+
+.ab-svglib-iconset__count {
+	font-size: 10px;
+	color:     var(--ab-text-muted);
+}
+
+/* Copy feedback */
+.ab-svglib-item.is-copied {
+	border-color: var(--ab-success);
+	background:   var(--ab-success-bg);
+}
+
+.ab-svglib-item.is-copied .ab-svglib-item__name {
+	color: var(--ab-success-text);
+}
+
+
+/* =============================================================================
+   29. Utilities
+   ============================================================================= */
+
+.ab-sr-only {
+	position:   absolute;
+	width:      1px;
+	height:     1px;
+	padding:    0;
+	margin:     -1px;
+	overflow:   hidden;
+	clip:       rect(0,0,0,0);
+	white-space: nowrap;
+	border:     0;
+}
+
+.ab-truncate {
+	overflow:      hidden;
+	text-overflow: ellipsis;
+	white-space:   nowrap;
+}
+
+.ab-text-muted   { color: var(--ab-text-muted); }
+.ab-text-strong  { color: var(--ab-text-strong); }
+.ab-text-heading { color: var(--ab-text-heading); }
+.ab-text-success { color: var(--ab-success-text); }
+.ab-text-warning { color: var(--ab-warning-text); }
+.ab-text-danger  { color: var(--ab-danger-text);  }
+.ab-text-info    { color: var(--ab-info-text);    }
+
+.ab-text-xs   { font-size: var(--ab-text-xs);   }
+.ab-text-sm   { font-size: var(--ab-text-sm);   }
+.ab-text-base { font-size: var(--ab-text-base); }
+
+.ab-font-normal   { font-weight: var(--ab-font-normal);   }
+.ab-font-medium   { font-weight: var(--ab-font-medium);   }
+.ab-font-semibold { font-weight: var(--ab-font-semibold); }
+.ab-font-bold     { font-weight: var(--ab-font-bold);     }
+
+.ab-font-mono { font-family: var(--ab-font-mono); }
+
+.ab-flex          { display: flex; }
+.ab-flex-col      { flex-direction: column; }
+.ab-items-center  { align-items: center; }
+.ab-justify-between { justify-content: space-between; }
+.ab-gap-2  { gap: var(--ab-space-2); }
+.ab-gap-3  { gap: var(--ab-space-3); }
+.ab-gap-4  { gap: var(--ab-space-4); }
+
+.ab-mt-0 { margin-top: 0; }
+.ab-mt-4 { margin-top: var(--ab-space-4); }
+.ab-mb-0 { margin-bottom: 0; }
+.ab-mb-4 { margin-bottom: var(--ab-space-4); }
+.ab-mb-6 { margin-bottom: var(--ab-space-6); }
+
+.ab-p-0 { padding: 0; }
+
+.ab-hidden  { display: none !important; }
+.ab-visible { display: block !important; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	.ab-toast,
+	.ab-slide-panel,
+	.ab-modal,
+	.ab-modal__backdrop,
+	.ab-backdrop,
+	.ab-spinner,
+	.ab-accordion__chevron {
+		transition: none;
+		animation:  none;
+	}
+}
+
+
+/* =============================================================================
+   30. WP admin overrides
+   ============================================================================= */
+
+/* Prevent WP admin styles from leaking into our UI */
+.wrap.ab-wrap {
+	margin-top:  0 !important;
+	padding-top: 0 !important;
+}
+.wrap.ab-wrap > h1:not(.ab-topbar__logo) {
+	display: none;
+}
+.ab-wrap h1,
+.ab-wrap h2,
+.ab-wrap h3,
+.ab-wrap p {
+	margin: 0;
+}
+
+/* Override WP's default teal/coloured link colour inside our plugin */
+#wpcontent .ab-wrap a:not(.button):not(.ab-btn):not(.ab-nav__item):not(.page-title-action),
+#wpbody .ab-wrap a:not(.button):not(.ab-btn):not(.ab-nav__item):not(.page-title-action) {
+	color: var(--ab-text-heading);
+}
+
+
+
+/* WP admin top bar offset - restore natural margin so frame sits below header */
+
+
+/* Topbar must sit below the fixed WP admin bar */
+.admin-bar .ab-topbar {
+	top: 32px;
+}
+@media screen and (max-width: 782px) {
+	.admin-bar .ab-topbar { top: 46px; }
+	.ab-frame { min-height: calc(100vh - var(--ab-topbar-height) - 46px); }
+}
+
+/* Full-bleed: remove WP's default content padding on AB's settings page */
+body.toplevel_page_admin-buddy #wpcontent {
+	padding-left: 0;
+}
+body.toplevel_page_admin-buddy #wpbody-content {
+	padding-right: 0;
+}
+body.toplevel_page_admin-buddy #wpbody {
+	padding-right: 0;
+}
+body.toplevel_page_admin-buddy .wrap {
+	margin: 0;
+}
+
+/* Breathing room at the bottom of the canvas so content never sits flush
+   against the WP footer. #wpfooter flows in normal document flow after
+   .ab-wrap - padding-bottom on .ab-canvas ensures the last item is always
+   visible above it. */
+body.toplevel_page_admin-buddy .ab-canvas {
+	padding-bottom: var(--ab-space-10, 56px);
+}
+
+/* -- Form-table inputs: prevent overflow on narrow viewports -------------- */
+.ab-wrap {
+	--ab-field-max: 600px;
+}
+.ab-wrap .form-table {
+	width:        100%;
+	table-layout: auto;
+}
+.ab-wrap .form-table th {
+	width: 140px;
+}
+.ab-wrap .form-table input[type="text"],
+.ab-wrap .form-table input[type="url"],
+.ab-wrap .form-table input[type="email"],
+.ab-wrap .form-table input[type="number"],
+.ab-wrap .form-table input[type="password"],
+.ab-wrap .form-table textarea,
+.ab-wrap .form-table select {
+	max-width:  var(--ab-field-max);
+	width:      100%;
+	box-sizing: border-box;
+}
+.ab-wrap .form-table td .description {
+	max-width:  var(--ab-field-max);
+}
+.ab-wrap .ab-section__header p {
+	max-width:  var(--ab-field-max);
+}
+
+/* Stacking order (all beat WP's 9999):
+     backdrop 160010 < slide panel 160020 < confirm modal 170000 < toast 160050
+ *
+ * After the Oct 2026 panel consolidation there's ONE slide-panel system
+ * (.ab-slide-panel / .ab-backdrop), so this block shrank to two rules.
+ * The proprietary .ab-snippet-modal / .ab-email-panel / .ab-cp-panel
+ * class families no longer exist — everything routes through .ab-slide-panel. */
+.ab-wrap .ab-backdrop    { z-index: 160010; }
+.ab-wrap .ab-slide-panel { z-index: 160020; }
+
+/* Confirm modal portaled to body - z-index set on .ab-modal directly (170000) */
+
+.ab-wrap #ab-toast       { z-index: 160050; }
+
+/* WP notice suppression inside .ab-canvas */
+.ab-canvas > .notice,
+.ab-canvas > .updated,
+.ab-canvas > .error,
+.ab-canvas > .update-nag,
+.ab-canvas .notice,
+.ab-canvas .updated,
+.ab-canvas .update-nag,
+.ab-wrap .notice:not(.ab-notice),
+.ab-wrap .updated:not(.ab-notice),
+.ab-wrap .update-nag {
+	display: none;
+}
+
+
+/* =============================================================================
+   PREVIEW LAYOUTS - Colours, Login, Maintenance tabs
+   Two-column: settings left, live preview right (sticky).
+   Pulled from v1 and updated to use design tokens.
+   ============================================================================= */
+
+/* =============================================================================
+   Reusable: Content + Sidebar layout (used by Quick Settings TOC, Colours preview, etc.)
+   Usage: <div class="ab-sidebar-layout"> <div class="ab-sidebar-layout__main">...</div> <aside class="ab-sidebar-layout__aside">...</aside> </div>
+   ============================================================================= */
+.ab-sidebar-layout {
+	display:               grid;
+	grid-template-columns: 1fr 200px;
+	gap:                   var(--ab-space-6);
+	align-items:           start;
+}
+.ab-sidebar-layout__main {
+	min-width: 0;
+}
+.ab-sidebar-layout__aside {
+	position: sticky;
+	top:      calc(32px + var(--ab-topbar-height) + var(--ab-space-4));
+}
+@media (max-width: 1100px) {
+	.ab-sidebar-layout      { grid-template-columns: 1fr; }
+	.ab-sidebar-layout__aside { position: static; }
+}
+
+/* TOC navigation inside aside */
+.ab-toc {
+	list-style: none;
+	padding: 0;
+}
+.ab-toc__label {
+	font-size:      var(--ab-text-xs);
+	font-weight:    var(--ab-font-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color:          var(--ab-text-secondary);
+	margin:         0 0 var(--ab-space-4);
+	padding:        0;
+}
+
+/* Scroll offset for TOC anchor links - account for sticky topbar + admin bar */
+[id^="ab-qs-section-"] {
+	scroll-margin-top: calc(32px + var(--ab-topbar-height) + var(--ab-space-6));
+}
+.ab-toc__item {
+	margin: 0;
+}
+.ab-toc__link {
+	display:       block;
+	padding:       6px 12px;
+	font-size:     13px;
+	color:         var(--ab-text-secondary);
+	text-decoration: none;
+	border-radius: var(--ab-radius-sm);
+	border-left:   2px solid transparent;
+	transition:    color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ab-toc__link:hover {
+	color:         var(--ab-text-heading);
+	background:    var(--ab-neutral-100);
+}
+.ab-toc__link.is-active {
+	color:         var(--ab-accent);
+	border-left-color: var(--ab-accent);
+	font-weight:   var(--ab-font-semibold);
+}
+
+/* -- Colours tab ----------------------------------------------------------- */
+.ab-colours-layout {
+	display:               grid;
+	grid-template-columns: 1fr 280px;
+	gap:                   var(--ab-space-6);
+	align-items:           start;
+}
+.ab-colours-main {
+	min-width: 0;
+}
+.ab-colours-left {
+	min-width: 0;
+}
+.ab-colours-preview-col {
+	position: sticky;
+	top:      calc(32px + var(--ab-topbar-height) + var(--ab-space-4));
+}
+.ab-colours-preview-label {
+	font-size:      var(--ab-text-xs);
+	font-weight:    var(--ab-font-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color:          var(--ab-text-secondary);
+	margin:         0 0 8px;
+}
+@media (max-width: 1100px) {
+	.ab-colours-layout      { grid-template-columns: 1fr; }
+	.ab-colours-preview-col { position: static; }
+}
+
+/* -- Login tab ------------------------------------------------------------- */
+.ab-login-layout {
+	display:               grid;
+	grid-template-columns: 1fr 1fr;
+	gap:                   28px;
+	align-items:           start;
+}
+.ab-login-main       { min-width: 0; }
+.ab-login-preview-col {
+	position: sticky;
+	top:      calc(32px + var(--ab-topbar-height) + var(--ab-space-4));
+}
+@media (max-width: 900px) {
+	.ab-login-layout      { grid-template-columns: 1fr; }
+	.ab-login-preview-col { position: static; }
+}
+
+/* -- Maintenance / Coming Soon tab ---------------------------------------- */
+.ab-maint-layout {
+	display:               grid;
+	grid-template-columns: 1fr 1fr;
+	gap:                   28px;
+	align-items:           start;
+}
+.ab-maint-main       { min-width: 0; }
+.ab-maint-preview-col {
+	position: sticky;
+	top:      calc(32px + var(--ab-topbar-height) + var(--ab-space-4));
+}
+.ab-maint-preview-col .ab-maint-preview-iframe {
+	display:       block;
+	width:         100%;
+	aspect-ratio:  3 / 2;
+	border-radius: var(--ab-radius-lg);
+	border:        1px solid var(--ab-border);
+}
+.ab-maint-placeholder {
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	aspect-ratio:    3 / 2;
+	border-radius:   var(--ab-radius-lg);
+	border:          1px solid var(--ab-border);
+	background:      var(--ab-surface-sunken);
+	color:           var(--ab-text-secondary);
+	font-size:       0.82rem;
+	text-align:      center;
+	padding:         var(--ab-space-4);
+}
+@media (max-width: 900px) {
+	.ab-maint-layout      { grid-template-columns: 1fr; }
+	.ab-maint-preview-col { position: static; }
+}
+
+/* -- Generic subtab layout (UI Tweaks, Setup, etc.) ----------------------- */
+.ab-subtab-layout { display: block; }
+.ab-subtab-main   { width: 100%; }
+
+
+/* =============================================================================
+   PRESET CARDS - Colours tab
+   ============================================================================= */
+
+.ab-preset-grid {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap:                   var(--ab-space-4);
+	padding:               4px 0 8px;
+}
+
+.ab-preset-card {
+	border:          1px solid var(--ab-border);
+	border-radius:   var(--ab-radius-lg);
+	overflow:        hidden;
+	background:      var(--ab-surface);
+	display:         flex;
+	flex-direction:  column;
+	transition:      box-shadow var(--ab-duration-base), border-color var(--ab-duration-base);
+}
+.ab-preset-card:hover {
+	box-shadow: var(--ab-shadow-md);
+	border-color: var(--ab-accent);
+}
+
+.ab-preset-swatches {
+	display: flex;
+	height:  48px;
+}
+.ab-preset-swatch {
+	flex:    1;
+	display: block;
+}
+
+.ab-preset-info {
+	padding: 12px 14px 8px;
+	flex:    1;
+}
+.ab-preset-name {
+	display:       block;
+	font-size:     var(--ab-text-sm);
+	font-weight:   var(--ab-font-semibold);
+	color:         var(--ab-text-heading);
+	margin-bottom: 3px;
+}
+.ab-preset-desc {
+	margin:      0;
+	font-size:   var(--ab-text-xs);
+	color:       var(--ab-text-secondary);
+	line-height: var(--ab-leading-snug);
+}
+.ab-preset-card .ab-btn {
+	margin:     10px 14px 14px;
+	align-self: flex-start;
+}
+
+
+/* =============================================================================
+   IMAGE UPLOAD ROW - logo pickers, bg image pickers
+   ============================================================================= */
+
+.ab-img-upload-row {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+	flex-wrap:   wrap;
+}
+.ab-img-upload-row .regular-text {
+	flex:      1;
+	min-width: 0;
+	max-width: 260px;
+}
+.ab-img-upload-preview {
+	margin-bottom: var(--ab-space-2);
+}
+.ab-img-upload-preview img {
+	max-height:    60px;
+	max-width:     220px;
+	object-fit:    contain;
+	display:       block;
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-sm);
+	padding:       4px;
+	background:    #fff;
+}
+
+.ab-img-size-sliders {
+	display:        flex;
+	flex-direction: column;
+	gap:            var(--ab-space-2);
+	margin-top:     var(--ab-space-2-5);
+}
+.ab-img-size-row {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2-5);
+}
+.ab-img-size-row label {
+	min-width:  52px;
+	font-size:  var(--ab-text-xs);
+	color:      var(--ab-text-secondary);
+}
+.ab-img-size-row input[type="range"] {
+	width: 180px;
+}
+.ab-img-size-row span {
+	font-weight: var(--ab-font-semibold);
+	min-width:   44px;
+	font-size:   var(--ab-text-xs);
+	color:       var(--ab-text-strong);
+}
+
+
+/* =============================================================================
+   SETUP TAB - Module grid, widget toggles, toolbar
+   ============================================================================= */
+
+/* Outer wrapper with toolbar + grid */
+.ab-setup-modules {
+	margin: 0 0 var(--ab-space-5);
+}
+
+/* Toolbar row: count + bulk action buttons */
+.ab-setup-modules__toolbar {
+	display:         flex;
+	align-items:     center;
+	justify-content: flex-start;
+	padding:         var(--ab-space-3) 0;
+	gap:             var(--ab-space-3);
+}
+.ab-setup-modules__count {
+	margin-left: auto;
+}
+.ab-setup-modules__toolbar > .ab-btn-group:last-child {
+	margin-left: 0;  /* count already pushes via auto; this group follows naturally */
+}
+
+
+
+/* Individual module card */
+.ab-module-card {
+	display:        flex;
+	align-items:    center;
+	gap:            var(--ab-space-3);
+	padding:        var(--ab-space-4) var(--ab-space-4);
+	background:     var(--ab-surface);
+	transition:     background var(--ab-duration-fast);
+	cursor:         pointer;
+}
+.ab-module-card:hover    { background: var(--ab-surface-raised); }
+.ab-module-card__icon    { width: 20px; height: 20px; flex-shrink: 0; color: var(--ab-text-secondary); }
+.ab-module-card__icon svg { width: 20px; height: 20px; }
+.ab-module-card__body    { flex: 1; min-width: 0; }
+.ab-module-card__label   { font-size: var(--ab-text-sm); font-weight: var(--ab-font-medium); color: var(--ab-text-body); display: block; }
+.ab-module-card__badge   { display: inline-block; margin-top: var(--ab-space-1); }
+.ab-module-card__toggle  { margin-left: auto; flex-shrink: 0; }
+.ab-module-card.is-enabled .ab-module-card__label { color: var(--ab-text-heading); }
+.ab-module-card.is-always-on { opacity: 0.6; }
+
+/* Pro-locked modules */
+.ab-module-card.is-pro-locked { opacity: 0.55; cursor: pointer; }
+.ab-module-card.is-pro-locked:hover { opacity: 0.75; background: var(--ab-surface-raised); }
+.ab-module-card.is-pro-locked .ab-module-card__toggle { pointer-events: none; }
+.ab-badge--pro {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* =============================================================================
+   Shared tooltip base (.ab-tip)
+   Used by: Pro badge tooltips, card info icon tooltips
+   ============================================================================= */
+.ab-tip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e1b2e;
+    color: #ede9fe;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: 8px;
+    width: max-content;
+    max-width: 360px;
+    white-space: normal;
+    z-index: 999999;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+.ab-tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1e1b2e;
+}
+.ab-tip a,
+.ab-tip a:link,
+.ab-tip a:visited,
+.ab-tip a:active {
+    color: #ede9fe !important;
+    text-decoration: underline !important;
+    pointer-events: auto;
+    font-weight: 600;
+}
+.ab-tip a:hover,
+.ab-tip a:focus { color: #fff !important; }
+
+/* -- Info icon trigger (card descriptions, general use) -------------------- */
+.ab-info-tip {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    cursor: help;
+    vertical-align: middle;
+    margin-left: 6px;
+}
+.ab-info-tip__icon {
+    width: 15px;
+    height: 15px;
+    color: var(--ab-text-muted);
+    flex-shrink: 0;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+}
+.ab-info-tip:hover .ab-info-tip__icon { opacity: 1; }
+.ab-info-tip:hover .ab-tip,
+.ab-info-tip:focus-within .ab-tip {
+    display: block;
+    pointer-events: auto;
+}
+
+/* -- Pro badge with tooltip (reuses .ab-tip) ------------------------------ */
+.ab-pro-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+    position: relative;
+    cursor: help;
+    vertical-align: middle;
+}
+.ab-pro-tag__icon {
+    width: 14px;
+    height: 14px;
+    color: #7c3aed;
+    flex-shrink: 0;
+}
+.ab-pro-tag:hover .ab-tip,
+.ab-pro-tag:focus-within .ab-tip {
+    display: block;
+    pointer-events: auto;
+}
+
+/* Ensure tooltip doesn't clip inside cards/rows - scoped to AB settings page only */
+.ab-wrap .ab-card, .ab-wrap .ab-card__body, .ab-wrap .ab-card__header,
+.ab-wrap .ab-section, .ab-wrap .ab-section__body,
+.ab-wrap .ab-form-table, .ab-wrap .ab-form-table tr, .ab-wrap .ab-form-table td, .ab-wrap .ab-form-table th,
+.ab-wrap .form-table, .ab-wrap .form-table tr, .ab-wrap .form-table td, .ab-wrap .form-table th,
+.ab-wrap .ab-pane, .ab-wrap .ab-canvas {
+    overflow: visible !important;
+}
+
+/* Pro-locked feature sections within free modules */
+.ab-pro-section-locked {
+    position: relative;
+}
+/* Dim the locked content via an overlay, leaving pro badges and tooltips fully opaque */
+.ab-pro-section-locked::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    border-radius: var(--ab-radius, 8px);
+    background: rgba(255, 255, 255, 0.55);
+    pointer-events: none;
+}
+/* Pro badges and info tips sit above the overlay so they're fully visible and clickable */
+.ab-pro-section-locked .ab-pro-tag,
+.ab-pro-section-locked .ab-info-tip {
+    position: relative;
+    z-index: 10;
+}
+/* Everything else inside is non-interactive */
+.ab-pro-section-locked > *:not(.ab-pro-tag):not(.ab-info-tip) {
+    pointer-events: none;
+}
+
+/* Pro CTA buttons */
+.ab-btn--pro-cta,
+.ab-btn--pro-cta:visited {
+    background: #7c3aed !important;
+    color: #fff !important;
+    border-color: #7c3aed !important;
+}
+.ab-btn--pro-cta:hover,
+.ab-btn--pro-cta:focus {
+    background: #6d28d9 !important;
+    color: #fff !important;
+    border-color: #6d28d9 !important;
+}
+
+/* Saving state */
+.ab-setup--saving { pointer-events: none; opacity: 0.7; }
+
+
+/* Widget toggle row - used inside .ab-grid.ab-grid--ruled for Dashboard widget visibility */
+.ab-setup-module-row {
+	display:         flex;
+	align-items:     center;
+	justify-content: space-between;
+	gap:             var(--ab-space-3);
+	padding:         var(--ab-space-3) var(--ab-space-4);
+	background:      var(--ab-surface);
+	transition:      background var(--ab-duration-fast);
+}
+.ab-setup-module-row:hover { background: var(--ab-surface-raised); }
+
+.ab-setup-module-label {
+	flex:          1;
+	font-size:     var(--ab-text-sm);
+	font-weight:   var(--ab-font-medium);
+	color:         var(--ab-text-body);
+	min-width:     0;
+	overflow:      hidden;
+	text-overflow: ellipsis;
+	white-space:   nowrap;
+}
+
+
+
+/* =============================================================================
+   RADIO CARD SELECTORS - Mode selector, Direction grid, Card position
+   Used by: Maintenance tab, Login tab
+   ============================================================================= */
+
+.ab-mode-selector {
+	display:        flex;
+	flex-direction: column;
+	gap:            var(--ab-space-2);
+	max-width:      520px;
+}
+.ab-mode-option {
+	display:     flex;
+	align-items: flex-start;
+	gap:         var(--ab-space-3);
+	padding:     12px 14px;
+	border:      2px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	cursor:      pointer;
+	transition:  border-color var(--ab-duration-base), background var(--ab-duration-base);
+	background:  var(--ab-surface-raised);
+}
+.ab-mode-option:hover {
+	border-color: var(--ab-accent);
+	background:   color-mix(in srgb, var(--ab-accent) 8%, var(--ab-surface));
+}
+.ab-mode-option--active {
+	border-color: var(--ab-accent) !important;
+	background:   color-mix(in srgb, var(--ab-accent) 14%, var(--ab-surface)) !important;
+}
+.ab-mode-option input[type="radio"] { margin-top: 3px; flex-shrink: 0; width: 15px; height: 15px; accent-color: var(--ab-accent); }
+.ab-mode-option__icon  { font-size: 1.3rem; flex-shrink: 0; line-height: 1; }
+.ab-mode-option__label { font-weight: var(--ab-font-semibold); color: var(--ab-text-heading); display: block; line-height: 1.4; }
+.ab-mode-option__desc  { font-size: var(--ab-text-xs); color: var(--ab-text-secondary); display: block; margin-top: 2px; line-height: 1.5; }
+
+.ab-direction-grid {
+	display:               grid;
+	grid-template-columns: repeat(3, 38px);
+	grid-template-rows:    repeat(3, 38px);
+	gap:                   var(--ab-space-1);
+	width:                 fit-content;
+}
+.ab-direction-grid__cell {
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	width:           38px; height: 38px;
+	border:          2px solid var(--ab-border);
+	border-radius:   var(--ab-radius-md);
+	cursor:          pointer;
+	font-size:       var(--ab-text-lg);
+	background:      var(--ab-surface-raised);
+	transition:      border-color var(--ab-duration-base), background var(--ab-duration-base);
+}
+.ab-direction-grid__cell input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.ab-direction-grid__cell:hover {
+	border-color: color-mix(in srgb, var(--ab-accent) 50%, #fff);
+	background:   color-mix(in srgb, var(--ab-accent) 6%, #fff);
+}
+.ab-direction-grid__cell--active,
+.ab-direction-grid__cell:has(input:checked) {
+	border-color: var(--ab-accent) !important;
+	background:   color-mix(in srgb, var(--ab-accent) 10%, #fff) !important;
+	color:        var(--ab-accent);
+	font-weight:  var(--ab-font-bold);
+}
+.ab-direction-grid__center {
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	width:           38px; height: 38px;
+	font-size:       1.3rem;
+	color:           var(--ab-border);
+	user-select:     none;
+}
+
+.ab-card-position-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+.ab-card-pos-option {
+	display:         flex;
+	flex-direction:  column;
+	align-items:     center;
+	gap:             var(--ab-space-1);
+	padding:         10px 20px;
+	border:          2px solid var(--ab-border);
+	border-radius:   var(--ab-radius-lg);
+	cursor:          pointer;
+	font-size:       var(--ab-text-xs);
+	font-weight:     var(--ab-font-medium);
+	color:           var(--ab-text-secondary);
+	background:      var(--ab-surface-raised);
+	transition:      border-color var(--ab-duration-base), background var(--ab-duration-base), color var(--ab-duration-base);
+	min-width:       70px;
+	text-align:      center;
+}
+.ab-card-pos-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.ab-card-pos-option:hover {
+	border-color: color-mix(in srgb, var(--ab-accent) 50%, #fff);
+	background:   color-mix(in srgb, var(--ab-accent) 6%, #fff);
+}
+.ab-card-pos-option--active,
+.ab-card-pos-option:has(input:checked) {
+	border-color: var(--ab-accent) !important;
+	background:   color-mix(in srgb, var(--ab-accent) 10%, #fff) !important;
+	color:        var(--ab-accent) !important;
+}
+.ab-card-pos-option__icon { font-size: 1.2rem; line-height: 1; }
+
+
+/* =============================================================================
+   ICON PICKER MODAL - shared by Menu Customiser and Custom Pages
+   ============================================================================= */
+
+/* Modal wrapper sizing */
+.ab-icon-modal__box {
+	max-width:      640px;
+	width:          calc(100vw - 40px);
+	max-height:     calc(100vh - 80px);
+	display:        flex;
+	flex-direction: column;
+	overflow:       hidden;
+}
+.ab-icon-modal__box .ab-modal__header {
+	flex-shrink:  0;
+	border-bottom: 1px solid var(--ab-border-subtle);
+}
+
+/* Search input inside modal */
+.ab-icon-modal__search {
+	flex-shrink: 0;
+	padding:     var(--ab-space-3) var(--ab-space-6);
+	border-bottom: 1px solid var(--ab-border-subtle);
+}
+.ab-icon-modal__search input {
+	width:         100%;
+	padding:       var(--ab-space-2) var(--ab-space-3);
+	border:        1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	font-size:     var(--ab-text-sm);
+	color:         var(--ab-text-body);
+	background:    var(--ab-surface);
+}
+.ab-icon-modal__search input:focus {
+	outline:      none;
+	border-color: var(--ab-accent);
+}
+
+/* Tab strip */
+.ab-icon-modal-tabs {
+	display:       flex;
+	gap:           0;
+	border-bottom: 2px solid var(--ab-border);
+	padding:       0 var(--ab-space-6);
+	flex-shrink:   0;
+}
+.ab-icon-modal-tab {
+	display:       inline-flex;
+	align-items:   center;
+	gap:           var(--ab-space-1-5);
+	padding:       var(--ab-space-2-5) var(--ab-space-4);
+	font-size:     var(--ab-text-xs);
+	font-weight:   var(--ab-font-medium);
+	font-family:   inherit;
+	background:    none;
+	border:        none;
+	border-bottom: 2px solid transparent;
+	margin-bottom: -2px;
+	cursor:        pointer;
+	color:         var(--ab-text-secondary);
+	transition:    color var(--ab-duration-base);
+	white-space:   nowrap;
+}
+.ab-icon-modal-tab:hover           { color: var(--ab-text-body); }
+.ab-icon-modal-tab--active {
+	color:              var(--ab-text-heading);
+	border-bottom-color: var(--ab-accent);
+	font-weight:        var(--ab-font-semibold);
+}
+.ab-icon-modal-panel        { display: none; }
+.ab-icon-modal-panel--active {
+	display:        flex;
+	flex-direction: column;
+	flex:           1;
+	min-height:     0;
+	overflow:       hidden;
+}
+
+/* Icon body scroll area */
+.ab-icon-modal__body {
+	flex:       1;
+	display:    flex;
+	flex-direction: column;
+	overflow:   hidden;
+	padding:    var(--ab-space-3) var(--ab-space-6) var(--ab-space-6);
+}
+
+/* SVG icon grid (Menu + CP built-in icons) */
+.ab-icon-svg-grid {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+	gap:                   var(--ab-space-2);
+	flex:                  1;
+	min-height:            220px;
+	max-height:            360px;
+	overflow-y:            auto;
+	padding:               var(--ab-space-1);
+	border:                1px solid var(--ab-border);
+	border-radius:         var(--ab-radius-md);
+	align-content:         start;
+}
+
+/* SVG icon button */
+.ab-icon-svg-option {
+	display:         flex;
+	flex-direction:  column;
+	align-items:     center;
+	gap:             var(--ab-space-1);
+	padding:         var(--ab-space-2) var(--ab-space-1-5) var(--ab-space-1-5);
+	border:          2px solid transparent;
+	border-radius:   var(--ab-radius-md);
+	background:      none;
+	cursor:          pointer;
+	transition:      background var(--ab-duration-fast), border-color var(--ab-duration-fast);
+	overflow:        hidden;
+}
+.ab-icon-svg-option svg         { width: 28px !important; height: 28px !important; display: block; color: var(--ab-text-secondary); }
+.ab-icon-svg-option:hover {
+	background:   color-mix(in srgb, var(--ab-accent) 8%, #fff);
+	border-color: color-mix(in srgb, var(--ab-accent) 40%, #fff);
+}
+.ab-icon-svg-option--selected,
+.ab-icon-svg-option.is-selected {
+	background:   color-mix(in srgb, var(--ab-accent) 12%, #fff);
+	border-color: var(--ab-accent);
+}
+
+/* -- Editor topbar enabled toggle - shared by Collections + Option Pages ---- */
+.ab-coll-enabled-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.ab-coll-enabled-toggle__label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--ab-text-secondary);
+    white-space: nowrap;
+}
+
+
+/* ===========================================================================
+   Shared field card component - used by Collections AND Option Pages
+   =========================================================================== */
+.ab-coll-field-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.ab-coll-field-header:hover { background: var(--ab-surface-raised, #f9f8ff); }
+.ab-coll-field-header__label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ab-neutral-800);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+}
+.ab-coll-field-header__key {
+    font-size: 0.7rem;
+    color: var(--ab-neutral-400);
+    font-family: monospace;
+    flex-shrink: 0;
+    background: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+.ab-op-field-form .ab-op-field-form__grid {
+    padding: var(--ab-space-4) var(--ab-space-4) var(--ab-space-3);
+    background: var(--ab-surface-raised, #f9f8ff);
+}
+.ab-op-field-form.is-collapsed .ab-op-field-form__grid { display: none; }
+.ab-op-field-form.is-collapsed .ab-coll-field-header .ab-op-collapse-chevron { transform: rotate(-90deg); }
+
+/* -- preserve_colors = false: normalise hardcoded fill/stroke to currentColor -- */
+/* The ab-icon--normalised class is added by AbIcon.buildLibraryBtn() and      */
+/* SvgLibrary::render_icon_html() when preserve_colors is false.               */
+/* This ensures library icons without original colours match the surrounding   */
+/* text colour in every display context (picker grid, list cards, previews).   */
+.ab-icon--normalised svg [fill]:not([fill="none"])   { fill:   currentColor; }
+.ab-icon--normalised svg [stroke]:not([stroke="none"]) { stroke: currentColor; }
+
+/* -- Purple dot - indicates preserve_colors = true --------------------------- */
+.ab-icon-preserve-dot {
+	position:      absolute;
+	top:           2px;
+	right:         2px;
+	width:         6px;
+	height:        6px;
+	border-radius: 50%;
+	background:    var(--ab-accent, #7c3aed);
+	pointer-events: none;
+}
+
+/* Icon modal footer */
+.ab-icon-modal__footer {
+	padding:         var(--ab-space-3) var(--ab-space-6);
+	border-top:      1px solid var(--ab-border-subtle);
+	display:         flex;
+	align-items:     center;
+	justify-content: flex-start;
+	gap:             var(--ab-space-2);
+	flex-shrink:     0;
+}
+
+/* Library empty state */
+.ab-icon-lib-empty,
+.ab-cp-icon-lib-empty,
+.ab-svglib-picker-empty {
+	padding:         var(--ab-space-8) var(--ab-space-4);
+	text-align:      center;
+	color:           var(--ab-text-muted);
+	font-size:       var(--ab-text-sm);
+}
+
+/* Library loading state */
+.ab-icon-lib-loading {
+	padding:    var(--ab-space-4);
+	text-align: center;
+	color:      var(--ab-text-muted);
+	font-size:  var(--ab-text-xs);
+	width:      100%;
+}
+
+/* Custom Pages specific icon grid (uses flex-wrap, same structure) */
+.ab-cp-icon-grid {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+	gap:                   var(--ab-space-2);
+	min-height:            200px;
+	max-height:            340px;
+	overflow-y:            auto;
+	padding:               var(--ab-space-1);
+	border:                1px solid var(--ab-border);
+	border-radius:         var(--ab-radius-md);
+	align-content:         start;
+}
+.ab-cp-icon-grid .ab-icon-svg-option,
+.ab-cp-icon-grid .ab-cp-icon-option { width: auto; height: auto; }
+
+
+/* =============================================================================
+   EXPORT / IMPORT - Tools tab
+   ============================================================================= */
+
+.ab-export-controls {
+	display:       flex;
+	gap:           var(--ab-space-2);
+	margin-bottom: var(--ab-space-4);
+}
+.ab-export-row {
+	display:         flex;
+	align-items:     center;
+	justify-content: space-between;
+	padding:         var(--ab-space-3) var(--ab-space-4);
+	cursor:          pointer;
+	transition:      background var(--ab-duration-fast);
+	gap:             var(--ab-space-4);
+	background:      var(--ab-surface);
+}
+.ab-export-row:hover      { background: var(--ab-surface-raised); }
+.ab-export-row__left {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+	min-width:   0;
+}
+.ab-export-row__icon {
+	display:     flex;
+	align-items: center;
+	color:       var(--ab-text-secondary);
+	flex-shrink: 0;
+	width:       20px;
+	height:      20px;
+}
+.ab-export-row__icon svg {
+	width:  20px;
+	height: 20px;
+}
+.ab-export-row__label {
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-medium);
+	color:       var(--ab-text-body);
+	flex:        1;
+	user-select: none;
+}
+.ab-export-toggle  { flex-shrink: 0; pointer-events: none; }
+/* Quick Settings rows - same clickable label pattern as export rows, with description line */
+/* -- Quick Settings rows -------------------------------------------------- */
+
+/* Base row - block wrapper (supports role flyout expansion) */
+.ab-qs-row {
+	background:  var(--ab-surface);
+	transition:  background var(--ab-duration-fast);
+}
+.ab-qs-row:hover { background: var(--ab-surface-raised); }
+
+/* Inner label row - flex, same visual as before */
+.ab-qs-row__main {
+	display:         flex;
+	align-items:     center;
+	justify-content: space-between;
+	padding:         var(--ab-space-3) var(--ab-space-4);
+	cursor:          pointer;
+	gap:             var(--ab-space-4);
+	width:           100%;
+	box-sizing:      border-box;
+}
+.ab-qs-row__content        { flex: 1; min-width: 0; }
+.ab-qs-row__label          { font-size: var(--ab-text-sm); font-weight: var(--ab-font-medium); color: var(--ab-text-body); margin: 0 0 2px; line-height: var(--ab-leading-snug); user-select: none; }
+.ab-qs-row__desc           { font-size: var(--ab-text-xs); color: var(--ab-text-secondary); margin: 0; }
+.ab-qs-row .ab-toggle      { flex-shrink: 0; pointer-events: none; }
+
+/* Role flyout - expands when toggle ON, collapses when OFF.
+   Never clips its own children - overflow:hidden only in the hidden state. */
+.ab-qs-roles {
+	padding:          var(--ab-space-3) var(--ab-space-4) var(--ab-space-4);
+	border-top:       1px solid var(--ab-border);
+	background:       var(--ab-surface-raised);
+	max-height:       9999px;
+	opacity:          1;
+	transition:       max-height 0.3s ease, opacity 0.2s ease, padding 0.2s ease, border-color 0.2s ease;
+	box-sizing:       border-box;
+	overflow:         visible;
+}
+/* Hidden state - collapse to zero, overflow:hidden required for animation */
+.ab-qs-roles.ab-hidden {
+	max-height:       0 !important;
+	opacity:          0;
+	padding-top:      0;
+	padding-bottom:   0;
+	border-top-color: transparent;
+	display:          block !important;
+	overflow:         hidden;
+}
+/* Fade matches the flyout background */
+.ab-qs-roles {
+	--ab-collapsible-fade-bg: var(--ab-surface-raised, #f9f7fe);
+}
+.ab-qs-roles__label {
+	display:        block;
+	font-size:      var(--ab-text-xs);
+	font-weight:    var(--ab-font-semibold);
+	color:          var(--ab-text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	margin-bottom:  var(--ab-space-2);
+}
+/* .ab-qs-roles__grid-wrap uses .ab-collapsible - see generic component below */
+.ab-qs-roles__grid {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+	gap:                   var(--ab-space-1) var(--ab-space-3);
+}
+.ab-qs-roles__item {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+	font-size:   var(--ab-text-sm);
+	color:       var(--ab-text-body);
+	cursor:      pointer;
+	padding:     var(--ab-space-1) 0;
+	user-select: none;
+}
+.ab-qs-roles__item input[type="checkbox"] {
+	width:        14px;
+	height:       14px;
+	flex-shrink:  0;
+	cursor:       pointer;
+	accent-color: var(--ab-primary, var(--wp-admin-theme-color, #7c3aed));
+}
+/* .ab-qs-roles__show-more uses .ab-collapsible__btn - see generic component below */
+
+/* ===========================================================================
+   ab-collapsible - Generic show more / show less
+   ===========================================================================
+
+   Usage (PHP renders both elements):
+     <div class="ab-collapsible">...content...</div>
+     <button class="ab-collapsible__btn"
+             data-more="Show more" data-less="Show less">Show more</button>
+
+   JS (admin.js) toggles .is-expanded on the wrapper when button clicked.
+   Button visibility: hidden via PHP when content fits; shown when it overflows.
+
+   max-height trick: collapsed = small fixed value, expanded = 9999px.
+   Transition looks natural because we use ease-out (slow at the top).
+   --------------------------------------------------------------------------- */
+
+.ab-collapsible {
+	position:   relative;
+	overflow:   hidden;
+	max-height: 96px;                           /* collapsed cap */
+	transition: max-height 0.3s ease-out;
+}
+.ab-collapsible.is-expanded {
+	max-height: 9999px;                         /* expanded - content height */
+	transition: max-height 0.4s ease-in;
+}
+
+/* Fade overlay - seamless gradient from transparent to surface colour */
+.ab-collapsible::after {
+	content:    '';
+	position:   absolute;
+	bottom:     0;
+	left:       0;
+	right:      0;
+	height:     48px;
+	background: linear-gradient(
+	              to bottom,
+	              transparent,
+	              var(--ab-collapsible-fade-bg, var(--ab-surface-raised, #f9f7fe))
+	            );
+	pointer-events: none;
+	transition: opacity 0.25s ease;
+	opacity:    1;
+}
+.ab-collapsible.is-expanded::after {
+	opacity: 0;
+}
+
+/* Show more / Show less button - right aligned, no border */
+.ab-collapsible__btn {
+	display:         block;
+	margin-top:      var(--ab-space-2);
+	margin-left:     auto;  /* pushes to right */
+	padding:         0;
+	border:          none;
+	background:      none;
+	cursor:          pointer;
+	font-size:       var(--ab-text-xs);
+	color:           var(--ab-primary, var(--wp-admin-theme-color, #7c3aed));
+	font-weight:     var(--ab-font-medium);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	line-height:     1.4;
+}
+.ab-collapsible__btn:hover { opacity: 0.75; }
+
+
+
+/* ===========================================================================
+   Network Admin - layout, typography, and icon fixes
+   ===========================================================================
+
+   WP network admin adds its own <h1> before .wrap content and sets
+   svg { overflow: hidden } globally. These rules compensate.
+   --------------------------------------------------------------------------- */
+
+/* Reset grid - network admin is single-column, no nav sidebar */
+.ab-wrap--network {
+	display: block;
+}
+
+/* Hide the WP-generated page <h1> that appears above our topbar */
+.ab-wrap--network + .ab-wrap--network,
+body.network-admin .wrap > h1:first-child,
+body.network-admin .ab-wrap--network ~ h2 {
+	display: none;
+}
+
+/* Topbar: bleed to WP admin chrome edges */
+.ab-wrap--network .ab-topbar {
+	margin:  -10px -20px 0;
+	padding: 0 var(--ab-space-6);
+}
+
+/* Logo: force correct colour (inherits WP nav text colour otherwise) */
+.ab-wrap--network .ab-topbar__logo svg {
+	color:   var(--ab-primary, #7c3aed);
+	display: block;
+	height:  28px;
+	width:   auto;
+	max-width: 180px;
+}
+
+/* Canvas: single column, max-width for readability */
+.ab-wrap--network .ab-canvas {
+	grid-column: auto;   /* undo the grid-column:2 from .ab-frame context */
+	padding:     var(--ab-space-6) 0;
+	max-width:   900px;
+}
+
+/* Section icons: fix WP's svg{overflow:hidden} clipping stroke icons */
+.ab-wrap--network .ab-section__icon {
+	width:    20px;
+	height:   20px;
+	overflow: visible;
+}
+.ab-wrap--network .ab-section__icon svg,
+.ab-wrap--network .ab-notice > svg {
+	width:    20px;
+	height:   20px;
+	overflow: visible; /* WP sets svg{overflow:hidden} which clips strokes */
+	display:  block;
+	flex-shrink: 0;
+}
+
+/* Notice: ensure icon and text align */
+.ab-wrap--network .ab-notice {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+}
+
+/* ===========================================================================
+   Network Admin - lock/push controls
+   =========================================================================== */
+
+.ab-network-row__control {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+	flex-wrap:   wrap;
+}
+
+/* Lock button - icon-only, ghost style */
+.ab-network-lock-btn {
+	display:      flex;
+	align-items:  center;
+	justify-content: center;
+	width:        28px;
+	height:       28px;
+	padding:      0;
+	border:       1px solid var(--ab-border);
+	border-radius: var(--ab-radius);
+	background:   transparent;
+	cursor:       pointer;
+	color:        var(--ab-text-muted);
+	transition:   border-color var(--ab-duration-fast), color var(--ab-duration-fast), background var(--ab-duration-fast);
+}
+.ab-network-lock-btn:hover {
+	border-color: var(--ab-primary, #7c3aed);
+	color:        var(--ab-primary, #7c3aed);
+}
+.ab-network-lock-btn.is-locked {
+	border-color: var(--ab-primary, #7c3aed);
+	background:   var(--ab-accent-subtle);
+	color:        var(--ab-primary, #7c3aed);
+}
+.ab-network-lock-btn:disabled {
+	opacity: 0.5;
+	cursor:  wait;
+}
+
+/* Push button */
+.ab-network-push-btn {
+	display:     inline-flex;
+	align-items: center;
+	gap:         4px;
+}
+.ab-network-push-btn:disabled {
+	opacity: 0.6;
+	cursor:  wait;
+}
+
+/* Status text - fades in/out */
+.ab-network-row__status {
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-medium);
+	transition:  opacity 0.4s ease;
+	opacity:     0;
+}
+
+/* Locked row highlight */
+.ab-network-row.is-locked > th,
+.ab-network-row.is-locked > td {
+	background: var(--ab-accent-subtle, rgba(124,58,237,0.04));
+}
+
+
+
+/* -- Network-locked field indicator ------------------------------------------- */
+.ab-wrap .ab-row-locked > th,
+.ab-wrap .ab-row-locked > td {
+	opacity: 0.75;
+}
+.ab-wrap .ab-row-locked .ab-toggle input:disabled ~ .ab-toggle__track {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.ab-wrap .ab-row-locked input[type="text"]:disabled {
+	background: var(--ab-surface-sunken) !important;
+	cursor: not-allowed;
+}
+.ab-locked-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-left: var(--ab-space-2);
+	font-size: var(--ab-text-xs);
+	color: var(--ab-accent);
+	font-weight: var(--ab-font-medium);
+	vertical-align: middle;
+}
+.ab-locked-badge svg {
+	width: 10px;
+	height: 10px;
+	vertical-align: middle;
+}
+
+/* Network admin locked row indicator - no tint, just opacity */
+.ab-network-locked-row > th,
+.ab-network-locked-row > td {
+	opacity: 0.75;
+}
+.ab-network-lock-btn.is-locked {
+	border-color: var(--ab-accent) !important;
+	color:        var(--ab-accent) !important;
+}
+/* Demo Data custom content rows - label+desc top, qty below when on, toggle right */
+.ab-demo-crow {
+	display:         flex;
+	align-items:     flex-start;
+	justify-content: space-between;
+	padding:         var(--ab-space-3) var(--ab-space-4);
+	cursor:          pointer;
+	transition:      background var(--ab-duration-fast);
+	gap:             var(--ab-space-4);
+	background:      var(--ab-surface);
+	user-select:     none;
+}
+.ab-demo-crow:hover              { background: var(--ab-surface-raised); }
+.ab-demo-crow__body              { flex: 1; min-width: 0; }
+.ab-demo-crow__label             { font-size: var(--ab-text-sm); font-weight: var(--ab-font-medium); color: var(--ab-text-body); margin: 0 0 2px; line-height: var(--ab-leading-snug); display: flex; align-items: center; gap: var(--ab-space-2); }
+.ab-demo-crow__desc              { font-size: var(--ab-text-xs); color: var(--ab-text-secondary); margin: 0 0 var(--ab-space-2); }
+.ab-demo-crow__qty               { display: none; align-items: center; gap: var(--ab-space-2); margin-top: var(--ab-space-2); }
+.ab-demo-crow.is-on .ab-demo-crow__qty  { display: flex; }
+.ab-demo-crow.is-off .ab-demo-crow__body { opacity: 0.45; }
+.ab-demo-crow .ab-toggle         { flex-shrink: 0; margin-top: 2px; pointer-events: none; }
+
+.ab-export-footer {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-3);
+	flex-wrap:   wrap;
+	margin-top:  var(--ab-space-4);
+}
+.ab-export-none-msg {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-danger-text);
+}
+.ab-advanced-tab { display: flex; flex-direction: column; gap: var(--ab-space-6); }
+
+
+/* =============================================================================
+   ICON MODAL - panel content layout fixes
+   ============================================================================= */
+
+/* Make the modal box a flex column so panels can flex:1 inside it */
+.ab-modal__box.ab-icon-modal__box {
+	padding:        0;                /* override default modal box padding */
+	display:        flex;
+	flex-direction: column;
+	min-height:     480px;
+}
+
+/* Header inside icon modal */
+.ab-icon-modal__box .ab-modal__header {
+	padding:      var(--ab-space-4) var(--ab-space-5);
+	border-bottom: 1px solid var(--ab-border-subtle);
+	flex-shrink:  0;
+}
+
+/* Tab strip sits between header and panel */
+.ab-icon-modal__box .ab-icon-modal-tabs {
+	padding:      0 var(--ab-space-5);
+	flex-shrink:  0;
+}
+
+/* Active panel fills remaining space */
+.ab-icon-modal__box .ab-icon-modal-panel--active {
+	flex:           1;
+	display:        flex;
+	flex-direction: column;
+	min-height:     0;
+	padding:        var(--ab-space-3) var(--ab-space-5);
+	overflow:       hidden;
+}
+
+/* Search input inside panel */
+.ab-icon-modal__box .ab-icon-modal-panel input[type="text"],
+.ab-icon-modal__box .ab-icon-modal-panel .regular-text {
+	width:         100% !important;
+	margin-bottom: var(--ab-space-2);
+	box-sizing:    border-box;
+}
+
+/* Grids inside the active panel fill all remaining height */
+.ab-icon-modal__box .ab-icon-svg-grid,
+.ab-icon-modal__box .ab-cp-icon-grid {
+	flex:       1;
+	min-height: 200px;
+	max-height: none;   /* let flex handle it instead of max-height */
+}
+
+/* Footer actions */
+.ab-icon-modal__box .ab-modal__actions {
+	padding:    var(--ab-space-3) var(--ab-space-5);
+	flex-shrink: 0;
+}
+
+
+/* =============================================================================
+   NAV ACCORDION GROUPS (.ab-nav__group)
+   ============================================================================= */
+
+.ab-nav__toggle-all {
+	display:         flex;
+	gap:             var(--ab-space-1);
+	padding:         var(--ab-space-2) var(--ab-space-4);
+}
+.ab-nav__toggle-btn {
+	display:      inline-flex;
+	align-items:  center;
+	gap:          var(--ab-space-1);
+	background:   var(--ab-accent-subtle, color-mix(in srgb, var(--ab-accent) 8%, transparent));
+	border:       none;
+	cursor:       pointer;
+	font-size:    var(--ab-text-xs);
+	color:        var(--ab-text-secondary);
+	padding:      var(--ab-space-1) var(--ab-space-2);
+	border-radius: var(--ab-radius-sm);
+	transition:   color var(--ab-transition-fast), background var(--ab-transition-fast);
+}
+.ab-nav__toggle-btn:hover {
+	color:      var(--ab-accent);
+	background: color-mix(in srgb, var(--ab-accent) 14%, transparent);
+}
+
+.ab-nav__group {
+	display:  block;
+}
+
+/* Remove default <details> marker */
+.ab-nav__group > summary {
+	list-style: none;
+}
+.ab-nav__group > summary::-webkit-details-marker {
+	display: none;
+}
+
+/* =============================================================================
+   GROUP LABELS (beta49 — top divider between groups, lowercase muted text)
+   ============================================================================= */
+.ab-nav__group-label {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-2);
+	padding:     var(--ab-space-2) var(--ab-space-4);
+	cursor:      pointer;
+	user-select: none;
+	font-size:   11px;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	color:       var(--ab-text-muted);
+	border-top:  1px solid var(--ab-border);
+	padding-top: var(--ab-space-3);
+	transition:  color var(--ab-transition-fast);
+}
+.ab-nav__group-label:hover {
+	color: var(--ab-text-secondary);
+}
+details.ab-nav__group:first-of-type .ab-nav__group-label {
+	border-top: none;
+	padding-top: var(--ab-space-2);
+}
+
+.ab-nav__group-chevron {
+	display:    inline-flex;
+	flex-shrink: 0;
+	transition: transform var(--ab-duration-base) var(--ab-ease-default);
+}
+details.ab-nav__group[open] .ab-nav__group-chevron {
+	transform: rotate(0deg);
+}
+details.ab-nav__group:not([open]) .ab-nav__group-chevron {
+	transform: rotate(-90deg);
+}
+
+
+/* =============================================================================
+   MODULE GROUP SECTIONS (Setup → Modules tab)
+   ============================================================================= */
+
+.ab-module-group {
+	margin-bottom: var(--ab-space-5);
+}
+
+.ab-module-group__header {
+	display:         flex;
+	align-items:     center;
+	gap:             var(--ab-space-2-5);
+	padding:         var(--ab-space-2) var(--ab-space-1);
+	cursor:          pointer;
+	user-select:     none;
+	border-bottom:   1px solid var(--ab-border-subtle);
+	margin-bottom:   var(--ab-space-2);
+}
+.ab-module-group__header:hover .ab-module-group__label { color: var(--ab-text-heading); }
+
+.ab-module-group__chevron {
+	display:    inline-flex;
+	flex-shrink: 0;
+	color:      var(--ab-text-secondary);
+}
+
+.ab-module-group__label {
+	font-size:   var(--ab-text-sm);
+	font-weight: var(--ab-font-semibold);
+	color:       var(--ab-text-body);
+	flex:        1;
+}
+
+.ab-module-group__count {
+	font-size: var(--ab-text-xs);
+	color:     var(--ab-text-secondary);
+}
+
+.ab-module-group__bulk {
+	margin-left: var(--ab-space-2);
+}
+
+/* xs button size for group bulk actions */
+.ab-btn--xs {
+	height:      var(--ab-btn-height-sm);
+	padding:     0 var(--ab-space-2-5);
+	font-size:   var(--ab-text-xs);
+	font-weight: var(--ab-font-medium);
+	border-radius: var(--ab-radius-md);
+}
+
+
+/* =============================================================================
+   EXPORT GROUP HEADERS (Setup → Tools tab)
+   ============================================================================= */
+
+.ab-export-group {
+	margin-bottom: var(--ab-space-5);
+}
+.ab-export-group:last-child {
+	margin-bottom: 0;
+}
+
+.ab-export-group__header {
+	font-size:      var(--ab-text-xs);
+	font-weight:    var(--ab-font-semibold);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color:          var(--ab-text-secondary);
+	padding:        var(--ab-space-2) 0 var(--ab-space-2);
+	margin-bottom:  var(--ab-space-1);
+}
+
+
+/* =============================================================================
+   CUSTOM WIDGETS - Dashboard tab
+   ============================================================================= */
+
+.ab-custom-widgets-list {
+	display:        flex;
+	flex-direction: column;
+	gap:            var(--ab-space-3);
+	margin-bottom:  var(--ab-space-2);
+}
+.ab-custom-widget-item {
+	display:     flex;
+	align-items: flex-start;
+	gap:         var(--ab-space-2-5);
+	padding:     var(--ab-space-3);
+	background:  var(--ab-surface-raised);
+	border:      1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+}
+.ab-custom-widget-fields {
+	flex:           1;
+	display:        flex;
+	flex-direction: column;
+	gap:            var(--ab-space-2);
+	min-width:      0;
+}
+.ab-custom-widget-fields .regular-text,
+.ab-custom-widget-fields .large-text {
+	width:   100%;
+	box-sizing: border-box;
+}
+.ab-custom-widget-fields .large-text { resize: vertical; }
+.ab-cw-remove {
+	flex-shrink: 0;
+	margin-top:  var(--ab-space-1);
+	color:       var(--ab-text-muted);
+	padding:     var(--ab-space-1) var(--ab-space-1-5);
+	transition:  color var(--ab-transition-fast);
+}
+.ab-cw-remove:hover { color: var(--ab-danger); }
+
+/* -- H2 Utility classes - extracted from inline styles ----------------------- */
+.ab-field-sublabel { display: block; font-size: var(--ab-text-xs); margin-bottom: var(--ab-space-1); }
+.ab-flex-row       { display: flex; align-items: center; gap: var(--ab-space-3); flex-wrap: wrap; }
+.ab-flex-row--sm   { display: flex; align-items: center; gap: var(--ab-space-2); }
+.ab-flex-row--lg   { display: flex; align-items: center; gap: var(--ab-space-4); flex-wrap: wrap; }
+.ab-flex-row--xs   { display: flex; align-items: center; gap: var(--ab-space-1-5); }
+.ab-inline-icon    { vertical-align: middle; margin-right: var(--ab-space-1); flex-shrink: 0; }
+.ab-mb-2           { margin-bottom: var(--ab-space-2); }
+.ab-mt-2           { margin-top: var(--ab-space-2); }
+.ab-m-0            { margin: 0; }
+.ab-dot            { width: 4px; height: 4px; border-radius: 50%; background: var(--ab-text-muted); flex-shrink: 0; }
+.ab-hint           { font-size: var(--ab-text-xs); color: var(--ab-text-muted); }
+.ab-img-preview    { max-height: 60px; max-width: 180px; object-fit: cover; border-radius: var(--ab-radius-sm); display: block; }
+.ab-range-value    { font-weight: var(--ab-font-semibold); min-width: 36px; }
+.ab-grad-arrow     { font-size: 1.4rem; color: var(--ab-text-muted); margin-top: 18px; }
+.ab-text-center    { text-align: center; }
+.ab-w-full         { width: 100%; }
+.ab-radio-card     { display: flex; align-items: center; gap: var(--ab-space-1-5); padding: var(--ab-space-2-5) var(--ab-space-4); border: 2px solid var(--ab-border); border-radius: var(--ab-radius-md); cursor: pointer; flex: 1; min-width: 140px; transition: border-color .15s, background .15s; }
+
+/* Admin Buddy admin bar group last-item separator */
+
+/* Admin Buddy admin bar - no separators */
+/* Skip links hidden globally via admin-buddy.php admin_head */

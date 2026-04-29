@@ -1,0 +1,59 @@
+/**
+ * Admin Buddy - tokens.css
+ * Design token layer (Phase 0). All CSS custom properties.
+ * Consumed by admin.css - never use raw values in component CSS.
+ * @version 1.1.0-beta1
+ */
+:root {
+    --ab-font-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --ab-font-mono: ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+    --ab-font-normal: 400; --ab-font-medium: 500; --ab-font-semibold: 600; --ab-font-bold: 700;
+    --ab-text-xs: 0.75rem; --ab-text-sm: 0.875rem; --ab-text-base: 1rem; --ab-text-lg: 1.125rem;
+    --ab-leading-none: 1; --ab-leading-tight: 1.25; --ab-leading-snug: 1.375;
+    --ab-leading-normal: 1.5; --ab-leading-relaxed: 1.625; --ab-leading-loose: 2;
+    --ab-space-1: 0.25rem; --ab-space-1-5: 0.375rem; --ab-space-2: 0.5rem;
+    --ab-space-2-5: 0.625rem; --ab-space-3: 0.75rem; --ab-space-4: 1rem;
+    --ab-space-5: 1.25rem; --ab-space-6: 1.5rem; --ab-space-8: 2rem;
+    --ab-space-10: 2.5rem; --ab-space-12: 3rem;
+    --ab-radius-sm: 4px; --ab-radius-md: 6px; --ab-radius-lg: 8px; --ab-radius-xl: 12px; --ab-radius-2xl: 16px; --ab-radius-3xl: 20px;
+    --ab-duration-fast: 100ms; --ab-duration-base: 150ms; --ab-duration-slow: 250ms;
+    --ab-duration-panel: 300ms; --ab-duration-backdrop: 200ms; --ab-duration-dropdown: 120ms;
+    --ab-ease-default: ease; --ab-ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+    --ab-transition-fast: var(--ab-duration-fast) var(--ab-ease-default);
+    --ab-transition-base: var(--ab-duration-base) var(--ab-ease-default);
+    --ab-transition-slow: var(--ab-duration-slow) var(--ab-ease-default);
+    --ab-z-content: 10; --ab-z-dropdown: 100; --ab-z-backdrop: 200;
+    --ab-z-panel: 300; --ab-z-modal: 400; --ab-z-toast: 500;
+    --ab-surface: #ffffff; --ab-surface-raised: #f9fafb; --ab-surface-sunken: #f8fafc;
+    --ab-border: #e2e8f0; --ab-border-subtle: #eef2f7; --ab-border-focus: var(--ab-primary, #7c3aed);
+    --ab-text-heading: #0f172a; --ab-text-strong: #1e293b; --ab-text-body: #374151;
+    --ab-text-secondary: #64748b; --ab-text-muted: #94a3b8;
+    --ab-text-placeholder: #b0bec5; --ab-text-disabled: #c0cad4; --ab-text-on-accent: #ffffff;
+    /* --ab-primary is set dynamically by class-colours.php via wp_add_inline_style */
+    --ab-accent:        var(--ab-primary, #7c3aed);
+    --ab-accent-hover:  var(--ab-secondary, #6d28d9);
+    --ab-accent-subtle: color-mix(in srgb, var(--ab-primary, #7c3aed) 8%, transparent);
+    --ab-success: #16a34a; --ab-success-hover: #15803d; --ab-success-bg: #f0fdf4; --ab-success-bg-emphasis: #dcfce7; --ab-success-text: #166534; --ab-success-strong: #14532d;
+    --ab-warning: #d97706; --ab-warning-bg: #fffbeb; --ab-warning-bg-emphasis: #fef3c7; --ab-warning-text: #92400e; --ab-warning-strong: #78350f;
+    --ab-danger: #dc2626; --ab-danger-hover: #b91c1c; --ab-danger-bg: #fef2f2; --ab-danger-bg-emphasis: #fee2e2; --ab-danger-text: #991b1b;
+    --ab-info: #2563eb; --ab-info-bg: #eff6ff; --ab-info-bg-emphasis: #dbeafe; --ab-info-text: #1e3a5f; --ab-info-strong: #1e3a5f;
+    --ab-btn-height: 36px; --ab-btn-height-sm: 28px; --ab-input-height: 36px;
+    --ab-toggle-width: 36px; --ab-toggle-height: 20px; --ab-toggle-thumb: 14px;
+    --ab-topbar-height: 56px; --ab-sidebar-width: 220px;
+    --ab-panel-sm: 400px; --ab-panel-md: 560px; --ab-panel-lg: 720px; --ab-panel-xl: 820px;
+    --ab-icon-sm: 14px; --ab-icon-md: 18px; --ab-icon-lg: 24px;
+    --ab-grid-min-card: 200px; --ab-grid-min-module: 250px; --ab-grid-min-preset: 160px;
+    --ab-grid-min-export: 220px; --ab-grid-min-cap: 140px;
+    --ab-grid-min-icon-sm: 80px; --ab-grid-min-icon-lg: 120px; --ab-grid-min-svglib: 96px;
+    --ab-grid-min-qs: 320px;
+    --ab-toast-max-w: 500px;
+
+    /* Shadows - elevation scale */
+    --ab-shadow-xs:  0 1px 3px rgba(0,0,0,0.08);
+    --ab-shadow-sm:  0 2px 8px rgba(0,0,0,0.08);
+    --ab-shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+    --ab-shadow-lg:  0 8px 24px rgba(0,0,0,0.10);
+    --ab-shadow-xl:  0 20px 60px rgba(0,0,0,0.15);
+    --ab-shadow-bar: 0 -2px 8px rgba(0,0,0,0.04);
+    --ab-shadow-panel: -8px 0 40px rgba(0,0,0,0.10);
+}

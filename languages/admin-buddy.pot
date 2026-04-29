@@ -1,0 +1,2379 @@
+# Copyright (C) 2026 Admin Buddy
+# This file is distributed under the same license as the Admin Buddy plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Admin Buddy 1.0.1\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/admin-buddy\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-04-29T13:23:02+00:00\n"
+"PO-Revision-Date: 2026-04-29T13:23:02+00:00\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: admin-buddy\n"
+
+#. Plugin Name of the plugin
+#. Author of the plugin
+msgid "Admin Buddy"
+msgstr ""
+
+#. Plugin URI of the plugin
+msgid "https://wpadminbuddy.com"
+msgstr ""
+
+#. Description of the plugin
+msgid "White-label your WordPress admin - custom branding, dashboard page, login styling, notice suppression, and maintenance mode in one place."
+msgstr ""
+
+msgid "A duplicate copy of Admin Buddy was detected and blocked from loading."
+msgstr ""
+
+msgid "conflicts with the already-active copy at"
+msgstr ""
+
+msgid "Please deactivate and delete the duplicate."
+msgstr ""
+
+msgid "Upgrade"
+msgstr ""
+
+msgid "Coming Soon"
+msgstr ""
+
+msgid "Maintenance"
+msgstr ""
+
+msgid "Admin Buddy: click to manage site mode"
+msgstr ""
+
+msgid "Search Engines Blocked"
+msgstr ""
+
+msgid "Search engines are discouraged from indexing this site. Click to change"
+msgstr ""
+
+msgid "Search engine visibility"
+msgstr ""
+
+msgid "With this on, search engines like Google will not index the site."
+msgstr ""
+
+msgid "Discouraged"
+msgstr ""
+
+msgid "Indexable"
+msgstr ""
+
+msgid "Permalinks"
+msgstr ""
+
+msgid "Plain permalinks like ?p=123 hurt SEO and break incoming links if changed later."
+msgstr ""
+
+msgid "Plain (?p=123)"
+msgstr ""
+
+msgid "Site tagline"
+msgstr ""
+
+msgid "The tagline is still the WordPress default. It often appears in search results and browser tabs."
+msgstr ""
+
+msgid "(empty)"
+msgstr ""
+
+msgid "Debug mode"
+msgstr ""
+
+msgid "WP_DEBUG is on. Fine for development; on a live site it can leak error details to visitors. Set define( 'WP_DEBUG', false ); in wp-config.php to turn it off."
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Debug display"
+msgstr ""
+
+msgid "WP_DEBUG is on AND errors render directly in the page, visible to visitors. Log-only is safer: add define( 'WP_DEBUG_DISPLAY', false ); and define( 'WP_DEBUG_LOG', true ); to wp-config.php."
+msgstr ""
+
+msgid "N/A (debug off)"
+msgstr ""
+
+msgid "Shown to visitors"
+msgstr ""
+
+msgid "Log only"
+msgstr ""
+
+msgid "Default \"admin\" username"
+msgstr ""
+
+msgid "A user named \"admin\" makes brute-force attacks easier — half the work is already done if the attacker knows a valid login. Rename this account or create a new admin and delete it."
+msgstr ""
+
+msgid "Exists"
+msgstr ""
+
+msgid "Not present"
+msgstr ""
+
+msgid "HTTPS on site URL"
+msgstr ""
+
+msgid "The site URL is plain http:// — login credentials and admin traffic are transmitted unencrypted. Install an SSL certificate and switch the WordPress Address (URL) and Site Address (URL) to https://."
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Plain HTTP"
+msgstr ""
+
+msgid "File editing in admin"
+msgstr ""
+
+msgid "Appearance → Editor and Plugins → Editor let any admin write PHP files live on the server. If one admin account is ever compromised, the attacker can install a backdoor in seconds. Add define( 'DISALLOW_FILE_EDIT', true ); to your wp-config.php to lock it down."
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Allowed"
+msgstr ""
+
+msgid "Registration role"
+msgstr ""
+
+msgid "\"Anyone can register\" is on AND the default role is Administrator. Every signup instantly becomes an admin — change the default role to Subscriber, or disable open registration entirely."
+msgstr ""
+
+msgid "Public signup grants admin"
+msgstr ""
+
+#. translators: %s: default new-user role (e.g. "subscriber")
+#, php-format
+msgid "Open → %s"
+msgstr ""
+
+msgid "Closed"
+msgstr ""
+
+msgid "WordPress version in page source"
+msgstr ""
+
+msgid "WordPress emits a generator meta tag in every page's <head> and in RSS feeds, exposing the exact version. Attackers scrape this to build \"sites on vulnerable X.Y\" target lists. Defense-in-depth only — the version can still be inferred from other signals — but it's a one-click hardening win."
+msgstr ""
+
+#. translators: %s: WordPress version number
+#, php-format
+msgid "Exposed (%s)"
+msgstr ""
+
+msgid "Hidden"
+msgstr ""
+
+msgid "Remove generator meta tag"
+msgstr ""
+
+msgid "Admin email"
+msgstr ""
+
+msgid "The admin email looks like a placeholder. Password resets and update notices are sent to this address."
+msgstr ""
+
+msgid "(not set)"
+msgstr ""
+
+msgid "WordPress core"
+msgstr ""
+
+msgid "A WordPress core update is available. Core updates often ship security patches — apply promptly after a backup."
+msgstr ""
+
+#. translators: %s: available WordPress version, e.g. "6.7.2"
+#, php-format
+msgid "Update to %s available"
+msgstr ""
+
+#. translators: %s: available WordPress version, e.g. "6.7.2"
+msgid "Update available"
+msgstr ""
+
+msgid "Up to date"
+msgstr ""
+
+msgid "Plugin updates"
+msgstr ""
+
+msgid "Out-of-date plugins are the #1 attack vector on WordPress sites. Review pending updates, back up, then apply."
+msgstr ""
+
+#. translators: %d: number of plugins with pending updates
+#, php-format
+msgid "%d plugin needs updating"
+msgid_plural "%d plugins need updating"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "All up to date"
+msgstr ""
+
+msgid "PHP version"
+msgstr ""
+
+msgid "WordPress recommends PHP 8.1 or newer. Older branches no longer receive security patches from the PHP project — hosts should have upgraded by now."
+msgstr ""
+
+msgid "(outdated)"
+msgstr ""
+
+msgid "Sample Page"
+msgstr ""
+
+msgid "WordPress ships with a \"Sample Page\". Delete it before launch."
+msgstr ""
+
+msgid "Still published"
+msgstr ""
+
+msgid "Removed"
+msgstr ""
+
+msgid "\"Hello world!\" post"
+msgstr ""
+
+msgid "WordPress ships with a \"Hello world!\" post. Delete it before launch."
+msgstr ""
+
+#. translators: %d: number of critical issues
+#. translators: %d: number of warnings
+#, php-format
+msgid "Checklist (%d)"
+msgid_plural "Checklist (%d)"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Checklist"
+msgstr ""
+
+msgid "Admin Buddy Checklist"
+msgstr ""
+
+msgid "Security"
+msgstr ""
+
+msgid "Updates"
+msgstr ""
+
+msgid "SEO & Visibility"
+msgstr ""
+
+msgid "Debug & Errors"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Content"
+msgstr ""
+
+#. translators: 1: OK count, 2: total count
+#, php-format
+msgid "%1$d of %2$d OK"
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "Other"
+msgstr ""
+
+msgid "Fix"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "(Untitled Widget)"
+msgstr ""
+
+msgid "Admin Buddy Dashboard"
+msgstr ""
+
+msgid "Page not found. Please check Admin Buddy → Dashboard settings."
+msgstr ""
+
+msgid "Permission denied."
+msgstr ""
+
+msgid "Site is temporarily under maintenance. Please try again shortly."
+msgstr ""
+
+msgid "Site is coming soon. Stay tuned!"
+msgstr ""
+
+msgid "Under Maintenance"
+msgstr ""
+
+msgid "We're performing scheduled maintenance. We'll be back shortly!"
+msgstr ""
+
+msgid "We're working on something exciting. Stay tuned!"
+msgstr ""
+
+msgid "REST API requests require authentication."
+msgstr ""
+
+#. translators: %s: site name
+#, php-format
+msgid "Visit %s (opens in a new tab)"
+msgstr ""
+
+msgid "Edit Profile"
+msgstr ""
+
+msgid "Log Out"
+msgstr ""
+
+msgid "Go to Dashboard"
+msgstr ""
+
+msgid "Duplicate"
+msgstr ""
+
+msgid "You do not have permission to duplicate this post."
+msgstr ""
+
+msgid "Post not found."
+msgstr ""
+
+msgid "Copy of"
+msgstr ""
+
+msgid "Failed to duplicate post."
+msgstr ""
+
+msgid "Last Seen"
+msgstr ""
+
+msgid "Never"
+msgstr ""
+
+#. translators: %s: human-readable time difference, e.g. "2 hours"
+#, php-format
+msgid "%s ago"
+msgstr ""
+
+msgid "Your role is not permitted to upload SVG files."
+msgstr ""
+
+msgid "Could not read SVG file for sanitisation."
+msgstr ""
+
+msgid "SVG file could not be sanitised. It may contain unsafe content."
+msgstr ""
+
+msgid "The administrator role must retain manage_options. Save rejected."
+msgstr ""
+
+msgid "Role not found."
+msgstr ""
+
+msgid "Save aborted: post-write integrity check failed. The administrator role has been repaired automatically."
+msgstr ""
+
+msgid "Role saved."
+msgstr ""
+
+msgid "Role name is required."
+msgstr ""
+
+msgid "A role with that name already exists."
+msgstr ""
+
+msgid "Role created."
+msgstr ""
+
+msgid "The administrator role cannot be deleted."
+msgstr ""
+
+msgid "Built-in roles cannot be deleted."
+msgstr ""
+
+msgid "Role deleted."
+msgstr ""
+
+msgid "Name cannot be empty."
+msgstr ""
+
+msgid "Rename aborted: the current role data is already in an inconsistent state. Please use the repair function."
+msgstr ""
+
+msgid "Rename aborted: the write corrupted role data. The previous state has been restored."
+msgstr ""
+
+msgid "Role renamed."
+msgstr ""
+
+msgid "Only built-in roles can be reset to defaults."
+msgstr ""
+
+msgid "Reset aborted: post-write integrity check failed. The administrator role has been repaired."
+msgstr ""
+
+msgid "Role reset to defaults."
+msgstr ""
+
+msgid "Access denied."
+msgstr ""
+
+msgid "Modules"
+msgstr ""
+
+msgid "Plugin Data"
+msgstr ""
+
+msgid "Admin Buddy Settings"
+msgstr ""
+
+msgid "Quick Settings"
+msgstr ""
+
+msgid "Remote"
+msgstr ""
+
+msgid "This action is disabled in demo mode. Get the full version at wpadminbuddy.com"
+msgstr ""
+
+msgid "Setting enabled."
+msgstr ""
+
+msgid "Setting disabled."
+msgstr ""
+
+msgid "Failed to save. Please try again."
+msgstr ""
+
+msgid "Sidebar User Menu turned on so you can still navigate. Toggle off below if you don't want it."
+msgstr ""
+
+msgid "Roles saved."
+msgstr ""
+
+msgid "Failed to save roles."
+msgstr ""
+
+msgid "All settings enabled."
+msgstr ""
+
+msgid "All settings disabled."
+msgstr ""
+
+msgid "Enable all Quick Settings?"
+msgstr ""
+
+msgid "All 16 settings will be turned on. You can disable individual ones afterwards."
+msgstr ""
+
+msgid "Yes, enable all"
+msgstr ""
+
+msgid "Disable all Quick Settings?"
+msgstr ""
+
+msgid "All 16 settings will be turned off."
+msgstr ""
+
+msgid "Yes, disable all"
+msgstr ""
+
+msgid "Choose Image"
+msgstr ""
+
+msgid "Use this image"
+msgstr ""
+
+msgid "✓ Copied"
+msgstr ""
+
+msgid "Settings saved."
+msgstr ""
+
+msgid "Save changes?"
+msgstr ""
+
+msgid "Your settings will be saved."
+msgstr ""
+
+msgid "This will invalidate the current emergency URL. Continue?"
+msgstr ""
+
+msgid "Regenerating…"
+msgstr ""
+
+msgid "Regenerate"
+msgstr ""
+
+msgid "✓ Token regenerated"
+msgstr ""
+
+msgid "✗ Something went wrong."
+msgstr ""
+
+msgid "Import Settings?"
+msgstr ""
+
+msgid "This will replace all current settings with the contents of the uploaded file. This cannot be undone."
+msgstr ""
+
+msgid "Unsaved changes"
+msgstr ""
+
+msgid "You have unsaved changes that will be lost if you leave this tab."
+msgstr ""
+
+msgid "Leave"
+msgstr ""
+
+msgid "Saving…"
+msgstr ""
+
+msgid "Snippet saved."
+msgstr ""
+
+msgid "Delete Snippet?"
+msgstr ""
+
+msgid "This action cannot be undone."
+msgstr ""
+
+msgid "Sending…"
+msgstr ""
+
+msgid "Clear Email Log?"
+msgstr ""
+
+msgid "All logged entries will be permanently deleted."
+msgstr ""
+
+msgid "Saved."
+msgstr ""
+
+msgid "Save capabilities?"
+msgstr ""
+
+msgid "Delete Role?"
+msgstr ""
+
+msgid "Users with this role will be moved to Subscriber. This cannot be undone."
+msgstr ""
+
+msgid "Reset Role?"
+msgstr ""
+
+msgid "This will restore the default capabilities for this role."
+msgstr ""
+
+msgid "New Page"
+msgstr ""
+
+msgid "Edit Page"
+msgstr ""
+
+msgid "Page saved."
+msgstr ""
+
+msgid "Page deleted."
+msgstr ""
+
+msgid "Page enabled."
+msgstr ""
+
+msgid "Page disabled."
+msgstr ""
+
+msgid "Page title is required."
+msgstr ""
+
+msgid "Delete page?"
+msgstr ""
+
+#. translators: %s: page title
+#, php-format
+msgid "Delete \"%s\"? This cannot be undone."
+msgstr ""
+
+msgid "Settings imported successfully."
+msgstr ""
+
+msgid "Settings reset to defaults."
+msgstr ""
+
+msgid "Import failed: no file selected."
+msgstr ""
+
+msgid "Import failed: invalid file."
+msgstr ""
+
+msgid "Save failed."
+msgstr ""
+
+msgid "Request failed."
+msgstr ""
+
+msgid "Toggle failed."
+msgstr ""
+
+msgid "Upload failed."
+msgstr ""
+
+msgid "Icon uploaded."
+msgstr ""
+
+msgid "Icon renamed."
+msgstr ""
+
+msgid "Colour setting saved."
+msgstr ""
+
+msgid "Slug copied."
+msgstr ""
+
+msgid "Only SVG files are supported."
+msgstr ""
+
+msgid "Snippet created."
+msgstr ""
+
+msgid "Snippet enabled."
+msgstr ""
+
+msgid "Snippet disabled."
+msgstr ""
+
+msgid "Snippet deleted."
+msgstr ""
+
+msgid "Defaults restored."
+msgstr ""
+
+msgid "Save menu configuration?"
+msgstr ""
+
+#. translators: %s: role name
+#, php-format
+msgid "Save settings for \"%s\"."
+msgstr ""
+
+msgid "Reset to defaults?"
+msgstr ""
+
+msgid "Palette generated."
+msgstr ""
+
+msgid "Preserve colours"
+msgstr ""
+
+msgid "Copy"
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Click to rename"
+msgstr ""
+
+msgid "Save Changes"
+msgstr ""
+
+msgid "Remove widget?"
+msgstr ""
+
+msgid "This widget will be removed. Save to apply."
+msgstr ""
+
+msgid "Enable all"
+msgstr ""
+
+msgid "Disable all"
+msgstr ""
+
+msgid "All modules in this group will be enabled."
+msgstr ""
+
+msgid "All modules will be removed from the navigation."
+msgstr ""
+
+msgid "This module cannot be disabled"
+msgstr ""
+
+msgid "Disable"
+msgstr ""
+
+msgid "Enable"
+msgstr ""
+
+msgid "Turn it off in the Maintenance tab first, then you can disable this module."
+msgstr ""
+
+msgid "Go to Maintenance"
+msgstr ""
+
+msgid "Interface"
+msgstr ""
+
+msgid "Utilities"
+msgstr ""
+
+msgid "Integrations"
+msgstr ""
+
+msgid "White Label"
+msgstr ""
+
+msgid "Colours"
+msgstr ""
+
+msgid "Login"
+msgstr ""
+
+msgid "Snippets"
+msgstr ""
+
+msgid "SMTP"
+msgstr ""
+
+msgid "User Roles"
+msgstr ""
+
+msgid "You do not have permission to access this page."
+msgstr ""
+
+msgid "Importing roles will overwrite ALL role definitions. Use with care."
+msgstr ""
+
+msgid "License"
+msgstr ""
+
+#. translators: %d: number of available updates
+#, php-format
+msgid "%d update(s) available"
+msgstr ""
+
+#. translators: %d: number of available updates
+msgid "No updates available"
+msgstr ""
+
+msgid "Updates Centre"
+msgstr ""
+
+msgid "Maintenance Mode is active: visitors see a maintenance page"
+msgstr ""
+
+msgid "Coming Soon mode is active: visitors see a coming soon page"
+msgstr ""
+
+msgid "Noindex"
+msgstr ""
+
+msgid "Search engines are discouraged from indexing this site (Settings → Reading)"
+msgstr ""
+
+msgid "Open Checklist"
+msgstr ""
+
+msgid "Everything is up to date."
+msgstr ""
+
+msgid "WordPress Core"
+msgstr ""
+
+msgid "Update"
+msgstr ""
+
+#. translators: %d: number of plugin updates
+#, php-format
+msgid "Plugins (%d)"
+msgstr ""
+
+msgid "Details"
+msgstr ""
+
+#. translators: %d: number of theme updates
+#, php-format
+msgid "Themes (%d)"
+msgstr ""
+
+msgid "Go to Updates page"
+msgstr ""
+
+msgid "Settings navigation"
+msgstr ""
+
+msgid "Expand all"
+msgstr ""
+
+msgid "Expand"
+msgstr ""
+
+msgid "Collapse all"
+msgstr ""
+
+msgid "Collapse"
+msgstr ""
+
+msgid "Manage"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Yes, proceed"
+msgstr ""
+
+msgid "This module requires a Pro license."
+msgstr ""
+
+msgid "Insufficient permissions."
+msgstr ""
+
+msgid "Please wait a few seconds before sending another test email."
+msgstr ""
+
+msgid "Admin Buddy: SMTP Test Email"
+msgstr ""
+
+#. translators: %s: site name
+#, php-format
+msgid ""
+"This is a test email sent by Admin Buddy from %s.\n"
+"\n"
+"If you received this, your SMTP configuration is working correctly."
+msgstr ""
+
+#. translators: %s: email address
+#, php-format
+msgid "Test email sent successfully to %s."
+msgstr ""
+
+msgid "Failed to send test email."
+msgstr ""
+
+msgid "Unknown error. Check your SMTP settings."
+msgstr ""
+
+msgid "Custom"
+msgstr ""
+
+msgid "Admin Buddy Safe Mode"
+msgstr ""
+
+msgid "All code snippets are bypassed on this page load."
+msgstr ""
+
+msgid "Snippet not found."
+msgstr ""
+
+msgid "Snippet code cannot be empty."
+msgstr ""
+
+msgid "PHP snippets require Admin Buddy Pro."
+msgstr ""
+
+msgid "Could not write snippet file. Check filesystem permissions."
+msgstr ""
+
+msgid "Branding"
+msgstr ""
+
+msgid "Dashboard"
+msgstr ""
+
+msgid "Site Identity"
+msgstr ""
+
+msgid "Global branding elements that appear across WordPress."
+msgstr ""
+
+msgid "Site Favicon"
+msgstr ""
+
+msgid "Favicon URL"
+msgstr ""
+
+msgid "Image URL"
+msgstr ""
+
+msgid "Reset"
+msgstr ""
+
+msgid "Synced with WordPress Settings → General. Changing it here updates it there too, and vice versa."
+msgstr ""
+
+msgid "Sidebar Logo"
+msgstr ""
+
+msgid "Displayed at the top of the WordPress admin sidebar. Scales to the sidebar width automatically."
+msgstr ""
+
+msgid "Admin Bar"
+msgstr ""
+
+msgid "Control what appears in the top admin toolbar and replace WordPress branding."
+msgstr ""
+
+msgid "Agency Name"
+msgstr ""
+
+msgid "Replaces \"WordPress\" in browser tab titles (e.g. \"Dashboard ‹ Your Agency\") and shows \"Powered by Your Agency\" in the admin footer when no custom footer text is set."
+msgstr ""
+
+msgid "e.g. Starter Digital"
+msgstr ""
+
+msgid "Agency URL"
+msgstr ""
+
+msgid "The WP logo in the admin bar links to this URL. Also used in the \"Powered by\" footer link when Agency Name is set."
+msgstr ""
+
+msgid "Custom Greeting"
+msgstr ""
+
+msgid "Replace \"Howdy, username\" with your own text. Use {username} as a placeholder for the display name."
+msgstr ""
+
+msgid "e.g. Welcome"
+msgstr ""
+
+msgid "Remove WordPress Logo"
+msgstr ""
+
+msgid "Hides the WP logo from the admin toolbar."
+msgstr ""
+
+msgid "Remove WordPress.org Links"
+msgstr ""
+
+msgid "Hides \"About WordPress\", \"Documentation\", \"Support Forums\" and \"Feedback\" from the admin bar dropdown."
+msgstr ""
+
+msgid "Show Admin Buddy in Admin Bar"
+msgstr ""
+
+msgid "Adds a quick-access link to Admin Buddy in the top toolbar."
+msgstr ""
+
+msgid "Hide Help Tab"
+msgstr ""
+
+msgid "Hides the Help dropdown tab from all admin pages."
+msgstr ""
+
+msgid "Hide Screen Options"
+msgstr ""
+
+msgid "Hides the Screen Options dropdown tab from admin pages."
+msgstr ""
+
+msgid "Footer"
+msgstr ""
+
+msgid "Customise the admin page footer area."
+msgstr ""
+
+msgid "Custom Footer Text"
+msgstr ""
+
+msgid "Replace the default WordPress footer text with your own. Turn off to restore the original WP footer."
+msgstr ""
+
+msgid "Footer Text"
+msgstr ""
+
+msgid "e.g. Built by Your Agency"
+msgstr ""
+
+msgid "Leave blank to show nothing. Basic HTML allowed."
+msgstr ""
+
+msgid "Footer Version Text"
+msgstr ""
+
+msgid "e.g. Agency Platform v2.0"
+msgstr ""
+
+msgid "Replaces \"Version X.X\" on the right side of the admin footer. Leave blank to show nothing."
+msgstr ""
+
+msgid "Show Motivational Quote"
+msgstr ""
+
+msgid "Displays a random motivational quote on the right side of the admin footer, before the version text."
+msgstr ""
+
+msgid "(no title)"
+msgstr ""
+
+msgid "Dashboard Page"
+msgstr ""
+
+msgid "Show a custom page instead of the standard WordPress dashboard."
+msgstr ""
+
+msgid "Default Page"
+msgstr ""
+
+msgid "- WordPress Dashboard -"
+msgstr ""
+
+msgid "Shown to all users unless a role override is set."
+msgstr ""
+
+msgid "Different Page Per Role"
+msgstr ""
+
+msgid "Show a different dashboard page based on the user role."
+msgstr ""
+
+msgid "Use Default"
+msgstr ""
+
+msgid "WordPress Dashboard"
+msgstr ""
+
+msgid "Dashboard Widgets"
+msgstr ""
+
+msgid "Choose which dashboard widgets to show. Toggle off to hide."
+msgstr ""
+
+#. translators: %s: Dashboard link
+#, php-format
+msgid "Other widgets will appear here after you visit your %s once."
+msgstr ""
+
+msgid "Custom Widgets"
+msgstr ""
+
+msgid "Add your own dashboard widgets. Supports HTML and shortcodes."
+msgstr ""
+
+msgid "Widget title"
+msgstr ""
+
+msgid "Widget content"
+msgstr ""
+
+msgid "Widget content (HTML & shortcodes supported)"
+msgstr ""
+
+msgid "Remove widget"
+msgstr ""
+
+msgid "Add Widget"
+msgstr ""
+
+msgid "Widget Visibility and Custom Widgets are unavailable while a Custom Dashboard Page is active. The custom page replaces the widget area entirely."
+msgstr ""
+
+msgid "Presets"
+msgstr ""
+
+msgid "Accent"
+msgstr ""
+
+msgid "Admin Menu"
+msgstr ""
+
+msgid "Exclusions"
+msgstr ""
+
+msgid "Accent Colours"
+msgstr ""
+
+msgid "Used for buttons, links, focus rings, and active states throughout the admin."
+msgstr ""
+
+msgid "Primary"
+msgstr ""
+
+msgid "Main accent: buttons, active menu items, links."
+msgstr ""
+
+msgid "Secondary"
+msgstr ""
+
+msgid "Controls hover backgrounds on sidebar menu items, admin bar, and buttons."
+msgstr ""
+
+msgid "Sidebar background, text colours, and optional gradient."
+msgstr ""
+
+msgid "Menu"
+msgstr ""
+
+msgid "Sidebar Background"
+msgstr ""
+
+msgid "Auto-suggest: "
+msgstr ""
+
+#. translators: %s: dynamic value
+#, php-format
+msgid "use %s text for best contrast"
+msgstr ""
+
+msgid "Menu Text"
+msgstr ""
+
+#. translators: %s: dynamic value
+#, php-format
+msgid "Good contrast (%s:1)"
+msgstr ""
+
+#. translators: %s: dynamic value
+#, php-format
+msgid "Low contrast (%s:1). WCAG AA needs 4.5+"
+msgstr ""
+
+msgid "Menu Hover Background"
+msgstr ""
+
+msgid "Background of menu items on hover. Defaults to Secondary colour."
+msgstr ""
+
+msgid "Menu Hover Text"
+msgstr ""
+
+msgid "Text for top-level items on hover. Defaults to Menu Text."
+msgstr ""
+
+msgid "Active Menu Background"
+msgstr ""
+
+msgid "Background of the currently active menu item. Defaults to Primary colour."
+msgstr ""
+
+msgid "Active Menu Text"
+msgstr ""
+
+msgid "Text for the currently active/selected menu item."
+msgstr ""
+
+msgid "Active Parent Text"
+msgstr ""
+
+msgid "Text for the parent item whose submenu is open. Defaults to Active Menu Text."
+msgstr ""
+
+msgid "Submenu & Flyout"
+msgstr ""
+
+msgid "Submenu and Flyout Background"
+msgstr ""
+
+msgid "Background for expanded submenus and flyout panels. Defaults to Primary colour."
+msgstr ""
+
+msgid "Submenu and Flyout Text"
+msgstr ""
+
+msgid "Text for submenu and flyout items. Defaults to Menu Text."
+msgstr ""
+
+msgid "Submenu and Flyout Hover Background"
+msgstr ""
+
+msgid "Submenu item background on hover. Defaults to Secondary colour."
+msgstr ""
+
+msgid "Submenu and Flyout Hover Text"
+msgstr ""
+
+msgid "Submenu item text on hover. Defaults to Menu Text."
+msgstr ""
+
+msgid "Submenu and Flyout Active Background"
+msgstr ""
+
+msgid "Submenu item background for the current page. Defaults to Submenu Hover Background."
+msgstr ""
+
+msgid "Submenu and Flyout Active Text"
+msgstr ""
+
+msgid "Submenu item text for the current page. Defaults to Submenu Hover Text."
+msgstr ""
+
+msgid "Sidebar Options"
+msgstr ""
+
+msgid "Sidebar Gradient"
+msgstr ""
+
+msgid "Replace solid background with a top-to-bottom gradient."
+msgstr ""
+
+msgid "Gradient From (top)"
+msgstr ""
+
+msgid "Gradient To (bottom)"
+msgstr ""
+
+msgid "Direction"
+msgstr ""
+
+msgid "Menu Item Separator"
+msgstr ""
+
+msgid "Show a subtle bottom border line under each sidebar menu item."
+msgstr ""
+
+msgid "Separator Colour"
+msgstr ""
+
+msgid "Leave blank to auto-derive from Primary."
+msgstr ""
+
+msgid "Top admin bar colours. Applies on backend and frontend. Leave any blank to use its noted default."
+msgstr ""
+
+msgid "Bar"
+msgstr ""
+
+msgid "Bar Background"
+msgstr ""
+
+msgid "Background of the admin bar. Leave blank to inherit the sidebar colour."
+msgstr ""
+
+msgid "Bar Text"
+msgstr ""
+
+msgid "Default text and icon colour. Leave blank to auto-derive from Menu Text."
+msgstr ""
+
+msgid "Hover Background"
+msgstr ""
+
+msgid "Background of top-level items on hover. Leave blank to use Primary."
+msgstr ""
+
+msgid "Hover Text"
+msgstr ""
+
+msgid "Text and icon colour on hover. Leave blank to use Menu Text."
+msgstr ""
+
+msgid "Flyout"
+msgstr ""
+
+msgid "Flyout Background"
+msgstr ""
+
+msgid "Background of flyout/dropdown panels. Leave blank to inherit sidebar colour."
+msgstr ""
+
+msgid "Flyout Text"
+msgstr ""
+
+msgid "Text inside flyout panels. Leave blank to auto-derive at 75% opacity."
+msgstr ""
+
+msgid "Flyout Background Hover"
+msgstr ""
+
+msgid "Flyout item background on hover. Leave blank to use primary colour."
+msgstr ""
+
+msgid "Flyout Text Hover"
+msgstr ""
+
+msgid "Flyout item text on hover. Leave blank to use Menu Text."
+msgstr ""
+
+msgid "Page"
+msgstr ""
+
+msgid "Content area background, headings, body text and links."
+msgstr ""
+
+msgid "Content Background"
+msgstr ""
+
+msgid "Main admin content area background. Leave blank for WP default."
+msgstr ""
+
+msgid "Heading Text"
+msgstr ""
+
+msgid "h1–h4 colour in the content area. Leave blank for WP default."
+msgstr ""
+
+msgid "Body Text"
+msgstr ""
+
+msgid "Paragraph and label text. Leave blank for WP default."
+msgstr ""
+
+msgid "Link Colour"
+msgstr ""
+
+msgid "Link colour. Leave blank to use your Primary colour."
+msgstr ""
+
+msgid "Link Hover"
+msgstr ""
+
+msgid "Link hover colour. Leave blank to use your Secondary colour."
+msgstr ""
+
+msgid "Drop Shadow"
+msgstr ""
+
+msgid "Shadow colour for flyout panels and dropdowns. Leave blank for default."
+msgstr ""
+
+msgid "Tables"
+msgstr ""
+
+msgid "List tables used across Posts, Pages, Plugins, Users and more."
+msgstr ""
+
+msgid "Header Background"
+msgstr ""
+
+msgid "Header Text"
+msgstr ""
+
+msgid "Header Links"
+msgstr ""
+
+msgid "Clickable column headings (Title, Author, Date)."
+msgstr ""
+
+msgid "Row Background"
+msgstr ""
+
+msgid "Row Text"
+msgstr ""
+
+msgid "Alternating Row Background"
+msgstr ""
+
+msgid "Auto-derived from row background if left blank."
+msgstr ""
+
+msgid "Alternating Row Text"
+msgstr ""
+
+msgid "Row Hover"
+msgstr ""
+
+msgid "Cell Border"
+msgstr ""
+
+msgid "Outer cell borders."
+msgstr ""
+
+msgid "Row Separator"
+msgstr ""
+
+msgid "Horizontal line between rows."
+msgstr ""
+
+msgid "Title Links"
+msgstr ""
+
+msgid "Post titles, plugin names, user names."
+msgstr ""
+
+msgid "Action Links"
+msgstr ""
+
+msgid "Edit / Trash / View links under each row."
+msgstr ""
+
+msgid "Forms"
+msgstr ""
+
+msgid "Input fields, focus rings and secondary buttons. Scoped to the content area only."
+msgstr ""
+
+msgid "Input Background"
+msgstr ""
+
+msgid "Input Border"
+msgstr ""
+
+msgid "Focus Ring"
+msgstr ""
+
+msgid "Border and box-shadow on focused inputs. Leave blank to use Primary."
+msgstr ""
+
+msgid "Primary Button Background"
+msgstr ""
+
+msgid "Leave blank to use your Primary colour."
+msgstr ""
+
+msgid "Primary Button Text"
+msgstr ""
+
+msgid "Primary Button Hover"
+msgstr ""
+
+msgid "Leave blank to use your Secondary colour."
+msgstr ""
+
+msgid "Secondary Button Background"
+msgstr ""
+
+msgid "WP .button-secondary background."
+msgstr ""
+
+msgid "Cards"
+msgstr ""
+
+msgid "Postbox / meta box cards used on the Dashboard and edit screens."
+msgstr ""
+
+msgid "Card Background"
+msgstr ""
+
+msgid "Card Header"
+msgstr ""
+
+msgid "Card Border"
+msgstr ""
+
+msgid "Card Text"
+msgstr ""
+
+msgid "Text colour inside cards. Leave blank to use Body Text."
+msgstr ""
+
+msgid "Notices"
+msgstr ""
+
+msgid "Admin notice background. Semantic border colours (info/success/warning/error) are preserved."
+msgstr ""
+
+msgid "Notice Background"
+msgstr ""
+
+msgid "Background for all admin notices. Leave blank for WP default white."
+msgstr ""
+
+msgid "Status Pills"
+msgstr ""
+
+msgid "Admin bar indicator pill colours for Maintenance, Coming Soon and Search Blocked states."
+msgstr ""
+
+msgid "Admin Buddy Pill"
+msgstr ""
+
+msgid "Admin Buddy quick-access pill in the admin bar. Leave blank to use Primary colour."
+msgstr ""
+
+msgid "Maintenance Pill"
+msgstr ""
+
+msgid "Leave blank for default red."
+msgstr ""
+
+msgid "Coming Soon Pill"
+msgstr ""
+
+msgid "Leave blank for default amber."
+msgstr ""
+
+msgid "Search Blocked Pill"
+msgstr ""
+
+msgid "Leave blank for default violet."
+msgstr ""
+
+msgid "Colour Presets"
+msgstr ""
+
+msgid "Apply a ready-made colour scheme instantly. Overwrites your current colour settings."
+msgstr ""
+
+msgid "Apply"
+msgstr ""
+
+msgid "Live Preview"
+msgstr ""
+
+msgid "Updates as you change colours. Save to apply."
+msgstr ""
+
+msgid "Detected Plugins"
+msgstr ""
+
+msgid "Toggle plugins whose admin pages should keep their own styling. Admin Buddy's content colours (links, buttons, tables, inputs) will be skipped on their pages. The sidebar and admin bar remain styled."
+msgstr ""
+
+#. translators: %d: count
+#, php-format
+msgid "(%d pages)"
+msgstr ""
+
+msgid "Save Exclusions"
+msgstr ""
+
+msgid "No third-party plugin pages detected."
+msgstr ""
+
+msgid "Manual Exclusions"
+msgstr ""
+
+msgid "For plugins not detected above, add page slugs manually. One entry per line. Prefix matching is supported: \"acf\" excludes acf-field-group, acf-post-type, etc."
+msgstr ""
+
+msgid "Data Management"
+msgstr ""
+
+msgid "Reset or permanently remove all Admin Buddy settings and the plugin itself."
+msgstr ""
+
+msgid "Warning:"
+msgstr ""
+
+msgid "These actions are irreversible. Deactivating or deleting the plugin does NOT delete settings data automatically. Use the buttons below for a clean removal."
+msgstr ""
+
+msgid "Reset Plugin Data?"
+msgstr ""
+
+msgid "This will permanently delete all Admin Buddy settings from the database. The plugin will remain active. This cannot be undone."
+msgstr ""
+
+msgid "Reset Plugin Data"
+msgstr ""
+
+msgid "Reset and Deactivate Plugin?"
+msgstr ""
+
+msgid "This will delete all Admin Buddy settings and deactivate the plugin. You can reactivate it later from the Plugins screen."
+msgstr ""
+
+msgid "Reset and Deactivate Plugin"
+msgstr ""
+
+msgid "Left"
+msgstr ""
+
+msgid "Center"
+msgstr ""
+
+msgid "Right"
+msgstr ""
+
+msgid "Layout"
+msgstr ""
+
+msgid "Position of the login form on the page."
+msgstr ""
+
+msgid "Left / Right: full-height frosted-glass panel. Center: classic floating card."
+msgstr ""
+
+msgid "Logo"
+msgstr ""
+
+msgid "Replaces the WordPress logo on the login page."
+msgstr ""
+
+msgid "Logo Image"
+msgstr ""
+
+msgid "Background"
+msgstr ""
+
+msgid "Choose how the login page background looks."
+msgstr ""
+
+msgid "Type"
+msgstr ""
+
+msgid "Solid Color"
+msgstr ""
+
+msgid "Gradient"
+msgstr ""
+
+msgid "Image"
+msgstr ""
+
+msgid "Color"
+msgstr ""
+
+msgid "From"
+msgstr ""
+
+msgid "To"
+msgstr ""
+
+msgid "Overlay"
+msgstr ""
+
+msgid "Opacity"
+msgstr ""
+
+msgid "0% = no overlay. Increase to improve card readability."
+msgstr ""
+
+msgid "Live preview. Updates as you change settings."
+msgstr ""
+
+msgid "Mode & Pages"
+msgstr ""
+
+msgid "Bypass & Emergency URLs"
+msgstr ""
+
+msgid "Site Mode"
+msgstr ""
+
+msgid "COMING SOON ON"
+msgstr ""
+
+msgid "MAINTENANCE ON"
+msgstr ""
+
+msgid "Admins are always bypassed. WP cron always runs."
+msgstr ""
+
+msgid "Site is live and accessible to everyone."
+msgstr ""
+
+msgid "Pre-launch page. Returns 200 OK. Search engines can index it."
+msgstr ""
+
+msgid "Temporary outage. Returns 503 + Retry-After. Search engines will not deindex your site."
+msgstr ""
+
+msgid "Coming Soon Page"
+msgstr ""
+
+msgid "Customise what visitors see before launch."
+msgstr ""
+
+msgid "Heading"
+msgstr ""
+
+msgid "Message"
+msgstr ""
+
+msgid "Basic HTML allowed."
+msgstr ""
+
+msgid "Heading Colour"
+msgstr ""
+
+msgid "Colour of the main heading text."
+msgstr ""
+
+msgid "Message Colour"
+msgstr ""
+
+msgid "Colour of the message body text."
+msgstr ""
+
+msgid "Background Type"
+msgstr ""
+
+msgid "Maintenance Page"
+msgstr ""
+
+msgid "Customise what visitors see during maintenance."
+msgstr ""
+
+msgid "Bypass URLs"
+msgstr ""
+
+msgid "Paths that stay accessible even when a mode is active."
+msgstr ""
+
+msgid "Always bypassed automatically:"
+msgstr ""
+
+msgid "Custom bypass paths"
+msgstr ""
+
+msgid "One path per line. Prefix-matched: /my-account also covers /my-account/orders."
+msgstr ""
+
+msgid "Emergency Access URL"
+msgstr ""
+
+msgid "More information"
+msgstr ""
+
+msgid "Your guaranteed way back in if you get locked out."
+msgstr ""
+
+msgid "What it does:"
+msgstr ""
+
+msgid "Visiting this URL sets a session cookie that removes the maintenance page for your browser, then redirects to your homepage so you can reach your login page normally. Works with any login plugin (Bricks, WooCommerce, native WP, etc)."
+msgstr ""
+
+msgid "Bonus use:"
+msgstr ""
+
+msgid "Share this URL with a client or designer so they can preview the front end while the site is still in coming soon / maintenance mode, without logging them in or granting any admin access."
+msgstr ""
+
+msgid "What it does NOT do:"
+msgstr ""
+
+msgid "Log you in. You still need your admin credentials. WordPress authentication is completely unaffected. The cookie clears when the browser is closed."
+msgstr ""
+
+msgid "Copy URL"
+msgstr ""
+
+msgid "Regenerate if this URL is ever exposed. The old one stops working immediately."
+msgstr ""
+
+msgid "Page Preview"
+msgstr ""
+
+msgid "Enable Coming Soon or Maintenance to see a preview."
+msgstr ""
+
+msgid "Welcome to Admin Buddy"
+msgstr ""
+
+msgid "Enable the modules you need to get started. Each toggle takes effect immediately."
+msgstr ""
+
+msgid "Module Visibility"
+msgstr ""
+
+msgid "Enable the modules you need. Toggles apply instantly, no save needed. Only enabled modules appear in the navigation."
+msgstr ""
+
+msgid "You're on the Free plan. Modules marked Pro and features with Pro badges require an upgrade."
+msgstr ""
+
+msgid "Loading..."
+msgstr ""
+
+msgid "Menu Customiser"
+msgstr ""
+
+msgid "Reorder, hide, rename, and assign custom icons to admin menu items. Per-role visibility and separators."
+msgstr ""
+
+msgid "Custom Pages"
+msgstr ""
+
+msgid "Add your own admin pages with a visual block builder. Perfect for client training docs or internal resources."
+msgstr ""
+
+msgid "Notices & Updates"
+msgstr ""
+
+msgid "Hide WordPress core, plugin and theme update nags, disable auto-update emails, and show a custom policy message."
+msgstr ""
+
+msgid "Auto Palette"
+msgstr ""
+
+msgid "Generate a complete, harmonious admin colour palette from one Primary colour. Plus global UI rounding controls."
+msgstr ""
+
+msgid "Collections"
+msgstr ""
+
+msgid "Build custom post types and field groups without code. Repeaters, relationships, taxonomies and more."
+msgstr ""
+
+msgid "Option Pages"
+msgstr ""
+
+msgid "Create client-friendly settings pages with custom fields. Values accessible via admbud_option() helper."
+msgstr ""
+
+msgid "Icon Library"
+msgstr ""
+
+msgid "Upload custom SVG icons and use them anywhere in Admin Buddy - menus, custom pages, collections."
+msgstr ""
+
+msgid "Activity Log"
+msgstr ""
+
+msgid "Audit trail of admin actions: logins, post edits, plugin changes, user events. Searchable and filterable."
+msgstr ""
+
+msgid "Debug"
+msgstr ""
+
+msgid "Toggle WP_DEBUG and related constants from the UI, view the error log inline, and roll back wp-config.php with one click."
+msgstr ""
+
+msgid "Bricks Builder"
+msgstr ""
+
+msgid "White-label the Bricks builder admin: replace logo, loading spinner, and colour-map the UI to your brand."
+msgstr ""
+
+msgid "Share snippets, collections and settings across multiple WordPress sites from one source of truth."
+msgstr ""
+
+msgid "Export / Import"
+msgstr ""
+
+msgid "Move your entire Admin Buddy setup between sites. JSON-based, selective, reliable."
+msgstr ""
+
+msgid "Demo Data"
+msgstr ""
+
+msgid "One-click niche starter content - posts, pages, users, products, menus and media - ready for client demos and theme testing."
+msgstr ""
+
+msgid "Blueprints"
+msgstr ""
+
+msgid "Curated stacks of plugins and themes you install on every new site - apply your starter blueprint in seconds."
+msgstr ""
+
+msgid "Command Palette"
+msgstr ""
+
+msgid "Alt+K anywhere in the admin to jump to any Admin Buddy setting, page, or post. Fast navigation for power users."
+msgstr ""
+
+msgid "Unlock more with Pro"
+msgstr ""
+
+msgid "Upgrade to access additional modules and features designed for agencies, power users, and multi-site operators."
+msgstr ""
+
+msgid "See Pricing"
+msgstr ""
+
+msgid "Performance"
+msgstr ""
+
+msgid "Remove unnecessary scripts and markup WordPress loads by default."
+msgstr ""
+
+msgid "Disable emoji scripts"
+msgstr ""
+
+msgid "Removes the emoji detection script from every page load. Native browser emoji rendering still works."
+msgstr ""
+
+msgid "Remove jQuery Migrate"
+msgstr ""
+
+msgid "Dequeues jQuery Migrate on the frontend. Skip if your theme needs it."
+msgstr ""
+
+msgid "Remove feed links from &lt;head&gt;"
+msgstr ""
+
+msgid "Removes RSS/Atom discovery links from &lt;head&gt;. Feeds still work via direct URL."
+msgstr ""
+
+msgid "Remove RSD link"
+msgstr ""
+
+msgid "Removes the Really Simple Discovery link. Only needed by external blog editors like MarsEdit."
+msgstr ""
+
+msgid "Remove WLW manifest link"
+msgstr ""
+
+msgid "Removes the Windows Live Writer manifest link from the page source."
+msgstr ""
+
+msgid "Remove shortlink"
+msgstr ""
+
+msgid "Removes the shortlink tag from &lt;head&gt;. Not needed unless you use wp.me shortlinks."
+msgstr ""
+
+msgid "Remove REST API discovery link"
+msgstr ""
+
+msgid "Removes the REST API link tag from &lt;head&gt;. Does not disable the REST API itself."
+msgstr ""
+
+msgid "Disable WordPress embeds"
+msgstr ""
+
+msgid "Removes embed scripts and prevents your content from being embedded on other sites via oEmbed."
+msgstr ""
+
+msgid "Close off common attack vectors and restrict sensitive areas."
+msgstr ""
+
+msgid "Disable XML-RPC"
+msgstr ""
+
+msgid "Turns off the XML-RPC endpoint. Skip if you use Jetpack or mobile apps."
+msgstr ""
+
+msgid "Restrict REST API to logged-in users"
+msgstr ""
+
+msgid "Returns 401 for unauthenticated REST requests. Good for private sites."
+msgstr ""
+
+msgid "Removes the WordPress version number from HTML source and RSS feeds. Prevents version fingerprinting."
+msgstr ""
+
+msgid "Adjust WordPress content defaults that are rarely needed on most sites."
+msgstr ""
+
+msgid "Disable RSS and Atom feeds"
+msgstr ""
+
+msgid "Redirects all feed URLs to the homepage. Use on sites that don't need RSS."
+msgstr ""
+
+msgid "Disable self-pingbacks"
+msgstr ""
+
+msgid "Prevents WordPress pinging itself when you link between your own posts."
+msgstr ""
+
+msgid "Close comments on new posts by default"
+msgstr ""
+
+msgid "New posts start with comments closed. You can still enable per post."
+msgstr ""
+
+msgid "Admin"
+msgstr ""
+
+msgid "Enhancements to the WordPress admin editing experience."
+msgstr ""
+
+msgid "Suppress Plugin Promotional Notices"
+msgstr ""
+
+msgid "Hides upsell banners, review requests, and promotional notices from plugins. Core WordPress notices are preserved."
+msgstr ""
+
+msgid "Enable Duplicate Post"
+msgstr ""
+
+msgid "Adds a \"Duplicate\" row action to posts, pages and CPTs. Creates a draft copy with all meta and taxonomies."
+msgstr ""
+
+msgid "User Last Seen"
+msgstr ""
+
+msgid "Records login timestamps and adds a sortable \"Last Seen\" column to the Users list."
+msgstr ""
+
+msgid "Hide Admin Bar (Frontend)"
+msgstr ""
+
+msgid "Hides the WordPress admin bar on the frontend for selected roles."
+msgstr ""
+
+msgid "Hide Admin Bar (Backend)"
+msgstr ""
+
+msgid "Hides the WordPress admin bar inside the admin dashboard for selected roles."
+msgstr ""
+
+msgid "Hide Checklist pill from admin bar"
+msgstr ""
+
+msgid "Removes the Checklist indicator from the WordPress admin bar for selected roles. The pill stays in the Admin Buddy settings topbar."
+msgstr ""
+
+msgid "Hide Noindex pill from admin bar"
+msgstr ""
+
+msgid "Removes the \"Search Engines Blocked\" indicator from the WordPress admin bar for selected roles. The pill stays in the Admin Buddy settings topbar."
+msgstr ""
+
+msgid "Collapse Sidebar by Default"
+msgstr ""
+
+msgid "The WordPress admin sidebar starts collapsed (icon-only) for selected roles. Users can still expand it."
+msgstr ""
+
+msgid "Show User Menu in Sidebar"
+msgstr ""
+
+msgid "Adds a user avatar, name, and logout button at the top of the admin sidebar for selected roles. Collapses to icons when sidebar is folded."
+msgstr ""
+
+msgid "Media"
+msgstr ""
+
+msgid "Control file upload permissions and allowed formats."
+msgstr ""
+
+msgid "Allow SVG uploads"
+msgstr ""
+
+msgid "Enables SVG file uploads to the media library. Files are sanitised on upload. Scripts and event handlers are stripped automatically."
+msgstr ""
+
+msgid "Allowed roles"
+msgstr ""
+
+msgid "Show all roles"
+msgstr ""
+
+msgid "Show less"
+msgstr ""
+
+msgid "On this page"
+msgstr ""
+
+msgid "Role:"
+msgstr ""
+
+msgid "New Role"
+msgstr ""
+
+#. translators: %s = human-readable time e.g. "2 hours ago"
+#, php-format
+msgid "Last backup: %s"
+msgstr ""
+
+#. translators: %s = human-readable time e.g. "2 hours ago"
+msgid "ago"
+msgstr ""
+
+msgid "Download a JSON backup of all roles before making changes"
+msgstr ""
+
+msgid "Backup Roles"
+msgstr ""
+
+msgid "Rename"
+msgstr ""
+
+msgid "Clone"
+msgstr ""
+
+msgid "Reset to defaults"
+msgstr ""
+
+msgid "Delete role"
+msgstr ""
+
+msgid "Administrator capabilities are protected. Core admin caps cannot be removed to prevent lockout."
+msgstr ""
+
+msgid "Search capabilities…"
+msgstr ""
+
+msgid "Expand All"
+msgstr ""
+
+msgid "Collapse All"
+msgstr ""
+
+msgid "Save Capabilities"
+msgstr ""
+
+msgid "Create Role"
+msgstr ""
+
+msgid "Role name"
+msgstr ""
+
+msgid "e.g. Shop Manager"
+msgstr ""
+
+msgid "Copy caps from"
+msgstr ""
+
+msgid "- None (start blank) -"
+msgstr ""
+
+msgid "Create"
+msgstr ""
+
+msgid "Rename Role"
+msgstr ""
+
+msgid "New name"
+msgstr ""
+
+#. translators: %d: email log limit number
+msgid "Email Log"
+msgstr ""
+
+msgid "Mail Settings"
+msgstr ""
+
+msgid "Control how WordPress sends email."
+msgstr ""
+
+msgid "Enable Custom Mail"
+msgstr ""
+
+msgid "When disabled, WordPress uses its built-in PHP mail behaviour."
+msgstr ""
+
+msgid "Mailer"
+msgstr ""
+
+msgid "Uses PHP's built-in mail() function. From name/email below still apply. No host/port/auth needed."
+msgstr ""
+
+msgid "From Address"
+msgstr ""
+
+msgid "The name and email that appear in the From field of every outgoing email."
+msgstr ""
+
+msgid "From Name"
+msgstr ""
+
+msgid "From Email"
+msgstr ""
+
+msgid "Use an address from a domain you own for best deliverability."
+msgstr ""
+
+msgid "SMTP Server"
+msgstr ""
+
+msgid "Connection details for your outgoing mail server."
+msgstr ""
+
+msgid "SMTP Host"
+msgstr ""
+
+msgid "SMTP Port"
+msgstr ""
+
+msgid "Common: 587 (TLS), 465 (SSL), 25 (none, not recommended)."
+msgstr ""
+
+msgid "Encryption"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Authentication"
+msgstr ""
+
+msgid "Most providers require authentication. Only disable if your server uses IP-based trust."
+msgstr ""
+
+msgid "Username"
+msgstr ""
+
+msgid "Password / App Key"
+msgstr ""
+
+msgid "••••••• (saved)"
+msgstr ""
+
+msgid "Stored encrypted. Leave blank to keep the existing password."
+msgstr ""
+
+msgid "Fallback to PHP Mail"
+msgstr ""
+
+msgid "If SMTP delivery fails, fall back to PHP mail() as a last resort."
+msgstr ""
+
+msgid "Disable SSL Verification"
+msgstr ""
+
+msgid "⚠ Security risk active"
+msgstr ""
+
+msgid "SSL peer verification is disabled. Your connection to the SMTP server is vulnerable to man-in-the-middle attacks. Only use this on a local/staging environment or as a last resort when your host uses a self-signed certificate."
+msgstr ""
+
+msgid "Disables SSL certificate verification and allows self-signed certificates. This is a security risk. Only enable on local or staging environments, or if your SMTP host uses a self-signed certificate."
+msgstr ""
+
+msgid "Send Test Email"
+msgstr ""
+
+msgid "Verify your configuration by sending a test message right now."
+msgstr ""
+
+msgid "Send to"
+msgstr ""
+
+msgid "Send Test"
+msgstr ""
+
+#. translators: %d: email log limit number
+#, php-format
+msgid "Last %d emails sent or attempted by WordPress."
+msgstr ""
+
+msgid "No emails logged yet."
+msgstr ""
+
+msgid "Clear Log"
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Subject"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Click to view full email"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "Sent"
+msgstr ""
+
+msgid "Close email detail"
+msgstr ""
+
+msgid "Everywhere"
+msgstr ""
+
+msgid "Front end"
+msgstr ""
+
+msgid "Admin only"
+msgstr ""
+
+msgid "New Snippet"
+msgstr ""
+
+msgid "Insert Sample"
+msgstr ""
+
+msgid "Search snippets…"
+msgstr ""
+
+msgid "Search snippets"
+msgstr ""
+
+msgid "Filter snippets"
+msgstr ""
+
+msgid "All"
+msgstr ""
+
+msgid "Active"
+msgstr ""
+
+msgid "Inactive"
+msgstr ""
+
+msgid "No snippets yet. Click \"New Snippet\" to add your first one."
+msgstr ""
+
+msgid "No snippets match your search or filters."
+msgstr ""
+
+msgid "Active. Click to disable"
+msgstr ""
+
+msgid "Inactive. Click to enable"
+msgstr ""
+
+msgid "(untitled)"
+msgstr ""
+
+msgid "Head"
+msgstr ""
+
+msgid "Auto-disabled due to error:"
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Give this snippet a name…"
+msgstr ""
+
+msgid "Scope"
+msgstr ""
+
+msgid "Position"
+msgstr ""
+
+msgid "Priority"
+msgstr ""
+
+msgid "Notes"
+msgstr ""
+
+msgid "Optional. Remind yourself what this snippet does"
+msgstr ""
+
+msgid "e.g. Adds Google Analytics to the frontend footer…"
+msgstr ""
+
+msgid "Code"
+msgstr ""
+
+msgid "omit the opening <?php tag"
+msgstr ""
+
+msgid "Snippet code"
+msgstr ""
+
+msgid "Save Snippet"
+msgstr ""
+
+msgid "We'll be back shortly."
+msgstr ""
+
+msgid "Maintenance page preview"
+msgstr ""
+
+msgid "Coming soon page preview"
+msgstr ""
+
+msgid "Live preview. Updates as you change settings above. Save to apply."
+msgstr ""
+
+msgid "Width"
+msgstr ""
+
+msgid "Height"
+msgstr ""
+
+msgid "Height 0 = auto (proportional to width)."
+msgstr ""
+
+msgid "Please select a valid published page."
+msgstr ""
+
+msgid "You do not have permission to do this."
+msgstr ""
+
+msgid "Importing roles will overwrite ALL role/capability definitions. Use with care."
+msgstr ""
