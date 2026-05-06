@@ -25,7 +25,7 @@ Eight modules ship enabled (or available to enable) in the free build:
 
 A separate commercial Pro build extends this Free build with additional modules (Menu Customiser, Custom Pages, Collections, Option Pages, Icon Library, Activity Log, Debug, Bricks Builder integration, Remote, Export/Import, Demo Data, Blueprints).
 
-Pro source is **not published here** - only the licensed Pro distribution is available to customers via [wpadminbuddy.com](https://wpadminbuddy.com).
+Pro source is **not published here** - only the licensed Pro distribution is available to customers.
 
 ## Reporting issues
 
