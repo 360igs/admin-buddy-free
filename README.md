@@ -13,19 +13,13 @@ Each release here matches a version on WordPress.org. The git tag `v1.0.1` corre
 Eight modules ship enabled (or available to enable) in the free build:
 
 - **White Label** - custom admin colours, logos, custom dashboard pages
-- **Colours** - full admin colour customisation (Auto Palette is Pro-only)
+- **Colours** - full admin colour customisation
 - **Login** - branded login page
 - **Maintenance** - Coming Soon / Maintenance modes with HMAC bypass tokens
-- **SMTP** - custom outgoing-mail settings (provider presets are Pro-only; Free supports any SMTP server via the Custom preset)
+- **SMTP** - custom outgoing-mail settings for any SMTP server
 - **Snippets** - CSS, JS, HTML snippets with syntax checking and per-snippet enable/disable
 - **User Roles** - capability editor + role create/clone/delete
 - **Quick Settings** - common WordPress hardening + UI toggles
-
-## Pro build
-
-A separate commercial Pro build extends this Free build with additional modules (Menu Customiser, Custom Pages, Collections, Option Pages, Icon Library, Activity Log, Debug, Bricks Builder integration, Remote, Export/Import, Demo Data, Blueprints).
-
-Pro source is **not published here** - only the licensed Pro distribution is available to customers.
 
 ## Reporting issues
 
