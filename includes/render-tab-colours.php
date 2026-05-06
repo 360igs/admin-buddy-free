@@ -732,7 +732,7 @@ function admbud_colour_val( string $option, string $fallback = '#000000' ): stri
                     'themes.php', 'plugins.php', 'users.php', 'tools.php',
                     'options-general.php', 'profile.php', 'site-health.php',
                     'update-core.php', 'import.php', 'export.php', 'privacy.php',
-                    'admin-buddy', 'admbud_', 'customize',
+                    'admbud', 'admbud_', 'customize',
                 ];
                 // Generic single-word slugs that are WP internals or too ambiguous.
                 $junk_slugs = [ 'action', 'add', 'edit', 'post', 'page', 'link', 'comment', 'options', 'menu', 'widget', 'nav', 'theme', 'plugin', 'user', 'media', 'tool', 'setting', 'dashboard' ];

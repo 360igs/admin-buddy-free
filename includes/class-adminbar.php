@@ -56,7 +56,7 @@ class AdminBar {
             return;
         }
 
-        $settings_url = admin_url( 'admin.php?page=admin-buddy&tab=maintenance' );
+        $settings_url = admin_url( 'admin.php?page=admbud&tab=maintenance' );
 
         // SVG icons - inline in the admin bar node title (WP_Admin_Bar accepts HTML).
         $rocket_svg = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;position:relative;top:-1px;"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>';
@@ -115,27 +115,36 @@ class AdminBar {
             return;
         }
 
-        // Pull pill colours from options (with class-default fallbacks). Each
-        // is run through sanitize_hex_field() at read so the final CSS string
-        // contains no unescaped data.
+        // Pull pill colours from options. Read-side: sanitize_hex_field()
+        // validates the hex format. Output-side: each value is run through
+        // sanitize_hex_color() again at the concat site below to enforce
+        // "escape late" — only a valid #rgb / #rrggbb string ever reaches
+        // the CSS string.
         $coming_soon = sanitize_hex_field( admbud_get_option( 'admbud_colours_pill_coming_soon', '' ) ) ?: \Admbud\Colours::COLOR_COMING_SOON;
         $maintenance = sanitize_hex_field( admbud_get_option( 'admbud_colours_pill_maintenance', '' ) ) ?: \Admbud\Colours::COLOR_MAINTENANCE;
         $noindex     = sanitize_hex_field( admbud_get_option( 'admbud_colours_pill_noindex',     '' ) ) ?: \Admbud\Colours::COLOR_NOINDEX;
         $admin_buddy = sanitize_hex_field( admbud_get_option( 'admbud_colours_pill_admin_buddy', '' ) )
             ?: ( sanitize_hex_field( admbud_get_option( 'admbud_colours_primary', '' ) ) ?: \Admbud\Colours::DEFAULT_PRIMARY );
 
+        // Escape-late: re-run through sanitize_hex_color(); fall back to a
+        // safe default if the option somehow contains a non-hex value.
+        $coming_soon = sanitize_hex_color( $coming_soon ) ?: \Admbud\Colours::COLOR_COMING_SOON;
+        $maintenance = sanitize_hex_color( $maintenance ) ?: \Admbud\Colours::COLOR_MAINTENANCE;
+        $noindex     = sanitize_hex_color( $noindex )     ?: \Admbud\Colours::COLOR_NOINDEX;
+        $admin_buddy = sanitize_hex_color( $admin_buddy ) ?: \Admbud\Colours::DEFAULT_PRIMARY;
+
         $css = '#wpadminbar #wp-admin-bar-ab-mode-indicator > .ab-item,'
              . '#wpadminbar #wp-admin-bar-ab-noindex-indicator > .ab-item,'
              . '#wpadminbar #wp-admin-bar-ab-checklist-indicator > .ab-item,'
-             . '#wpadminbar #wp-admin-bar-admin-buddy > .ab-item,'
+             . '#wpadminbar #wp-admin-bar-admbud > .ab-item,'
              . '#wpadminbar .quicklinks #wp-admin-bar-ab-mode-indicator:hover > .ab-item,'
              . '#wpadminbar .quicklinks #wp-admin-bar-ab-noindex-indicator:hover > .ab-item,'
              . '#wpadminbar .quicklinks #wp-admin-bar-ab-checklist-indicator:hover > .ab-item,'
-             . '#wpadminbar .quicklinks #wp-admin-bar-admin-buddy:hover > .ab-item,'
+             . '#wpadminbar .quicklinks #wp-admin-bar-admbud:hover > .ab-item,'
              . '#wpadminbar.mobile .quicklinks #wp-admin-bar-ab-mode-indicator:hover > .ab-item,'
              . '#wpadminbar.mobile .quicklinks #wp-admin-bar-ab-noindex-indicator:hover > .ab-item,'
              . '#wpadminbar.mobile .quicklinks #wp-admin-bar-ab-checklist-indicator:hover > .ab-item,'
-             . '#wpadminbar.mobile .quicklinks #wp-admin-bar-admin-buddy:hover > .ab-item{'
+             . '#wpadminbar.mobile .quicklinks #wp-admin-bar-admbud:hover > .ab-item{'
              . 'padding:0!important;background:transparent!important;color:inherit!important;}'
              . '.ab-bar-node{display:inline-flex;align-items:center;gap:5px;padding:0 10px!important;'
              . 'border-radius:20px;font-size:12px;font-weight:600;line-height:1;height:22px;'

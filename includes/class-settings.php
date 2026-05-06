@@ -272,7 +272,7 @@ class Settings {
             __( 'Admin Buddy', 'admin-buddy' ),
             __( 'Admin Buddy', 'admin-buddy' ),
             'manage_options',
-            'admin-buddy',
+            'admbud',
             [ $this, 'render_page' ],
             $icon_svg,
             80
@@ -281,31 +281,31 @@ class Settings {
         // First submenu: same slug as parent so WP doesn't create a duplicate.
         // Clicking parent "Admin Buddy" goes to last visited tab.
         add_submenu_page(
-            'admin-buddy',
+            'admbud',
             __( 'Admin Buddy', 'admin-buddy' ),
             __( 'Admin Buddy', 'admin-buddy' ),
             'manage_options',
-            'admin-buddy',
+            'admbud',
             [ $this, 'render_page' ]
         );
 
         // Explicit Modules submenu - always goes to Modules tab.
         add_submenu_page(
-            'admin-buddy',
+            'admbud',
             __( 'Modules', 'admin-buddy' ),
             __( 'Modules', 'admin-buddy' ),
             'manage_options',
-            'admin-buddy&tab=modules',
+            'admbud&tab=modules',
             [ $this, 'render_page' ]
         );
 
         // Plugin Data submenu.
         add_submenu_page(
-            'admin-buddy',
+            'admbud',
             __( 'Plugin Data', 'admin-buddy' ),
             __( 'Plugin Data', 'admin-buddy' ),
             'manage_options',
-            'admin-buddy&tab=plugin-data',
+            'admbud&tab=plugin-data',
             [ $this, 'render_page' ]
         );
     }
@@ -315,9 +315,9 @@ class Settings {
         if ( admbud_get_option( 'admbud_show_in_adminbar', '0' ) !== '1' ) { return; }
         if ( ! current_user_can( 'manage_options' ) ) { return; }
 
-        $base = admin_url( 'admin.php?page=admin-buddy' );
+        $base = admin_url( 'admin.php?page=admbud' );
         $bar->add_node( [
-            'id'    => 'admin-buddy',
+            'id'    => 'admbud',
             'title' => '<span class="ab-bar-node ab-bar-node--admin-buddy">' . esc_html__( 'Admin Buddy', 'admin-buddy' ) . '</span>',
             'href'  => $base,
             'meta'  => [ 'title' => __( 'Admin Buddy Settings', 'admin-buddy' ) ],
@@ -325,7 +325,7 @@ class Settings {
 
         // Modules link.
         $bar->add_node( [
-            'parent' => 'admin-buddy',
+            'parent' => 'admbud',
             'id'     => 'ab-bar-modules',
             'title'  => __( 'Modules', 'admin-buddy' ),
             'href'   => $base . '&tab=modules',
@@ -344,7 +344,7 @@ class Settings {
             foreach ( $group_tabs as $gslug => $gtab ) {
                 if ( ! in_array( $gslug, $enabled, true ) ) { continue; }
                 $bar->add_node( [
-                    'parent' => 'admin-buddy',
+                    'parent' => 'admbud',
                     'id'     => 'ab-bar-' . $gslug,
                     'title'  => $gtab['label'],
                     'href'   => $base . '&tab=' . $gslug,
@@ -360,7 +360,7 @@ class Settings {
         ];
         foreach ( $manage_tabs as $mtab_slug => $mtab_label ) {
             $bar->add_node( [
-                'parent' => 'admin-buddy',
+                'parent' => 'admbud',
                 'id'     => 'ab-bar-' . $mtab_slug,
                 'title'  => $mtab_label,
                 'href'   => $base . '&tab=' . $mtab_slug,
@@ -378,7 +378,7 @@ class Settings {
      */
     public function intercept_redirect( string $location ): string {
         if (
-            strpos( $location, 'page=admin-buddy' ) !== false &&
+            strpos( $location, 'page=admbud' ) !== false &&
             strpos( $location, 'settings-updated=true' ) !== false
         ) {
             // This filter runs on the wp_redirect hook AFTER WordPress's
@@ -441,7 +441,7 @@ class Settings {
         if ( $key === 'demo_blocked' ) {
             ?>
             <div class="ab-notice ab-notice--warning">
-                🔒 <?php esc_html_e( 'This action is disabled in demo mode. Get the full version at wpadminbuddy.com', 'admin-buddy' ); ?>
+                🔒 <?php esc_html_e( 'This action is disabled in demo mode.', 'admin-buddy' ); ?>
             </div>
             <?php
             return;
@@ -906,7 +906,8 @@ class Settings {
     // ============================================================================
 
     public function enqueue_assets( string $hook ): void {
-        if ( ! in_array( $hook, [ 'settings_page_admin-buddy', 'toplevel_page_admin-buddy' ], true ) ) return;
+        // Hook suffix follows the menu slug ('admbud'), not the plugin folder name.
+        if ( ! in_array( $hook, [ 'settings_page_admbud', 'toplevel_page_admbud' ], true ) ) return;
 
         $v      = ADMBUD_VERSION;
         $url    = ADMBUD_URL . 'assets/';
@@ -918,18 +919,18 @@ class Settings {
         $min_css = '';
 
         // Tokens must load before component CSS.
-        wp_enqueue_style( 'admin-buddy-tokens', $url . 'tokens.css', [], $v );
+        wp_enqueue_style( 'admbud-tokens', $url . 'tokens.css', [], $v );
         // Core shared CSS - always loaded.
-        wp_enqueue_style( 'admin-buddy-core', $url . 'admin.css', [ 'admin-buddy-tokens' ], $v );
-        wp_enqueue_style( 'admin-buddy-dropdown', $url . "ab-dropdown{$min_css}.css", [ 'admin-buddy-core' ], $v );
+        wp_enqueue_style( 'admbud-core', $url . 'admin.css', [ 'admbud-tokens' ], $v );
+        wp_enqueue_style( 'admbud-dropdown', $url . "ab-dropdown{$min_css}.css", [ 'admbud-core' ], $v );
         wp_enqueue_style( 'wp-color-picker' );
         wp_enqueue_script( 'wp-color-picker' );
-        wp_enqueue_script( 'admin-buddy-dropdown', $js_url . 'ab-dropdown.js', [], $v, true );
+        wp_enqueue_script( 'admbud-dropdown', $js_url . 'ab-dropdown.js', [], $v, true );
         wp_enqueue_media();
 
 
         // Core shared JS - Vanilla ES6+, no jQuery dependency.
-        wp_enqueue_script( 'admin-buddy-core', $js_url . 'admin.js', [ 'wp-color-picker', 'admin-buddy-dropdown' ], $v, true );
+        wp_enqueue_script( 'admbud-core', $js_url . 'admin.js', [ 'wp-color-picker', 'admbud-dropdown' ], $v, true );
 
         // Tab-specific assets - only loaded on the relevant tab.
         $active_tab = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'adminui'; // phpcs:ignore WordPress.Security.NonceVerification
@@ -950,14 +951,14 @@ class Settings {
                 $cm_html = wp_enqueue_code_editor( [ 'type' => 'text/html' ] );
                 wp_enqueue_style( 'code-editor' );
                 wp_enqueue_script( 'code-editor' );
-                wp_enqueue_style(  'admin-buddy-tab-snippets', $url . "tab-snippets{$min_css}.css", [ 'admin-buddy-core' ], $v );
-                wp_enqueue_script( 'admin-buddy-tab-snippets', $js_url . 'tab-snippets.js', [ 'admin-buddy-core' ], $v, true );
+                wp_enqueue_style(  'admbud-tab-snippets', $url . "tab-snippets{$min_css}.css", [ 'admbud-core' ], $v );
+                wp_enqueue_script( 'admbud-tab-snippets', $js_url . 'tab-snippets.js', [ 'admbud-core' ], $v, true );
                 // The linter rule maps live at the TOP LEVEL of each settings
                 // array (csslint/jshint/htmlhint), not under codemirror.lint.
                 // wp.codeEditor.initialize() reads those top-level keys to set
                 // up the actual linter. Pass them per-type so the JS side can
                 // inject the right one based on the active mode.
-                wp_localize_script( 'admin-buddy-tab-snippets', 'admbudSnippetData', [
+                wp_localize_script( 'admbud-tab-snippets', 'admbudSnippetData', [
                     'restUrl'   => esc_url_raw( rest_url( 'admin-buddy/v1/php-functions' ) ),
                     'restNonce' => wp_create_nonce( 'wp_rest' ),
                     'linters'   => [
@@ -969,19 +970,19 @@ class Settings {
                 break;
 
             case 'smtp':
-                wp_enqueue_style(  'admin-buddy-tab-smtp', $url . "tab-smtp{$min_css}.css", [ 'admin-buddy-core' ], $v );
-                wp_enqueue_script( 'admin-buddy-tab-smtp', $js_url . 'tab-smtp.js', [ 'admin-buddy-core' ], $v, true );
+                wp_enqueue_style(  'admbud-tab-smtp', $url . "tab-smtp{$min_css}.css", [ 'admbud-core' ], $v );
+                wp_enqueue_script( 'admbud-tab-smtp', $js_url . 'tab-smtp.js', [ 'admbud-core' ], $v, true );
                 break;
 
             case 'roles':
-                wp_enqueue_style(  'admin-buddy-tab-roles', $url . "tab-roles{$min_css}.css", [ 'admin-buddy-core' ], $v );
-                wp_enqueue_script( 'admin-buddy-tab-roles', $js_url . 'tab-roles.js', [ 'admin-buddy-core' ], $v, true );
+                wp_enqueue_style(  'admbud-tab-roles', $url . "tab-roles{$min_css}.css", [ 'admbud-core' ], $v );
+                wp_enqueue_script( 'admbud-tab-roles', $js_url . 'tab-roles.js', [ 'admbud-core' ], $v, true );
                 break;
 
 
             case 'quick-settings':
-                wp_enqueue_script( 'admin-buddy-tab-quick-settings', $js_url . 'tab-quick-settings.js', [ 'admin-buddy-core' ], $v, true );
-                wp_localize_script( 'admin-buddy-tab-quick-settings', 'admbudQs', [
+                wp_enqueue_script( 'admbud-tab-quick-settings', $js_url . 'tab-quick-settings.js', [ 'admbud-core' ], $v, true );
+                wp_localize_script( 'admbud-tab-quick-settings', 'admbudQs', [
                     'nonce'   => wp_create_nonce( 'admbud_qs_nonce' ),
                     'ajaxUrl' => admin_url( 'admin-ajax.php' ),
                     'i18n'    => [
@@ -1006,17 +1007,14 @@ class Settings {
             case 'modules':
                 wp_enqueue_script( 'wp-element' );
                 wp_enqueue_script(
-                    'admin-buddy-setup-modules',
+                    'admbud-setup-modules',
                     $js_url . 'setup-modules.js',
-                    [ 'admin-buddy-core', 'wp-element' ],
+                    [ 'admbud-core', 'wp-element' ],
                     $v,
                     true
                 );
                 $manageable = $this->get_manageable_tabs();
                 $enabled    = $this->get_enabled_tabs();
-                $allowed    = function_exists( 'admbud_allowed_modules' ) ? admbud_allowed_modules() : array_keys( $manageable );
-                $is_licensed = function_exists( 'admbud_is_licensed' ) ? admbud_is_licensed() : true;
-                $is_paid     = function_exists( 'admbud_is_paid' ) ? admbud_is_paid() : true;
                 $modules_data = [];
                 foreach ( $manageable as $slug => $tab ) {
                     $modules_data[] = [
@@ -1026,7 +1024,6 @@ class Settings {
                         'group'     => $tab['group'] ?? 'interface',
                         'enabled'   => in_array( $slug, $enabled, true ),
                         'always_on' => false,
-                        'pro'       => ! in_array( $slug, $allowed, true ),
                     ];
                 }
                 // Use wp_add_inline_script + wp_json_encode to preserve boolean types.
@@ -1037,12 +1034,10 @@ class Settings {
                     'nonce'           => wp_create_nonce( 'admbud_modules_toggle' ),
                     'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
                     'maintenanceMode' => admbud_get_option( 'admbud_maintenance_mode', 'off' ),
-                    'maintenanceUrl'  => admin_url( 'admin.php?page=admin-buddy&tab=maintenance' ),
-                    'isLicensed'      => true,
-                    'isPaid'          => ! admbud_is_pro(),
+                    'maintenanceUrl'  => admin_url( 'admin.php?page=admbud&tab=maintenance' ),
                 ];
                 wp_add_inline_script(
-                    'admin-buddy-setup-modules',
+                    'admbud-setup-modules',
                     'var admbudSetupData=' . wp_json_encode( $setup_data ) . ';',
                     'before'
                 );
@@ -1050,12 +1045,12 @@ class Settings {
                 foreach ( $manageable as $slug => $tab ) {
                     $icons_map[ $slug ] = $tab['icon'];
                 }
-                wp_localize_script( 'admin-buddy-setup-modules', 'admbudIcons', $icons_map );
+                wp_localize_script( 'admbud-setup-modules', 'admbudIcons', $icons_map );
                 break;
         }
 
-        // Shared localised strings - passed to admin-buddy-core but also available to tab scripts.
-        wp_localize_script( 'admin-buddy-core', 'admbudSettings', [
+        // Shared localised strings - passed to admbud-core but also available to tab scripts.
+        wp_localize_script( 'admbud-core', 'admbudSettings', [
             'chooseImageTitle'   => __( 'Choose Image',                                              'admin-buddy' ),
             'useImageText'       => __( 'Use this image',                                            'admin-buddy' ),
             'copiedText'         => __( '✓ Copied',                                                  'admin-buddy' ),
@@ -1170,7 +1165,7 @@ class Settings {
     public function action_links( array $links ): array {
         array_unshift( $links, sprintf(
             '<a href="%s">%s</a>',
-            esc_url( admin_url( 'admin.php?page=admin-buddy' ) ),
+            esc_url( admin_url( 'admin.php?page=admbud' ) ),
             esc_html__( 'Settings', 'admin-buddy' )
         ) );
         return $links;
@@ -1229,7 +1224,7 @@ class Settings {
         $saved_tab = sanitize_key( wp_unslash( $_COOKIE['admbud_last_tab'] ) );
         if ( ! $saved_tab ) { return; }
 
-        $url = admin_url( 'admin.php?page=admin-buddy&tab=' . $saved_tab );
+        $url = admin_url( 'admin.php?page=admbud&tab=' . $saved_tab );
         $sub_cookie = 'admbud_subtab_' . $saved_tab;
         if ( ! empty( $_COOKIE[ $sub_cookie ] ) ) {
             $url = add_query_arg( 'admbud_subtab', sanitize_key( wp_unslash( $_COOKIE[ $sub_cookie ] ) ), $url );
@@ -1278,21 +1273,21 @@ class Settings {
 
     /**
      * Enqueue assets that must be available on EVERY admin page, not just the AB settings page.
-     *  - admin-buddy-icon-inject (script): provides window.AdmbudIcon.injectSidebarIcons(),
+     *  - admbud-icon-inject (script): provides window.AdmbudIcon.injectSidebarIcons(),
      *    called by inline scripts that each module appends via wp_add_inline_script().
-     *  - admin-buddy-icon-inject (style): empty handle used as the attachment point for
+     *  - admbud-icon-inject (style): empty handle used as the attachment point for
      *    per-module inline CSS that targets the WP admin sidebar icons.
      */
     public function enqueue_global_assets(): void {
         wp_enqueue_script(
-            'admin-buddy-icon-inject',
+            'admbud-icon-inject',
             ADMBUD_URL . 'assets/js/ab-icon-inject.js',
             [],
             ADMBUD_VERSION,
             true // footer
         );
-        wp_register_style( 'admin-buddy-icon-inject', false, [], ADMBUD_VERSION );
-        wp_enqueue_style( 'admin-buddy-icon-inject' );
+        wp_register_style( 'admbud-icon-inject', false, [], ADMBUD_VERSION );
+        wp_enqueue_style( 'admbud-icon-inject' );
     }
 
     public function render_page(): void {
@@ -1404,9 +1399,6 @@ class Settings {
 </svg>
                 </div>
                 <div class="ab-topbar__version">v<?php echo esc_html( ADMBUD_VERSION ); ?><?php
-                    if ( function_exists( 'admbud_is_paid' ) && admbud_is_paid() ) {
-                        echo ' <span class="ab-topbar__pro-label">Pro</span>';
-                    }
                 ?></div>
 
                 <?php /* -- Updates Centre icon -- */ ?>
@@ -1469,9 +1461,12 @@ class Settings {
                     foreach ( $raw_plugin_transient->response as $plugin_file => $plugin_data ) {
                         // get_plugin_data() requires an absolute path to ANOTHER plugin's
                         // main file; plugin_dir_path( __FILE__ ) returns Admin Buddy's
-                        // own folder, not the plugins root, so WP_PLUGIN_DIR is the
-                        // canonical way to resolve $plugin_file (e.g. "akismet/akismet.php").
-                        $full_path   = WP_PLUGIN_DIR . '/' . $plugin_file;
+                        // own folder, not the plugins root. WP_PLUGIN_DIR is the
+                        // canonical WP constant for the plugins root and is the only
+                        // way to resolve a relative plugin file path like "akismet/akismet.php".
+                        // validate_file() guards against path traversal (..).
+                        if ( 0 !== validate_file( $plugin_file ) ) { continue; }
+                        $full_path   = trailingslashit( WP_PLUGIN_DIR ) . $plugin_file;
                         $plugin_info = file_exists( $full_path ) ? get_plugin_data( $full_path, false, false ) : [];
                         $admbud_updates_plugins[] = [
                             'name'    => $plugin_info['Name'] ?? $plugin_file,
@@ -1586,11 +1581,11 @@ class Settings {
                             class="ab-badge <?php echo esc_attr( $admbud_checklist_class ); ?> ab-topbar__status-badge"
                             data-ab-checklist-open="1"
                             title="<?php esc_attr_e( 'Open Checklist', 'admin-buddy' ); ?>">
-                        <?php echo $admbud_checklist_icon; // phpcs:ignore -- trusted internal SVG ?>
+                        <?php echo admbud_kses_svg( $admbud_checklist_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped via admbud_kses_svg() (wp_kses with SVG ruleset) ?>
                         <?php echo esc_html( $admbud_checklist_label ); ?>
                     </button>
                     <?php foreach ( $status_indicators as $ind ) :
-                        $url = ! empty( $ind['url'] ) ? $ind['url'] : ( ! empty( $ind['tab'] ) ? admin_url( 'admin.php?page=admin-buddy&tab=' . $ind['tab'] ) : '' );
+                        $url = ! empty( $ind['url'] ) ? $ind['url'] : ( ! empty( $ind['tab'] ) ? admin_url( 'admin.php?page=admbud&tab=' . $ind['tab'] ) : '' );
                     ?>
                         <?php if ( $url ) : ?>
                         <a href="<?php echo esc_url( $url ); ?>"
@@ -1702,10 +1697,10 @@ class Settings {
 
             <?php
             // Updates Centre slide-panel handler — attached to the global
-            // admin-buddy-core handle so it's part of the same enqueue cycle
+            // admbud-core handle so it's part of the same enqueue cycle
             // as the markup that triggers it.
             wp_add_inline_script(
-                'admin-buddy-core',
+                'admbud-core',
                 '(function(){var btn=document.getElementById("ab-updates-btn");var panel=document.getElementById("ab-updates-panel");var backdrop=document.getElementById("ab-updates-backdrop");var closeBtn=document.getElementById("ab-updates-panel-close");function openPanel(){if(!panel||!backdrop)return;panel.style.display="";backdrop.style.display="";requestAnimationFrame(function(){requestAnimationFrame(function(){panel.classList.add("is-open");backdrop.classList.add("is-open");document.body.classList.add("ab-modal-open");});});}function closePanel(){if(!panel)return;panel.classList.remove("is-open");backdrop.classList.remove("is-open");document.body.classList.remove("ab-modal-open");setTimeout(function(){if(!panel.classList.contains("is-open")){panel.style.display="none";backdrop.style.display="none";}},300);}if(btn)btn.addEventListener("click",openPanel);if(closeBtn)closeBtn.addEventListener("click",closePanel);if(backdrop)backdrop.addEventListener("click",closePanel);document.addEventListener("keydown",function(e){if(e.key==="Escape"&&panel&&panel.classList.contains("is-open"))closePanel();});})();'
             );
             ?>
@@ -1748,8 +1743,6 @@ class Settings {
                         'manage'       => __( 'Manage',       'admin-buddy' ),
                     ];
 
-                    // License state for pro badge visibility in nav.
-                    $is_paid_nav = function_exists( 'admbud_is_paid' ) && admbud_is_paid();
 
                     // -- Collapsible groups (Interface, Utilities, Integrations, Manage) --
                     // All groups follow the same pattern: filter by enabled modules.
@@ -1770,24 +1763,14 @@ class Settings {
                         </summary>
                         <?php foreach ( $group_tabs as $slug => $tab ) :
                             $is_active = ( $active_tab === $slug );
-                            $url       = admin_url( 'admin.php?page=admin-buddy&tab=' . $slug );
-                            // Pro-locked sidebar items (Remote for free users).
-                            $is_nav_pro_locked = ( ( $slug === 'source' || $slug === 'export-import' ) && ! $is_paid_nav );
+                            $url       = admin_url( 'admin.php?page=admbud&tab=' . $slug );
                         ?>
-                            <?php if ( $is_nav_pro_locked ) : ?>
-                            <span class="ab-nav__item" style="opacity:0.5;pointer-events:none;cursor:default;">
-                                <span class="ab-nav__icon"><?php echo admbud_kses_svg( $tab['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-                                <span class="ab-nav__label"><?php echo esc_html( $tab['label'] ); ?></span>
-                                <span class="ab-badge ab-badge--pro" style="font-size:9px;padding:1px 5px;margin-left:auto;">Pro</span>
-                            </span>
-                            <?php else : ?>
                             <a href="<?php echo esc_url( $url ); ?>"
                                class="ab-nav__item<?php echo $is_active ? ' is-active' : ''; ?>"
                                <?php if ( $is_active ) echo 'aria-current="page"'; ?>>
                                 <span class="ab-nav__icon"><?php echo admbud_kses_svg( $tab['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
                                 <span class="ab-nav__label"><?php echo esc_html( $tab['label'] ); ?></span>
                             </a>
-                            <?php endif; ?>
                         <?php endforeach; ?>
                     </details>
                     <?php endforeach; ?>
@@ -1805,7 +1788,7 @@ class Settings {
                         if ( ! isset( $tabs[ $s_slug ] ) ) { continue; }
                         $s_tab     = $tabs[ $s_slug ];
                         $s_active  = ( $active_tab === $s_slug );
-                        $s_url     = admin_url( 'admin.php?page=admin-buddy&tab=' . $s_slug );
+                        $s_url     = admin_url( 'admin.php?page=admbud&tab=' . $s_slug );
                     ?>
                         <a href="<?php echo esc_url( $s_url ); ?>"
                            class="ab-nav__item ab-nav__item--standalone<?php echo $s_active ? ' is-active' : ''; ?>"
@@ -2245,6 +2228,9 @@ class Settings {
             wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
         }
         $raw = wp_unslash( $_POST['values'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+        // json_decode does not sanitise; each decoded key/value pair is run
+        // through sanitize_key() / sanitize_text_field() below, AND only keys
+        // matching the admbud_ prefix whitelist are written to options.
         $data = json_decode( $raw, true );
         if ( ! is_array( $data ) ) {
             wp_send_json_error( [ 'message' => 'Invalid data' ], 400 );

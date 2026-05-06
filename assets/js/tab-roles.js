@@ -223,7 +223,7 @@
         backupBtn.disabled=true; backupBtn.textContent='Downloading…';
         post({action:'admbud_roles_backup',nonce:nonce}).then(function(res){
             if(res.success){
-                var fname='admin-buddy-roles-'+new Date().toISOString().slice(0,10)+'.json';
+                var fname='admbud-roles-'+new Date().toISOString().slice(0,10)+'.json';
                 var blob=new Blob([JSON.stringify(res.data,null,2)],{type:'application/json'});
                 var url=URL.createObjectURL(blob), a=document.createElement('a');
                 a.href=url; a.download=fname; a.click(); URL.revokeObjectURL(url);

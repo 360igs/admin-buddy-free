@@ -27,12 +27,12 @@ trait Settings_Render {
         <?php
     }
 
-    /** Open a settings card with an inline SVG icon (no escaping - caller passes trusted SVG). */
+    /** Open a settings card with an inline SVG icon. SVG is sanitised via admbud_kses_svg(). */
     public function card_open_svg( string $svg, string $title, string $subtitle = '' ): void {
         ?>
         <div class="ab-section">
             <div class="ab-section__header">
-                <span class="ab-section__icon ab-section__icon"><?php echo $svg; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted internal SVG ?></span>
+                <span class="ab-section__icon ab-section__icon"><?php echo admbud_kses_svg( $svg ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped via admbud_kses_svg() (wp_kses with SVG ruleset) ?></span>
                 <div>
                     <h3><?php echo esc_html( $title ); ?></h3>
                     <?php if ( $subtitle ) : ?><p><?php echo esc_html( $subtitle ); ?></p><?php endif; ?>
@@ -195,25 +195,30 @@ trait Settings_Render {
                     <div class="ab-img-size-row">
                         <label for="<?php echo esc_attr( $width_key ); ?>"><?php esc_html_e( 'Width', 'admin-buddy' ); ?></label>
                         <input type="range"
+                               class="ab-range-display"
+                               data-display="<?php echo esc_attr( $w_id ); ?>"
+                               data-suffix="px"
                                id="<?php echo esc_attr( $width_key ); ?>"
                                name="<?php echo esc_attr( $width_key ); ?>"
                                min="<?php echo esc_attr( $w_min ); ?>"
                                max="<?php echo esc_attr( $w_max ); ?>"
                                step="4"
-                               value="<?php echo esc_attr( $width ); ?>"
-                               oninput="document.getElementById('<?php echo esc_attr( $w_id ); ?>').textContent=this.value+'px'">
+                               value="<?php echo esc_attr( $width ); ?>">
                         <span id="<?php echo esc_attr( $w_id ); ?>"><?php echo esc_html( $width ); ?>px</span>
                     </div>
                     <div class="ab-img-size-row">
                         <label for="<?php echo esc_attr( $height_key ); ?>"><?php esc_html_e( 'Height', 'admin-buddy' ); ?></label>
                         <input type="range"
+                               class="ab-range-display"
+                               data-display="<?php echo esc_attr( $h_id ); ?>"
+                               data-suffix="px"
+                               data-zero-label="Auto"
                                id="<?php echo esc_attr( $height_key ); ?>"
                                name="<?php echo esc_attr( $height_key ); ?>"
                                min="0"
                                max="<?php echo esc_attr( $h_max ); ?>"
                                step="4"
-                               value="<?php echo esc_attr( $height ); ?>"
-                               oninput="document.getElementById('<?php echo esc_attr( $h_id ); ?>').textContent=this.value==0?'Auto':this.value+'px'">
+                               value="<?php echo esc_attr( $height ); ?>">
                         <span id="<?php echo esc_attr( $h_id ); ?>"><?php echo $height === 0 ? 'Auto' : esc_html( $height ) . 'px'; ?></span>
                     </div>
                 </div>

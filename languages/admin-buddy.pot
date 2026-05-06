@@ -9,18 +9,14 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-04-29T13:23:02+00:00\n"
-"PO-Revision-Date: 2026-04-29T13:23:02+00:00\n"
+"POT-Creation-Date: 2026-05-06T10:58:04+00:00\n"
+"PO-Revision-Date: 2026-05-06T10:58:04+00:00\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: admin-buddy\n"
 
 #. Plugin Name of the plugin
 #. Author of the plugin
 msgid "Admin Buddy"
-msgstr ""
-
-#. Plugin URI of the plugin
-msgid "https://wpadminbuddy.com"
 msgstr ""
 
 #. Description of the plugin
@@ -34,9 +30,6 @@ msgid "conflicts with the already-active copy at"
 msgstr ""
 
 msgid "Please deactivate and delete the duplicate."
-msgstr ""
-
-msgid "Upgrade"
 msgstr ""
 
 msgid "Coming Soon"
@@ -448,7 +441,7 @@ msgstr ""
 msgid "Remote"
 msgstr ""
 
-msgid "This action is disabled in demo mode. Get the full version at wpadminbuddy.com"
+msgid "This action is disabled in demo mode."
 msgstr ""
 
 msgid "Setting enabled."
@@ -1766,9 +1759,6 @@ msgstr ""
 msgid "Enable the modules you need. Toggles apply instantly, no save needed. Only enabled modules appear in the navigation."
 msgstr ""
 
-msgid "You're on the Free plan. Modules marked Pro and features with Pro badges require an upgrade."
-msgstr ""
-
 msgid "Loading..."
 msgstr ""
 
@@ -1863,9 +1853,6 @@ msgid "Unlock more with Pro"
 msgstr ""
 
 msgid "Upgrade to access additional modules and features designed for agencies, power users, and multi-site operators."
-msgstr ""
-
-msgid "See Pricing"
 msgstr ""
 
 msgid "Performance"

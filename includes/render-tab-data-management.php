@@ -13,7 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 /** @var \Admbud\Settings $settings */
 
         $icon_trash  = '<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="ab-inline-icon"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>';
-        $tools_url  = esc_url( admin_url( 'admin.php?page=admin-buddy' ) );
+        $tools_url  = esc_url( admin_url( 'admin.php?page=admbud' ) );
         ?>
         <div class="ab-advanced-tab">
 
@@ -38,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
                     <?php wp_nonce_field( 'admbud_reset_data', 'admbud_reset_nonce' ); ?>
                     <input type="hidden" name="admbud_action" value="reset_data">
                     <button type="submit" class="ab-btn ab-btn--danger ab-tools-danger-btn ab-w-full" style="justify-content:center;">
-                        <?php echo $icon_trash; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <?php echo admbud_kses_svg( $icon_trash ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped via admbud_kses_svg() ?>
                         <?php esc_html_e( 'Reset Plugin Data', 'admin-buddy' ); ?>
                     </button>
                 </form>
@@ -50,7 +50,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
                     <?php wp_nonce_field( 'admbud_reset_deactivate', 'admbud_reset_deactivate_nonce' ); ?>
                     <input type="hidden" name="admbud_action" value="reset_deactivate">
                     <button type="submit" class="ab-btn ab-btn--danger ab-tools-danger-btn ab-w-full" style="justify-content:center;">
-                        <?php echo $icon_trash; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+                        <?php echo admbud_kses_svg( $icon_trash ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped via admbud_kses_svg() ?>
                         <?php esc_html_e( 'Reset and Deactivate Plugin', 'admin-buddy' ); ?>
                     </button>
                 </form>

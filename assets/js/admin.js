@@ -61,6 +61,25 @@
         } );
     } );
 
+    // -- Range-input value display -----------------------------------------------
+    // Replaces inline `oninput="document.getElementById('X').textContent = ..."`
+    // attributes on range sliders. The HTML attaches three data attributes:
+    //   data-display       — id of the element whose textContent shows the value
+    //   data-suffix        — appended after the numeric value (e.g. "%", "px")
+    //   data-zero-label    — optional, displayed verbatim when value is "0"
+    // Delegated input listener on document so dynamically-added inputs work too.
+    document.addEventListener( 'input', function ( e ) {
+        var el = e.target;
+        if ( ! el || ! el.classList || ! el.classList.contains( 'ab-range-display' ) ) { return; }
+        var targetId = el.getAttribute( 'data-display' );
+        if ( ! targetId ) { return; }
+        var target = document.getElementById( targetId );
+        if ( ! target ) { return; }
+        var zeroLabel = el.getAttribute( 'data-zero-label' );
+        var suffix    = el.getAttribute( 'data-suffix' ) || '';
+        target.textContent = ( zeroLabel && el.value === '0' ) ? zeroLabel : ( el.value + suffix );
+    } );
+
     // -- Remember last visited tab ------------------------------------------------
     // Persist active tab slug to localStorage. On load (see below), if no ?tab=
     // in the URL we redirect to the last visited tab (if it's still enabled).
@@ -1661,7 +1680,7 @@
                 var fd=new FormData();
                 fd.append('action','admbud_apply_preset'); fd.append('preset',preset); fd.append('nonce',nonce);
                 fetch(ajaxUrl,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(res){
-                    if(res.success){ window.location.href=window.location.pathname+'?page=admin-buddy&tab=colours&admbud_subtab=presets&admbud_notice=saved'; }
+                    if(res.success){ window.location.href=window.location.pathname+'?page=admbud&tab=colours&admbud_subtab=presets&admbud_notice=saved'; }
                     else { alert('Could not apply preset.'); btn.disabled=false; btn.textContent='Apply'; }
                 }).catch(function(){ alert('Could not apply preset.'); btn.disabled=false; btn.textContent='Apply'; });
             }

@@ -215,7 +215,6 @@
         var fields={id:data.id||0,title:data.title||'',notes:data.notes||'',scope:data.scope||'global',position:data.position||'footer',priority:data.priority||10};
         Object.keys(fields).forEach(function(k){ var el=qs('#ab-edit-'+k); if(el){el.value=fields[k];} });
         var activeEl=qs('#ab-edit-active'); if(activeEl){activeEl.checked=data.active!==0;}
-        var sharedEl=qs('#ab-edit-is-shared'); if(sharedEl){sharedEl.checked=!!parseInt(data.is_shared||0);}
         var titleEl=qs('#ab-editor-title-text'); if(titleEl){titleEl.textContent=data.id?'Edit Snippet':'New Snippet';}
         var type=data.type||'php';
         qsa('input[name="admbud_edit_type"]').forEach(function(r){r.checked=r.value===type;});
@@ -292,7 +291,6 @@
             position:  ( qs( '#ab-edit-position' ) || {} ).value || 'footer',
             priority:  ( qs( '#ab-edit-priority' ) || {} ).value || 10,
             active:    ( qs( '#ab-edit-active' ) || {} ).checked ? 1 : 0,
-            is_shared: ( qs( '#ab-edit-is-shared' ) || {} ).checked ? 1 : 0,
             code:      code,
         } )
         .then( function ( res ) {
@@ -381,38 +379,6 @@
         );
     } );
 
-    // -- Shared badge toggle ---------------------------------------------------
-    on( document, 'click', '.ab-snippet-shared-toggle', function ( e ) {
-        e.stopPropagation();
-        var btn       = this;
-        var id        = btn.getAttribute( 'data-id' );
-        var isShared  = btn.getAttribute( 'data-shared' ) === '1';
-        var newShared = isShared ? 0 : 1;
-        btn.disabled  = true;
-
-        post( { action: 'admbud_snippet_save_shared', nonce: nonce, id: id, is_shared: newShared } )
-            .then( function ( res ) {
-                btn.disabled = false;
-                if ( ! res.success ) { return; }
-
-                btn.setAttribute( 'data-shared', String( newShared ) );
-                var row = btn.closest( '.ab-snippet-row' );
-                if ( row ) { row.setAttribute( 'data-is-shared', String( newShared ) ); }
-
-                if ( newShared ) {
-                    btn.classList.remove( 'ab-badge--neutral' );
-                    btn.classList.add( 'ab-badge--success' );
-                    btn.title = 'Shared via Source - click to unshare';
-                    btn.lastChild.textContent = 'Shared';
-                } else {
-                    btn.classList.remove( 'ab-badge--success' );
-                    btn.classList.add( 'ab-badge--neutral' );
-                    btn.title = 'Not shared - click to share via Source';
-                    btn.lastChild.textContent = 'Share';
-                }
-                applyFilters();
-            } );
-    } );
 
     // -- Samples dropdown ------------------------------------------------------
     var SAMPLES = {

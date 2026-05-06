@@ -100,7 +100,18 @@
 	min-height:            calc(100vh - var(--ab-topbar-height) - 32px);
 }
 
-/* Full-bleed: remove WP's default content padding on AB's settings page */
+/* Full-bleed: remove WP's default content padding on AB's settings page.
+ * WP core gives .wrap a 10px/20px/0/2px margin and #wpcontent a 20px
+ * padding-left. We zero the wrap margin and pull left by 20px to nudge
+ * the AB shell flush against the admin menu and the right viewport edge. */
+.ab-wrap.ab-wrap {
+	margin:  0 0 0 -20px;
+	padding: 0;
+}
+/* RTL: WP flips #wpcontent padding to the right side. */
+body.rtl .ab-wrap.ab-wrap {
+	margin: 0 -20px 0 0;
+}
 .ab-wrap ~ .clear,
 .ab-wrap ~ br { display: none; }
 

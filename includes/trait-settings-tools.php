@@ -48,7 +48,7 @@ trait Settings_Tools {
      * WP's options.php pipeline doesn't handle custom actions, so we intercept
      * them here via admin_init (fires before any output) and route to the right handler.
      *
-     * The forms POST to: admin.php?page=admin-buddy&admbud_action=<action>
+     * The forms POST to: admin.php?page=admbud&admbud_action=<action>
      * and include standard nonces. This method reads the GET param and dispatches.
      */
     public function dispatch_tools_action(): void {
@@ -99,7 +99,7 @@ trait Settings_Tools {
         $this->delete_all_options();
         wp_cache_flush();
         wp_safe_redirect( add_query_arg( 'admbud_notice', 'reset_ok',
-            admin_url( 'admin.php?page=admin-buddy&tab=modules' ) ) );
+            admin_url( 'admin.php?page=admbud&tab=modules' ) ) );
         exit;
     }
 
@@ -238,11 +238,13 @@ trait Settings_Tools {
 
         // Clear Admin Buddy cookies (tab/subtab memory).
         $cookie_prefixes = [ 'admbud_last_tab', 'admbud_subtab_' ];
-        foreach ( $_COOKIE as $name => $val ) {
+        foreach ( $_COOKIE as $raw_name => $val ) {
+            $name = sanitize_key( (string) $raw_name );
+            if ( $name === '' ) { continue; }
             foreach ( $cookie_prefixes as $pfx ) {
                 if ( strpos( $name, $pfx ) === 0 ) {
                     setcookie( $name, '', time() - 3600, '/' );
-                    unset( $_COOKIE[ $name ] );
+                    unset( $_COOKIE[ $raw_name ] );
                 }
             }
         }

@@ -7,7 +7,6 @@
  * Tested up to:      6.9
  * Requires PHP:      8.1
  * Author:            Admin Buddy
- * Plugin URI:        https://wpadminbuddy.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       admin-buddy
@@ -181,7 +180,7 @@ function admbud_init() {
         delete_transient( 'admbud_activation_redirect' );
         // Skip on bulk activation, network activation, or AJAX.
         if ( wp_doing_ajax() || is_network_admin() || isset( $_GET['activate-multi'] ) ) { return; } // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
-        wp_safe_redirect( admin_url( 'admin.php?page=admin-buddy&tab=modules&admbud_welcome=1' ) );
+        wp_safe_redirect( admin_url( 'admin.php?page=admbud&tab=modules&admbud_welcome=1' ) );
         exit;
     } );
 
@@ -377,26 +376,6 @@ function admbud_allowed_modules(): array {
         'quick-settings',  // Quick Settings (full in free)
     ];
 
-    // Pro-only modules - not available at all on free.
-    $pro_modules = [
-        'notices-updates', // Notices & Updates (hide nags, disable auto-updates)
-        'menus',           // Menu Customiser
-        'custom-pages',    // Custom Pages
-        'collections',     // Collections (CPT/fields)
-        'optionpages',     // Option Pages
-        'svg-library',     // Icon Library
-        'activity-log',    // Activity Log
-        'debug',           // Debug (toggle constants + view error log)
-        'bricks',          // Bricks Builder integration
-        'export-import',   // Export / Import
-        'source',          // Remote
-        'demo-data',       // Demo Data
-        'blueprint',       // Blueprints
-    ];
-
-    if ( admbud_is_paid() ) {
-        return array_merge( $free_modules, $pro_modules );
-    }
 
     return $free_modules;
 }
@@ -417,47 +396,6 @@ function admbud_is_pro(): bool { // phpcs:ignore WordPress.NamingConventions.Pre
     return $result;
 }
 
-/**
- * Render a Pro badge + info icon with tooltip.
- * Outputs nothing for paid users.
- *
- * Usage: <th>Sidebar Gradient <?php admbud_pro('This is a Pro feature.'); ?></th>
- *
- * @param string $msg Tooltip text.
- */
-function admbud_pro( string $msg ): void { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- admbud_ is the plugin prefix.
-    if ( ! admbud_is_pro() ) { return; }
-    ?>
-    <span class="ab-pro-tag" tabindex="0">
-        <span class="ab-badge ab-badge--pro">Pro</span>
-        <svg class="ab-pro-tag__icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        <span class="ab-tip"><?php echo esc_html( $msg ); ?> <a href="https://wpadminbuddy.com" target="_blank"><?php esc_html_e( 'Upgrade', 'admin-buddy' ); ?></a></span>
-    </span>
-    <?php
-}
-
-/**
- * Render a Pro info banner (used on Modules tab).
- *
- * @param string $text Banner text.
- */
-function admbud_pro_banner( string $text ): void { // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound -- admbud_ is the plugin prefix.
-    if ( ! admbud_is_pro() ) { return; }
-    ?>
-    <div class="ab-pro-notice" style="background:linear-gradient(135deg, rgba(124,58,237,0.06), rgba(124,58,237,0.02));border:1px solid rgba(124,58,237,0.15);border-radius:var(--ab-radius, 8px);padding:14px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-            <span class="ab-badge ab-badge--pro">Pro</span>
-            <p style="margin:0;font-size:13px;color:var(--ab-text-secondary, #6b7280);line-height:1.4;"><?php echo esc_html( $text ); ?></p>
-        </div>
-        <a href="https://wpadminbuddy.com" target="_blank" class="ab-btn ab-btn--sm ab-btn--pro-cta" style="flex-shrink:0;"><?php esc_html_e( 'Upgrade', 'admin-buddy' ); ?></a>
-    </div>
-    <?php
-}
-
-// Keep old names as aliases for backward compat during refactor.
-function admbud_is_pro_locked(): bool { return admbud_is_pro(); }
-function admbud_pro_tag( string $msg ): void { admbud_pro( $msg ); }
-function admbud_pro_notice( string $text ): void { admbud_pro_banner( $text ); }
 
 /**
  * Sanitise an SVG string for safe output.

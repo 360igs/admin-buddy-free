@@ -5,7 +5,6 @@ Requires at least: 6.4
 Tested up to:      6.9
 Requires PHP:      8.1
 Stable tag:        1.0.1
-Donate link:       https://wpadminbuddy.com
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,10 +24,6 @@ Admin Buddy is a modular admin enhancement suite for WordPress. Each feature is 
 * **Snippets** - manage CSS, JavaScript, and HTML code snippets with hook targeting and scope control
 * **User Roles** - capability matrix editor with backup and restore
 * **Quick Settings** - one-click toggles for common WordPress housekeeping (disable feeds, emojis, XML-RPC, REST API, etc.)
-
-**Additional modules in [Admin Buddy Pro](https://wpadminbuddy.com):**
-
-* Menu Customiser, Custom Pages, Notices & Updates, Auto Palette, Icon Library, Option Pages, Collections, Activity Log, Bricks Builder, Remote Sync, Export / Import, Demo Data, Blueprints, PHP Snippets
 
 == Installation ==
 
@@ -65,10 +60,20 @@ Not yet - a public module API is planned for a future release. Right now, all mo
 
 == Source Code ==
 
-The complete source code for the free build is available at:
+The complete source code is available at:
 https://github.com/360igs/admin-buddy-free
 
-The repository is published on each release of the free build and contains the exact files in the WordPress.org-hosted zip. Pro source is private; only the licensed Pro distribution is available to customers.
+The repository is published on each release and contains the exact files in the WordPress.org-hosted zip.
+
+== External services ==
+
+The SMTP module can route outgoing WordPress email through a third-party SMTP server when the site administrator chooses to enable it.
+
+The plugin does not include hardcoded connections to any specific email service. The administrator supplies the SMTP host, port, encryption setting, and credentials in the SMTP module's settings. No data is sent to any external server until the administrator saves those credentials and an email is dispatched (either by WordPress itself or by the SMTP module's "Send test email" button).
+
+When email is sent, the recipient address, message body, and any attachments are transmitted to the SMTP server the administrator configured, using the credentials supplied. The plugin neither chooses the destination server nor stores credentials anywhere outside the local site database.
+
+Because the destination is administrator-supplied, no fixed terms-of-service or privacy-policy link applies; the relevant policy is the one published by whichever SMTP provider the administrator chooses.
 
 == Changelog ==
 

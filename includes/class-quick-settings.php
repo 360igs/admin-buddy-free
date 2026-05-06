@@ -254,7 +254,7 @@ class QuickSettings {
                     // slide-panel would otherwise start 32px below a toolbar
                     // that no longer exists.
                     wp_add_inline_style(
-                        'admin-buddy-icon-inject',
+                        'admbud-icon-inject',
                         '#wpadminbar{display:none!important}'
                         . 'html.wp-toolbar{padding-top:0!important;margin-top:0!important}'
                         . '#wpbody{padding-top:0!important}'
@@ -309,7 +309,7 @@ class QuickSettings {
     /**
      * Inline CSS + JS for the sidebar user-menu widget. Registered on
      * admin_enqueue_scripts so the inline rules attach to the global
-     * admin-buddy-icon-inject handle before head/footer print. The HTML
+     * admbud-icon-inject handle before head/footer print. The HTML
      * itself is rendered later via render_sidebar_user_menu() on admin_footer.
      */
     public function enqueue_sidebar_user_menu_assets(): void {
@@ -345,11 +345,11 @@ class QuickSettings {
              . '.folded .ab-sidebar-site__title,.folded .ab-sidebar-site__caret{display:none!important;}'
              . '.folded .ab-sidebar-site__favicon{display:inline-block!important;}';
 
-        wp_add_inline_style( 'admin-buddy-icon-inject', $css );
+        wp_add_inline_style( 'admbud-icon-inject', $css );
 
         // Move the rendered <li> to the top of #adminmenu and inherit menu link colour.
         wp_add_inline_script(
-            'admin-buddy-icon-inject',
+            'admbud-icon-inject',
             '(function(){var el=document.getElementById("ab-sidebar-account"),menu=document.getElementById("adminmenu");if(el&&menu){menu.insertBefore(el,menu.firstChild);el.style.display="";var ref=menu.querySelector("li.menu-top > a, li.menu-top a");if(ref){var c=getComputedStyle(ref).color;el.querySelectorAll("a").forEach(function(a){a.style.color=c;});}}})();'
         );
     }

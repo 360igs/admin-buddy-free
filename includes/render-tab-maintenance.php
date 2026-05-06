@@ -230,7 +230,7 @@ use Admbud\Maintenance;
                                     <div>
                                         <label for="admbud_cs_bg_overlay_opacity" class="ab-field-sublabel"><?php esc_html_e( 'Opacity', 'admin-buddy' ); ?></label>
                                         <div class="ab-flex-row--sm">
-                                            <input type="range" id="admbud_cs_bg_overlay_opacity" name="admbud_cs_bg_overlay_opacity" min="0" max="90" step="5" value="<?php echo esc_attr( $cs_ov_op ); ?>" style="width:140px;" oninput="document.getElementById('admbud_cs_overlay_op_val').textContent=this.value+'%'">
+                                            <input type="range" class="ab-range-display" data-display="admbud_cs_overlay_op_val" data-suffix="%" id="admbud_cs_bg_overlay_opacity" name="admbud_cs_bg_overlay_opacity" min="0" max="90" step="5" value="<?php echo esc_attr( $cs_ov_op ); ?>" style="width:140px;">
                                             <span id="admbud_cs_overlay_op_val" class="ab-range-value"><?php echo esc_html( $cs_ov_op ); ?>%</span>
                                         </div>
                                     </div>
@@ -339,7 +339,7 @@ use Admbud\Maintenance;
                                     <div>
                                         <label for="admbud_maint_bg_overlay_opacity" class="ab-field-sublabel"><?php esc_html_e( 'Opacity', 'admin-buddy' ); ?></label>
                                         <div class="ab-flex-row--sm">
-                                            <input type="range" id="admbud_maint_bg_overlay_opacity" name="admbud_maint_bg_overlay_opacity" min="0" max="90" step="5" value="<?php echo esc_attr( $maint_ov_op ); ?>" style="width:140px;" oninput="document.getElementById('admbud_maint_overlay_op_val').textContent=this.value+'%'">
+                                            <input type="range" class="ab-range-display" data-display="admbud_maint_overlay_op_val" data-suffix="%" id="admbud_maint_bg_overlay_opacity" name="admbud_maint_bg_overlay_opacity" min="0" max="90" step="5" value="<?php echo esc_attr( $maint_ov_op ); ?>" style="width:140px;">
                                             <span id="admbud_maint_overlay_op_val" class="ab-range-value"><?php echo esc_html( $maint_ov_op ); ?>%</span>
                                         </div>
                                     </div>

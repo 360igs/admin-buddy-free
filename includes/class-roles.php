@@ -321,6 +321,9 @@ class Roles {
 
         $slug     = sanitize_key( $_POST['role'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
         $raw_caps = $_POST['caps'] ?? '[]'; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
+        // json_decode does not sanitise; every decoded capability slug is run
+        // through sanitize_key() on the next line before any role mutation,
+        // and only caps in the known admbud-managed set are touched below.
         $new_caps = json_decode( wp_unslash( $raw_caps ), true );
         if ( ! is_array( $new_caps ) ) { $new_caps = []; }
         $new_caps = array_map( 'sanitize_key', $new_caps );

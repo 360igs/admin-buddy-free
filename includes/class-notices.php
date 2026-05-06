@@ -151,13 +151,16 @@ class Notices {
             return false;
         }
 
-        // Path matching against a debug_backtrace() result to categorise where
-        // a notice callback was defined. WordPress exposes WPINC for the
-        // wp-includes folder and WP_PLUGIN_DIR / get_theme_root() for plugins
-        // and themes, but provides no constant for the wp-admin folder, so
-        // ABSPATH . 'wp-admin/' is the canonical pattern for this comparison.
-        $wp_includes = wp_normalize_path( ABSPATH . WPINC . '/' );
-        $wp_admin    = wp_normalize_path( ABSPATH . 'wp-admin/' );
+        // Filesystem-path comparison against a debug_backtrace() file path to
+        // categorise where a notice callback was defined. WordPress's plugin /
+        // upload / theme URL helpers don't apply here - we need the actual
+        // disk-path roots to do prefix matching. The canonical WP constants
+        // are ABSPATH (WP root), WPINC (wp-includes name), WP_PLUGIN_DIR
+        // (plugins root), WPMU_PLUGIN_DIR (mu-plugins root); there is no
+        // core-provided constant for the wp-admin folder so ABSPATH . 'wp-admin/'
+        // is the documented pattern. All values are normalised + trailing-slashed.
+        $wp_includes = wp_normalize_path( trailingslashit( ABSPATH . WPINC ) );
+        $wp_admin    = wp_normalize_path( trailingslashit( ABSPATH ) . 'wp-admin/' );
         $file        = wp_normalize_path( $file );
 
         // Keep anything from wp-includes or wp-admin (core).
@@ -166,8 +169,8 @@ class Notices {
         }
 
         // Keep callbacks from the active theme (parent + child) and mu-plugins.
-        $theme_dir   = wp_normalize_path( get_theme_root() . '/' );
-        $mu_dir      = wp_normalize_path( WPMU_PLUGIN_DIR . '/' );
+        $theme_dir   = wp_normalize_path( trailingslashit( get_theme_root() ) );
+        $mu_dir      = wp_normalize_path( trailingslashit( WPMU_PLUGIN_DIR ) );
 
         if ( str_starts_with( $file, $theme_dir ) || str_starts_with( $file, $mu_dir ) ) {
             return false;
@@ -180,7 +183,7 @@ class Notices {
         }
 
         // Anything else (regular plugins) is fair game to suppress.
-        $plugins_dir = wp_normalize_path( WP_PLUGIN_DIR . '/' );
+        $plugins_dir = wp_normalize_path( trailingslashit( WP_PLUGIN_DIR ) );
         return str_starts_with( $file, $plugins_dir );
     }
 

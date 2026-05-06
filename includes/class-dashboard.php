@@ -267,7 +267,7 @@ class Dashboard {
     public function hide_submenu_item(): void {
         if ( $this->page_id() < 1 ) { return; }
         wp_add_inline_style(
-            'admin-buddy-icon-inject',
+            'admbud-icon-inject',
             '#adminmenu .wp-submenu li a[href="admin.php?page=ab-dashboard-iframe"],'
             . '#adminmenu .wp-submenu li a[href="index.php?page=ab-dashboard-iframe"],'
             . '#adminmenu .wp-submenu li a[href="options-general.php?page=ab-dashboard-iframe"]{display:none!important;}'
@@ -393,8 +393,8 @@ class Dashboard {
 
         $iframe_js = '(function(){function setHeight(){var wrap=document.getElementById("ab-dashboard-iframe-wrap");var bar=document.getElementById("wpadminbar");if(!wrap){return;}wrap.style.height="calc(100vh - "+(bar?bar.offsetHeight:32)+"px)";}document.addEventListener("DOMContentLoaded",setHeight);}());';
 
-        wp_add_inline_style(  'admin-buddy-icon-inject', $iframe_css );
-        wp_add_inline_script( 'admin-buddy-icon-inject', $iframe_js );
+        wp_add_inline_style(  'admbud-icon-inject', $iframe_css );
+        wp_add_inline_script( 'admbud-icon-inject', $iframe_js );
         ?>
         <div id="ab-dashboard-iframe-wrap">
             <iframe src="<?php echo esc_url( $src ); ?>" title="<?php echo esc_attr( $title ); ?>" allowfullscreen></iframe>

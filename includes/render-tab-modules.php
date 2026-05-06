@@ -47,9 +47,6 @@ $admbud_is_paid     = function_exists( 'admbud_is_paid' ) && admbud_is_paid();
         __( 'Enable the modules you need. Toggles apply instantly, no save needed. Only enabled modules appear in the navigation.', 'admin-buddy' )
     ); ?>
 
-    <?php if ( ! $admbud_is_paid && $admbud_is_licensed ) : ?>
-        <?php admbud_pro_banner( __( 'You\'re on the Free plan. Modules marked Pro and features with Pro badges require an upgrade.', 'admin-buddy' ) ); ?>
-    <?php endif; ?>
 
     <div id="ab-setup-modules-react">
         <div style="padding:24px;text-align:center;color:#888;font-size:0.875rem;">
@@ -167,12 +164,6 @@ $admbud_is_paid     = function_exists( 'admbud_is_paid' ) && admbud_is_paid();
                 </div>
             </div>
             <?php endforeach; ?>
-        </div>
-        <div style="margin-top:var(--ab-space-5);text-align:center;">
-            <a href="https://wpadminbuddy.com" target="_blank" rel="noopener" class="ab-btn ab-btn--primary ab-btn--pro-cta">
-                <?php esc_html_e( 'See Pricing', 'admin-buddy' ); ?>
-                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="margin-left:4px;vertical-align:middle;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-            </a>
         </div>
         <?php $settings->card_close(); ?>
     <?php endif; ?>

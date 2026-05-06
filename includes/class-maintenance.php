@@ -552,6 +552,10 @@ class Maintenance {
         echo '<meta name="viewport" content="width=device-width, initial-scale=1">';
         echo '<meta name="robots" content="noindex, nofollow">';
         echo '<title>' . esc_html( $page_title ) . '</title>';
+        // Inline <style> (not wp_enqueue_style) is intentional here:
+        // this is a self-contained HTML page rendered as a die() response
+        // BEFORE WordPress's normal head/body pipeline runs, so there is no
+        // wp_enqueue context. Every interpolated value is esc_attr()'d.
         echo '<style>';
         echo '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }';
         echo 'body {'

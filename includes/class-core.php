@@ -161,21 +161,21 @@ class Core {
                 }
             } );
             add_action( 'admin_enqueue_scripts', function () {
-                wp_add_inline_style( 'admin-buddy-icon-inject', '#contextual-help-link-wrap{display:none!important}' );
+                wp_add_inline_style( 'admbud-icon-inject', '#contextual-help-link-wrap{display:none!important}' );
             } );
         }
 
         // -- Screen Options ---------------------------------------------------
         if ( $this->is_enabled( 'admbud_core_remove_screen_options', '0' ) ) {
             add_action( 'admin_enqueue_scripts', function () {
-                wp_add_inline_style( 'admin-buddy-icon-inject', '#screen-options-link-wrap{display:none!important}' );
+                wp_add_inline_style( 'admbud-icon-inject', '#screen-options-link-wrap{display:none!important}' );
             } );
         }
 
         // Fix WP's blue filter on SVG menu icons - load on every admin page.
         add_action( 'admin_enqueue_scripts', function () {
             wp_add_inline_style(
-                'admin-buddy-icon-inject',
+                'admbud-icon-inject',
                 '#adminmenu #toplevel_page_admin-buddy .wp-menu-image:before{content:"";}'
             );
         } );
@@ -184,7 +184,7 @@ class Core {
         // !important needed: media-views.min.css loads after our inline styles.
         add_action( 'admin_enqueue_scripts', function () {
             wp_add_inline_style(
-                'admin-buddy-icon-inject',
+                'admbud-icon-inject',
                 '.media-menu .media-menu-item{color:var(--ab-accent,#7c3aed)!important;}'
                 . '.media-menu .media-menu-item:hover{color:var(--ab-accent-hover,#6d28d9)!important;}'
                 . '.media-menu .media-menu-item:focus{color:var(--ab-accent,#7c3aed)!important;box-shadow:0 0 0 2px var(--ab-accent,#7c3aed)!important;}'
@@ -260,15 +260,20 @@ class Core {
      */
     public function enqueue_pill_styles(): void {
         // Resolve colour constants here (user override → constant fallback).
-        // Sanitize hex colours from options before interpolating into CSS.
-        // sanitize_hex_field() returns '' on invalid input; the ?: fallback
-        // restores the canonical default so the CSS stays valid.
+        // Read-side: sanitize_hex_field() validates the option value.
+        // Output-side: each value is re-validated through sanitize_hex_color()
+        // immediately before CSS interpolation to enforce "escape late".
         $coming_soon       = sanitize_hex_field( admbud_get_option( 'admbud_colours_pill_coming_soon', '' ) ) ?: \Admbud\Colours::COLOR_COMING_SOON;
         $coming_soon_hover = \Admbud\Colours::COLOR_COMING_SOON_HOVER;
         $maintenance       = sanitize_hex_field( admbud_get_option( 'admbud_colours_pill_maintenance', '' ) ) ?: \Admbud\Colours::COLOR_MAINTENANCE;
         $maintenance_hover = \Admbud\Colours::COLOR_MAINTENANCE_HOVER;
         $noindex           = sanitize_hex_field( admbud_get_option( 'admbud_colours_pill_noindex', '' ) )     ?: \Admbud\Colours::COLOR_NOINDEX;
         $noindex_hover     = \Admbud\Colours::COLOR_NOINDEX_HOVER;
+
+        // Escape-late: re-run user-overrideable values through sanitize_hex_color().
+        $coming_soon = sanitize_hex_color( $coming_soon ) ?: \Admbud\Colours::COLOR_COMING_SOON;
+        $maintenance = sanitize_hex_color( $maintenance ) ?: \Admbud\Colours::COLOR_MAINTENANCE;
+        $noindex     = sanitize_hex_color( $noindex )     ?: \Admbud\Colours::COLOR_NOINDEX;
 
         $css = "
             /* Admin Buddy - status pills */
@@ -380,7 +385,7 @@ class Core {
              . '}'
              . '.folded #adminmenu::before{display:none;}';
 
-        wp_add_inline_style( 'admin-buddy-icon-inject', $css );
+        wp_add_inline_style( 'admbud-icon-inject', $css );
     }
 
     // -- Helper ----------------------------------------------------------------

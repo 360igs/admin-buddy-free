@@ -242,7 +242,7 @@ class Checklist {
                 },
                 'fix_url'  => add_query_arg(
                     [
-                        'page'         => 'admin-buddy',
+                        'page'         => 'admbud',
                         'tab'          => 'quick-settings',
                         'admbud_highlight' => __( 'Remove generator meta tag', 'admin-buddy' ),
                     ],
@@ -598,11 +598,11 @@ class Checklist {
         // wherever the Checklist shows (admin AND front-end admin bar).
         // Register idempotently - class-settings.php may have already
         // registered these on admin pages.
-        if ( ! wp_style_is( 'admin-buddy-tokens', 'registered' ) ) {
-            wp_register_style( 'admin-buddy-tokens', $url . 'tokens.css', [], $v );
+        if ( ! wp_style_is( 'admbud-tokens', 'registered' ) ) {
+            wp_register_style( 'admbud-tokens', $url . 'tokens.css', [], $v );
         }
-        if ( ! wp_style_is( 'admin-buddy-core', 'registered' ) ) {
-            wp_register_style( 'admin-buddy-core', $url . 'admin.css', [ 'admin-buddy-tokens' ], $v );
+        if ( ! wp_style_is( 'admbud-core', 'registered' ) ) {
+            wp_register_style( 'admbud-core', $url . 'admin.css', [ 'admbud-tokens' ], $v );
         }
 
         // Use filemtime() for the Checklist CSS version so every edit
@@ -612,13 +612,13 @@ class Checklist {
         $css_path = $dir . 'checklist-panel.css';
         $css_ver  = file_exists( $css_path ) ? (string) filemtime( $css_path ) : $v;
 
-        // Depend on admin-buddy-core so .ab-slide-panel / .ab-backdrop
+        // Depend on admbud-core so .ab-slide-panel / .ab-backdrop
         // rules (animation, width, z-index, shadow, tokens) are loaded
         // once, from the single canonical source.
         wp_enqueue_style(
             'ab-checklist',
             $url . 'checklist-panel.css',
-            [ 'admin-buddy-core' ],
+            [ 'admbud-core' ],
             $css_ver
         );
         wp_enqueue_script(

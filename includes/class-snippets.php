@@ -60,7 +60,6 @@ class Snippets {
         add_action( 'wp_ajax_admbud_snippet_save',        [ $this, 'ajax_save'          ] );
         add_action( 'wp_ajax_admbud_snippet_get',         [ $this, 'ajax_get'           ] );
         add_action( 'wp_ajax_admbud_snippet_toggle',      [ $this, 'ajax_toggle'        ] );
-        add_action( 'wp_ajax_admbud_snippet_save_shared', [ $this, 'ajax_save_shared'   ] );
         add_action( 'wp_ajax_admbud_snippet_delete',      [ $this, 'ajax_delete'        ] );
         add_action( 'wp_ajax_admbud_snippet_reorder',     [ $this, 'ajax_reorder'       ] );
         add_action( 'rest_api_init',                  [ $this, 'register_rest'      ] );
@@ -257,7 +256,6 @@ class Snippets {
             'active'         => 1,
             'error'          => null,
             'notes'          => '',
-            'is_shared'      => 0,
             'source_id'      => '',
             'source_item_id' => 0,
             'sync_hash'      => '',
@@ -276,7 +274,6 @@ class Snippets {
             'Active'       => 'active',
             'Error'        => 'error',
             'Notes'        => 'notes',
-            'IsShared'     => 'is_shared',
             'SourceId'     => 'source_id',
             'SourceItemId' => 'source_item_id',
             'SyncHash'     => 'sync_hash',
@@ -288,7 +285,8 @@ class Snippets {
             if ( preg_match( '/ \* ' . $tag . ':[^\S\n]*(.+)/m', $header, $match ) ) {
                 $value = trim( $match[1] );
                 // Type coerce
-                if ( in_array( $key, [ 'priority', 'active', 'is_shared', 'source_item_id' ], true ) ) {
+                $int_keys = [ 'priority', 'active', 'source_item_id' ];
+                if ( in_array( $key, $int_keys, true ) ) {
                     $meta[ $key ] = (int) $value;
                 } elseif ( $key === 'error' ) {
                     $meta[ $key ] = $value === 'null' || $value === '' ? null : $value;
@@ -320,7 +318,6 @@ class Snippets {
             . " * Active: "       . ( (int) ( $data['active']     ?? 1  ) )     . "\n"
             . " * Error: "        . $error_str                                  . "\n"
             . " * Notes: "        . ( $data['notes']          ?? '' )           . "\n"
-            . " * IsShared: "     . ( (int) ( $data['is_shared']  ?? 0  ) )     . "\n"
             . " * SourceId: "     . ( $data['source_id']      ?? '' )           . "\n"
             . " * SourceItemId: " . ( (int) ( $data['source_item_id'] ?? 0 ) )  . "\n"
             . " * SyncHash: "     . ( $data['sync_hash']      ?? '' )           . "\n"
@@ -448,7 +445,13 @@ class Snippets {
             : ( $in_footer ? 'wp_footer'    : 'wp_head'    );
 
         add_action( $hook, function () use ( $file ) {
-            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            // HTML snippets are admin-authored markup (gated by the
+            // admbud_manage_snippets / manage_options capability at save time).
+            // The user explicitly asks the plugin to inject their HTML into
+            // the page; sanitising would corrupt valid markup and defeat the
+            // feature's purpose. read_snippet_code() reads the trusted file
+            // written by ajax_save() above.
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- admin-authored HTML; cap-gated at save.
             echo $this->read_snippet_code( $file ) . "\n";
         }, (int) ( $meta['priority'] ?? 10 ) );
     }
@@ -484,12 +487,6 @@ class Snippets {
         return array_map( [ $this, 'array_to_object' ], $this->get_index() );
     }
 
-    public function get_shared_snippets(): array {
-        return array_map(
-            [ $this, 'array_to_object' ],
-            array_filter( $this->get_index(), fn( $m ) => ! empty( $m['is_shared'] ) )
-        );
-    }
 
     public function get_snippet( int $id ): ?object {
         foreach ( $this->get_index() as $meta ) {
@@ -564,9 +561,14 @@ class Snippets {
         // checks above; only users who can manage snippets can submit code.
         // For type === 'php', the Pro-only check_dangerous_functions() and
         // syntax_check_php() validators run before storage (see below).
-        $code     = wp_unslash( $_POST['code'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+        //
+        // Defensive: strip NUL bytes (defeat null-byte truncation attacks on
+        // any downstream string handler) and reject invalid UTF-8 sequences
+        // (which can desync header/body parsing in read_snippet_code()).
+        $code     = (string) wp_unslash( $_POST['code'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+        $code     = str_replace( "\0", '', $code );
+        $code     = wp_check_invalid_utf8( $code );
         $notes    = sanitize_textarea_field( wp_unslash( $_POST['notes'] ?? '' ) );
-        $is_shared = ! empty( $_POST['is_shared'] ) ? 1 : 0; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
 
         if ( trim( $code ) === '' ) {
             wp_send_json_error( [ 'message' => __( 'Snippet code cannot be empty.', 'admin-buddy' ) ] );
@@ -606,7 +608,6 @@ class Snippets {
             'active'         => $active,
             'error'          => null,
             'notes'          => $notes,
-            'is_shared'      => $is_shared,
             'source_id'      => $source_id,
             'source_item_id' => $source_iid,
             'sync_hash'      => $sync_hash,
@@ -659,27 +660,6 @@ class Snippets {
         wp_send_json_success();
     }
 
-    public function ajax_save_shared(): void {
-        check_ajax_referer( 'admbud_snippets_nonce', 'nonce' );
-        if ( ! current_user_can( 'admbud_manage_snippets' ) && ! current_user_can( 'manage_options' ) ) {
-            wp_send_json_error();
-        }
-
-        $id        = (int) ( $_POST['id'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
-        $is_shared = (int) (bool) ( $_POST['is_shared'] ?? 0 ); // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
-        $file      = self::snippet_path( $id );
-
-        if ( ! file_exists( $file ) ) {
-            wp_send_json_error();
-        }
-
-        $contents = file_get_contents( $file );
-        $contents = preg_replace( '/ \* IsShared: \d+/', ' * IsShared: ' . $is_shared, $contents );
-        file_put_contents( $file, $contents );
-        $this->rebuild_index();
-
-        wp_send_json_success( [ 'is_shared' => $is_shared ] );
-    }
 
     public function ajax_delete(): void {
         check_ajax_referer( 'admbud_snippets_nonce', 'nonce' );
@@ -769,7 +749,6 @@ class Snippets {
                 'active'         => (int) ( $row->active         ?? 1  ),
                 'error'          => $row->error           ?? null,
                 'notes'          => $row->notes           ?? '',
-                'is_shared'      => (int) ( $row->is_shared      ?? 0  ),
                 'source_id'      => $row->source_id       ?? '',
                 'source_item_id' => (int) ( $row->source_item_id ?? 0  ),
                 'sync_hash'      => $row->sync_hash       ?? '',

@@ -52,23 +52,9 @@
 
 	// -- ModuleToggle ---------------------------------------------------------
 	function ModuleToggle( props ) {
-		const { slug, label, enabled, alwaysOn, mode, onToggle, busy, pro } = props;
-		const isLicensed = admbudSetupData.isLicensed;
-		const isPaid = admbudSetupData.isPaid;
-		const isProLocked = pro && ! isPaid;
+		const { slug, label, enabled, alwaysOn, mode, onToggle, busy } = props;
 
 		const handleChange = useCallback( function ( e ) {
-			// Block if no license at all.
-			if ( ! isLicensed ) {
-				e.target.checked = false;
-				if ( admbudSetupData.licenseUrl ) { window.location.href = admbudSetupData.licenseUrl; }
-				return;
-			}
-			// Block Pro modules for free tier - toggle is disabled, no redirect.
-			if ( isProLocked ) {
-				e.target.checked = false;
-				return;
-			}
 			const newEnabled = e.target.checked;
 			if ( slug === 'maintenance' && ! newEnabled && mode !== 'off' ) {
 				e.target.checked = true;
@@ -90,12 +76,13 @@
 		const checkboxId = 'ab-module-chk-' + slug;
 
 		return el( 'div',
-			{ className: 'ab-module-card' + ( enabled ? ' is-enabled' : '' ) + ( alwaysOn ? ' is-always-on' : '' ) + ( isProLocked ? ' is-pro-locked' : '' ),
+			{ className: 'ab-module-card' + ( enabled ? ' is-enabled' : '' ) + ( alwaysOn ? ' is-always-on' : '' )
+				,
 			  'data-module': slug,
-			  onClick: ( alwaysOn || isProLocked ) ? null : function( e ) {
+			  onClick: ( alwaysOn
+				) ? null : function( e ) {
 			  	// Don't double-fire if the label/checkbox itself was clicked.
 			  	if ( e.target.tagName === 'INPUT' ) { return; }
-			  	if ( ! isLicensed ) { if ( admbudSetupData.licenseUrl ) { window.location.href = admbudSetupData.licenseUrl; } return; }
 			  	handleChange( { target: { checked: ! enabled } } );
 			  }
 			},
@@ -103,14 +90,15 @@
 			el( 'div', { className: 'ab-module-card__body' },
 				el( 'span', { className: 'ab-module-card__label' }, label ),
 				alwaysOn ? el( 'span', { className: 'ab-badge ab-badge--info ab-module-card__badge' }, 'Always on' ) : null,
-				isProLocked ? el( 'span', { className: 'ab-badge ab-badge--pro ab-module-card__badge' }, 'Pro' ) : null
 			),
 			el( 'label',
 				{ className: 'ab-toggle ab-module-card__toggle',
 				  htmlFor: checkboxId,
 				  style: { pointerEvents: 'none' },
 				  title: alwaysOn ? ( S.moduleAlwaysOn || 'This module cannot be disabled' ) : ( enabled ? ( S.disableModule || 'Disable' ) + ' ' : ( S.enableModule || 'Enable' ) + ' ' ) + label },
-				el( 'input', { type: 'checkbox', id: checkboxId, checked: enabled, disabled: alwaysOn || busy || isProLocked || ! isLicensed, onChange: ( alwaysOn || isProLocked ) ? null : handleChange } ),
+				el( 'input', { type: 'checkbox', id: checkboxId, checked: enabled, disabled: alwaysOn || busy
+					, onChange: ( alwaysOn
+					) ? null : handleChange } ),
 				el( 'span', { className: 'ab-toggle__track' } ),
 				el( 'span', { className: 'ab-toggle__thumb' } )
 			)
@@ -190,7 +178,6 @@
 						key: m.slug, slug: m.slug, label: m.label, enabled: m.enabled,
 						alwaysOn: m.always_on || false, mode: maintenanceMode || 'off',
 						onToggle: onToggle, busy: busySlug === m.slug,
-						pro: m.pro || false,
 					} );
 				} )
 			) : null
@@ -268,7 +255,6 @@
 							return prev.map( function ( m ) {
 								if ( m.always_on ) { return m; }
 								if ( ! enable && m.slug === 'maintenance' ) { return m; }
-								if ( enable && m.pro && ! admbudSetupData.isPaid ) { return Object.assign( {}, m, { enabled: false } ); }
 								return Object.assign( {}, m, { enabled: enable } );
 							} );
 						} );
@@ -391,6 +377,14 @@
 		);
 	}
 
-	wp.element.render( el( SetupModulesApp, admbudSetupData ), mountPoint );
+	// React 18 (WP 6.2+) prefers createRoot. wp.element.render was removed in
+	// WP 6.6 / React 18. Fall back to it for older WP installs that pre-date
+	// createRoot exposure.
+	const appElement = el( SetupModulesApp, admbudSetupData );
+	if ( typeof wp.element.createRoot === 'function' ) {
+		wp.element.createRoot( mountPoint ).render( appElement );
+	} else if ( typeof wp.element.render === 'function' ) {
+		wp.element.render( appElement, mountPoint );
+	}
 
 } )();

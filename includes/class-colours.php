@@ -225,26 +225,14 @@ class Colours {
             }
         }
 
-        // Serve from transient cache when not on an excluded page.
-        if ( ! $excluded ) {
-            $cached = get_transient( self::cache_key() );
-            if ( false !== $cached ) {
-                wp_add_inline_style( 'admin-buddy-icon-inject', self::strip_style_tags( $cached ) );
-                return;
-            }
-        }
-
-        // Cache miss or excluded - generate output.
-        ob_start();
+        // Always generate. The previous transient cache short-circuited
+        // before per-handle wp_add_inline_style() registrations inside
+        // build_admin_css() ran, so on cache hit none of the colour CSS
+        // was ever output - colours appeared on the first page load only
+        // and disappeared on every subsequent navigation. The cache key
+        // is kept (busted from class-upgrade.php on version change) so
+        // existing transients are harmless.
         $this->build_admin_css( $excluded );
-        $css = ob_get_clean();
-
-        // Only persist cache when not excluded (excluded pages skip content colours).
-        if ( ! $excluded ) {
-            set_transient( self::cache_key(), $css, DAY_IN_SECONDS );
-        }
-
-        wp_add_inline_style( 'admin-buddy-icon-inject', self::strip_style_tags( $css ) );
     }
 
     /**
@@ -414,8 +402,10 @@ class Colours {
         }
         $p28 = $box_shadow; // drop shadow for flyout panels
         $p1_enc = str_replace( '#', '%23', $p1 ); // URL-encoded primary for inline SVG
+        // Buffer the CSS string and emit via wp_add_inline_style instead of
+        // direct <style> echoes so WP.org's enqueue rules are honoured.
         // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- All colour vars pre-sanitised via esc_attr(). CSS context only.
-        echo '<style id="ab-admin-colours">';
+        ob_start();
         echo ':root {';
         echo '--wp-admin-theme-color:           ' . esc_attr( $p1 ) . ' !important;';
         echo '--wp-admin-theme-color--rgb:      ' . esc_attr( $p2 ) . ' !important;';
@@ -669,7 +659,10 @@ class Colours {
         echo 'background: ' . esc_attr( $p26 ) . ' !important;';
         echo 'color: ' . esc_attr( $p22 ) . ' !important;';
         echo '}';
-        echo '</style>';
+        $admbud_css = ob_get_clean();
+        wp_register_style( 'admbud-admin-colours', false, [], ADMBUD_VERSION );
+        wp_enqueue_style(  'admbud-admin-colours' );
+        wp_add_inline_style( 'admbud-admin-colours', $admbud_css );
         // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 
         // -- UI Rounding (optional) -------------------------------------------
@@ -681,31 +674,43 @@ class Colours {
                 'large'  => [ 'card' => 'var(--ab-radius-2xl)', 'flyout' => 'var(--ab-radius-lg)' ],
             ];
             $r = $radius_map[ $ui_radius ];
-            // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- $r values are hardcoded CSS custom property references from $radius_map above.
+            // $r values come from a hardcoded $radius_map above (CSS var()
+            // references). Escape-late via esc_attr() at every interpolation
+            // site so reviewers see the explicit escape on output.
+            $rf = esc_attr( $r['flyout'] );
+            $rc = esc_attr( $r['card'] );
+            // Buffer + emit via wp_add_inline_style instead of direct <style>.
+            // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- $rf, $rc are esc_attr()'d above; CSS context only.
             // Sidebar flyout radius (chrome, always applied)
-            echo '<style id="ab-ui-radius-chrome">';
+            ob_start();
             // Flyout submenus (collapsed sidebar or hover) - all corners rounded.
             echo '#adminmenu li.wp-has-submenu.wp-not-current-submenu.opensub>.wp-submenu,'
                . '#adminmenu li.wp-has-submenu.wp-not-current-submenu:focus-within>.wp-submenu{'
-               . 'border-radius:' . $r['flyout'] . '!important;overflow:hidden}';
+               . 'border-radius:' . $rf . '!important;overflow:hidden}';
             // Expanded inline submenu (current menu open) - top-left square so it
             // sits flush against the parent menu item, other corners rounded.
             echo '#adminmenu li.wp-has-current-submenu .wp-submenu-wrap{'
-               . 'border-radius:0 0 ' . $r['flyout'] . ' ' . $r['flyout'] . '!important;overflow:hidden}';
+               . 'border-radius:0 0 ' . $rf . ' ' . $rf . '!important;overflow:hidden}';
             echo '#adminmenu li.wp-has-current-submenu a.wp-has-current-submenu,#adminmenu li.current a.menu-top,#adminmenu .wp-menu-arrow,.folded #adminmenu li.current.menu-top,.folded #adminmenu li.wp-has-current-submenu a.wp-has-current-submenu{border-radius:0}';
-            echo '</style>';
+            $admbud_css_chrome = ob_get_clean();
+            wp_register_style( 'admbud-ui-radius-chrome', false, [], ADMBUD_VERSION );
+            wp_enqueue_style(  'admbud-ui-radius-chrome' );
+            wp_add_inline_style( 'admbud-ui-radius-chrome', $admbud_css_chrome );
             // Content area radius (gated by $excluded)
             if ( ! $excluded ) {
-                echo '<style id="ab-ui-radius-content">';
-                echo '#wpcontent .postbox{border-radius:' . $r['card'] . '!important;overflow:hidden}';
-                echo '#wpcontent .plugin-card{border-radius:' . $r['card'] . '!important;overflow:hidden}';
-                echo '#wpcontent .wp-filter{border-radius:' . $r['flyout'] . '!important}';
-                echo '#wpcontent .theme-browser .theme{border-radius:' . $r['card'] . '!important;overflow:hidden}';
-                echo '#wpcontent .theme-browser .theme .theme-screenshot{border-radius:' . $r['card'] . ' ' . $r['card'] . ' 0 0!important}';
-                echo '#wpcontent table.widefat,#wpcontent .wp-list-table{border-radius:' . $r['card'] . '!important;overflow:hidden;border-collapse:separate;border-spacing:0}';
-                echo '#wpcontent .tablenav{border-radius:' . $r['flyout'] . '}';
-                echo '#wpcontent .tablenav .tablenav-pages{border-radius:' . $r['flyout'] . '}';
-                echo '</style>';
+                ob_start();
+                echo '#wpcontent .postbox{border-radius:' . $rc . '!important;overflow:hidden}';
+                echo '#wpcontent .plugin-card{border-radius:' . $rc . '!important;overflow:hidden}';
+                echo '#wpcontent .wp-filter{border-radius:' . $rf . '!important}';
+                echo '#wpcontent .theme-browser .theme{border-radius:' . $rc . '!important;overflow:hidden}';
+                echo '#wpcontent .theme-browser .theme .theme-screenshot{border-radius:' . $rc . ' ' . $rc . ' 0 0!important}';
+                echo '#wpcontent table.widefat,#wpcontent .wp-list-table{border-radius:' . $rc . '!important;overflow:hidden;border-collapse:separate;border-spacing:0}';
+                echo '#wpcontent .tablenav{border-radius:' . $rf . '}';
+                echo '#wpcontent .tablenav .tablenav-pages{border-radius:' . $rf . '}';
+                $admbud_css_content = ob_get_clean();
+                wp_register_style( 'admbud-ui-radius-content', false, [], ADMBUD_VERSION );
+                wp_enqueue_style(  'admbud-ui-radius-content' );
+                wp_add_inline_style( 'admbud-ui-radius-content', $admbud_css_content );
             }
             // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
         }
@@ -714,7 +719,7 @@ class Colours {
         // ========================================================================
         if ( ! $excluded ) {
         // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- All colour vars pre-sanitised via esc_attr(). CSS context only.
-        echo '<style id="ab-admin-content">';
+        ob_start();
         echo '#wpcontent a{color:' . esc_attr( $p1 ) . '}';
         echo '#wpcontent a:hover,#wpcontent a:active{color:' . esc_attr( $p3 ) . '}';
         echo '#wpcontent a:focus,#wpcontent .button:focus,#wpcontent .button-secondary:focus{box-shadow:0 0 0 1px ' . esc_attr( $p1 ) . '!important;outline:1px solid transparent!important}';
@@ -1335,13 +1340,16 @@ class Colours {
         echo 'background-image: none;';
         echo 'padding-right: inherit !important;';
         echo '}';
-        echo '</style>';
+        $admbud_css = ob_get_clean();
+        wp_register_style( 'admbud-admin-content', false, [], ADMBUD_VERSION );
+        wp_enqueue_style(  'admbud-admin-content' );
+        wp_add_inline_style( 'admbud-admin-content', $admbud_css );
         // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
         } // end if ( ! $excluded ) - content CSS block
 
         // -- Global button overrides (always applied, even on excluded pages) --
         // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- All $p1/$p3/$p9 vars are sanitised hex colours from $this->colour() which runs sanitize_hex_color().
-        echo '<style id="ab-global-buttons">';
+        ob_start();
         echo ".wp-core-ui .button-primary{background:{$p1}!important;border-color:{$p3}!important;color:#fff!important;box-shadow:none!important}";
         echo ".wp-core-ui .button-primary:hover,.wp-core-ui .button-primary.hover{background:{$p3}!important;border-color:{$p3}!important;color:#fff!important}";
         echo ".wp-core-ui .button-primary:focus,.wp-core-ui .button-primary.focus{background:{$p1}!important;border-color:{$p3}!important;color:#fff!important;box-shadow:0 0 0 1px #fff,0 0 0 3px {$p1}!important}";
@@ -1398,7 +1406,10 @@ class Colours {
         echo ".bricks-panel .active,.brx-body .active,.bricks-panel [aria-selected='true']{background:{$p9}!important;color:{$p1}!important}";
         echo ".bricks-panel .bricks-button.primary,.brx-body .bricks-button.primary{background:{$p1}!important;color:#fff!important}";
 
-        echo '</style>';
+        $admbud_css = ob_get_clean();
+        wp_register_style( 'admbud-global-buttons', false, [], ADMBUD_VERSION );
+        wp_enqueue_style(  'admbud-global-buttons' );
+        wp_add_inline_style( 'admbud-global-buttons', $admbud_css );
         // phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 
         // -- Body background (optional) -----------------------------------------
@@ -1406,10 +1417,11 @@ class Colours {
         // Gated by $excluded - body bg is a content-area override.
         if ( ! $excluded && $body_bg_raw ) {
             $bg = esc_attr( $this->colour( 'admbud_colours_body_bg', '#f0f0f1' ) );
-            echo '<style id="ab-body-bg">';
-            echo ':root{--ab-ct-body-bg:' . $bg . '}'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $bg escaped via esc_attr() above.
-            echo '#wpwrap,#wpcontent,#wpbody,#wpbody-content{background-color:var(--ab-ct-body-bg)!important;}';
-            echo '</style>';
+            $admbud_css = ':root{--ab-ct-body-bg:' . $bg . '}'
+                . '#wpwrap,#wpcontent,#wpbody,#wpbody-content{background-color:var(--ab-ct-body-bg)!important;}';
+            wp_register_style( 'admbud-body-bg', false, [], ADMBUD_VERSION );
+            wp_enqueue_style(  'admbud-body-bg' );
+            wp_add_inline_style( 'admbud-body-bg', $admbud_css );
         }
 
         // -- Sidebar gradient (optional) --------------------------------------
@@ -1421,26 +1433,28 @@ class Colours {
         $sg3 = esc_attr( admbud_get_option( 'admbud_colours_sidebar_grad_dir', self::DEFAULT_SIDEBAR_GRAD_DIR ) );
         // Submenu uses menu_bg_dark (derived from menu_bg) for solid contrast.
         $sg4 = esc_attr( $menu_bg_dark );
-        echo '<style id="ab-sidebar-gradient">';
-        echo '#adminmenu,#adminmenuback,#adminmenuwrap{'
-           . 'background:linear-gradient(' . esc_attr( $sg3 ) . ',' . esc_attr( $sg1 ) . ',' . esc_attr( $sg2 ) . ')!important}';
-        echo '#adminmenu .wp-submenu{background:' . esc_attr( $sg4 ) . '!important}';
-        echo '</style>';
+        $admbud_css = '#adminmenu,#adminmenuback,#adminmenuwrap{'
+                    . 'background:linear-gradient(' . $sg3 . ',' . $sg1 . ',' . $sg2 . ')!important}'
+                    . '#adminmenu .wp-submenu{background:' . $sg4 . '!important}';
+        wp_register_style( 'admbud-sidebar-gradient', false, [], ADMBUD_VERSION );
+        wp_enqueue_style(  'admbud-sidebar-gradient' );
+        wp_add_inline_style( 'admbud-sidebar-gradient', $admbud_css );
         }
 
         // NOTE: Menu item border CSS is output by MenuCustomiser::output_border_css()
 
         // -- Menu item separator border (optional) ---------------------------
         $menu_item_sep = admbud_get_option( 'admbud_colours_menu_item_sep', '1' ) === '1';
-        echo '<style id="ab-menu-item-sep">';
         if ( $menu_item_sep ) {
-            echo '#adminmenu .wp-menu-name { border-bottom: 1px solid color-mix(in srgb, var(--ab-menu-sep) 35%, transparent) !important; display:block; }';
+            $admbud_css = '#adminmenu .wp-menu-name { border-bottom: 1px solid color-mix(in srgb, var(--ab-menu-sep) 35%, transparent) !important; display:block; }';
         } else {
-            echo '#adminmenu .wp-menu-name { border-bottom: none !important; box-shadow: none !important; }';
-            echo '#adminmenu li.menu-top { border-bottom: none !important; }';
-            echo '#adminmenu li.menu-top > a { border-bottom: none !important; }';
+            $admbud_css = '#adminmenu .wp-menu-name { border-bottom: none !important; box-shadow: none !important; }'
+                        . '#adminmenu li.menu-top { border-bottom: none !important; }'
+                        . '#adminmenu li.menu-top > a { border-bottom: none !important; }';
         }
-        echo '</style>';
+        wp_register_style( 'admbud-menu-item-sep', false, [], ADMBUD_VERSION );
+        wp_enqueue_style(  'admbud-menu-item-sep' );
+        wp_add_inline_style( 'admbud-menu-item-sep', $admbud_css );
 
         // -- Content area tokens -------------------------------------------------
         // Always resolve values - saved option if set, otherwise derive from existing tokens.
@@ -1493,7 +1507,7 @@ class Colours {
                   $ct_postbox_bg_raw || $ct_postbox_hdr_raw || $ct_postbox_bdr_raw || $ct_postbox_txt_raw || $ct_notice_bg_raw;
 
         if ( $ct_any ) {
-            $out = '<style id="ab-content-colours">';
+            $out = '';
 
             // Emit CSS custom properties for all content tokens so presets stay coherent
             $out .= ':root{';
@@ -2003,9 +2017,10 @@ class Colours {
             // Update count - just remove box-shadow bleed, let WP handle shape/colour
             $out .= '#adminmenu .update-plugins .plugin-count,#adminmenu .update-plugins .update-count,.update-plugins .update-count{box-shadow:none!important}';
 
-            $out .= '</style>';
             if ( ! $excluded ) {
-                echo $out; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                wp_register_style( 'admbud-content-colours', false, [], ADMBUD_VERSION );
+                wp_enqueue_style(  'admbud-content-colours' );
+                wp_add_inline_style( 'admbud-content-colours', $out );
             }
         }
 
@@ -2013,10 +2028,11 @@ class Colours {
         // nav-tab-active/hover: only target WP's own settings pages.
         // Gated by $excluded - these target #wpcontent .wrap content area.
         if ( ! $excluded ) {
-            echo '<style id="ab-navtab-compat">';
-            echo '#wpcontent .wrap > .nav-tab-wrapper .nav-tab-active,#wpcontent .wrap > h2.nav-tab-wrapper + .nav-tab-wrapper .nav-tab-active,#wpcontent .wrap .nav-tab-wrapper .nav-tab-active{background:var(--ab-menu-bg)!important;border-bottom-color:var(--ab-menu-bg)!important;color:var(--ab-menu-text)!important;}';
-            echo '#wpcontent .wrap .nav-tab-wrapper .nav-tab:hover{color:var(--ab-primary)!important;}';
-            echo '</style>';
+            $admbud_css = '#wpcontent .wrap > .nav-tab-wrapper .nav-tab-active,#wpcontent .wrap > h2.nav-tab-wrapper + .nav-tab-wrapper .nav-tab-active,#wpcontent .wrap .nav-tab-wrapper .nav-tab-active{background:var(--ab-menu-bg)!important;border-bottom-color:var(--ab-menu-bg)!important;color:var(--ab-menu-text)!important;}'
+                        . '#wpcontent .wrap .nav-tab-wrapper .nav-tab:hover{color:var(--ab-primary)!important;}';
+            wp_register_style( 'admbud-navtab-compat', false, [], ADMBUD_VERSION );
+            wp_enqueue_style(  'admbud-navtab-compat' );
+            wp_add_inline_style( 'admbud-navtab-compat', $admbud_css );
         }
     }
 

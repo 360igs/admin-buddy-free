@@ -35,13 +35,11 @@ $type_counts = [
     'css'    => 0,
     'js'     => 0,
     'html'   => 0,
-    'shared' => 0,
 ];
 $status_counts = [ 'active' => 0, 'inactive' => 0 ];
 foreach ( $snippets as $s ) {
     if ( isset( $type_counts[ $s->type ] ) ) { $type_counts[ $s->type ]++; }
     if ( ! empty( $s->active ) ) { $status_counts['active']++; } else { $status_counts['inactive']++; }
-    if ( ! empty( $s->is_shared ) ) { $type_counts['shared']++; }
 }
 ?>
 
@@ -145,7 +143,6 @@ foreach ( $snippets as $s ) {
              data-id="<?php echo (int) $snippet->id; ?>"
              data-type="<?php echo esc_attr( $snippet->type ); ?>"
              data-active="<?php echo $snippet->active ? '1' : '0'; ?>"
-             data-is-shared="<?php echo ! empty( $snippet->is_shared ) ? '1' : '0'; ?>"
              data-source-id="<?php echo esc_attr( $snippet->source_id ?? '' ); ?>"
              data-search="<?php echo esc_attr( strtolower( $snippet->title ) ); ?>">
 
