@@ -1,0 +1,102 @@
+   SMTP TAB
+   ============================================================================ */
+
+.ab-smtp-log-table {
+    font-size: 0.83rem;
+    margin-top: 4px;
+}
+
+.ab-smtp-log-table th {
+    font-weight: 600;
+    color: var(--ab-neutral-900);
+    padding: 8px 12px;
+}
+
+.ab-smtp-log-table td {
+    padding: 7px 12px;
+    vertical-align: middle;
+}
+
+/* Sortable drag placeholder */
+.ab-snippet-row--placeholder {
+    background: color-mix(in srgb, var(--ab-accent) 6%, var(--ab-surface));
+    border: 2px dashed var(--ab-accent) !important;
+    border-radius: 8px;
+    visibility: visible !important;
+}
+
+/* SMTP log row hover */
+.ab-log-row:hover { background: var(--ab-surface-sunken) !important; cursor: pointer; }
+
+/* ============================================================================
+   EMAIL DETAIL - content layout inside the canonical .ab-slide-panel
+   ----------------------------------------------------------------------------
+   Panel chrome (backdrop, outer positioning, animation, header, close button)
+   is provided by .ab-slide-panel + .ab-backdrop in admin.css. This file only
+   defines what's unique to the email detail view: stacked meta/status/body/
+   error sections, and the iframe/pre fill-height behavior for the message.
+   ============================================================================ */
+
+/* Override the canonical body so it's a flex column. The shared rule is
+ * `flex: 1; overflow-y: auto; padding: 20px` — we need the inner message
+ * (iframe or pre) to fill the remaining height below meta + status, so
+ * children handle their own overflow. */
+#ab-email-panel .ab-slide-panel__body {
+    display:        flex;
+    flex-direction: column;
+    overflow:       hidden;
+    padding:        0;
+}
+
+.ab-email-panel__meta {
+    font-size:     0.8rem;
+    color:         var(--ab-neutral-600);
+    padding:       12px 20px;
+    border-bottom: 1px solid var(--ab-border-subtle);
+    flex-shrink:   0;
+    display:       flex;
+    flex-direction: column;
+    gap:           3px;
+}
+
+.ab-email-panel__meta strong { color: var(--ab-neutral-900); }
+
+.ab-email-panel__status {
+    padding:     4px 20px 8px;
+    flex-shrink: 0;
+}
+
+.ab-email-panel__message {
+    flex:        1;
+    min-height:  0;
+    padding:     16px 20px;
+    font-size:   0.875rem;
+    line-height: 1.7;
+    display:     flex;
+    flex-direction: column;
+    overflow:    hidden;
+}
+
+.ab-email-panel__message iframe {
+    flex:         1;
+    min-height:   0;
+    width:        100%;
+    border:       none;
+    border-radius: 4px;
+    background:   var(--ab-surface);
+    display:      block;
+}
+
+.ab-email-panel__message pre {
+    flex:        1;
+    overflow-y:  auto;
+    margin:      0;
+    white-space: pre-wrap;
+    word-break:  break-word;
+    font-family: inherit;
+}
+
+.ab-email-panel__error {
+    flex-shrink: 0;
+    padding:     0 20px 16px;
+}

@@ -1,0 +1,192 @@
+/*
+ * Admin Buddy - Custom Select Dropdown Component
+ * Replaces native <select> visually while keeping the original hidden for form submissions.
+ *
+ * Key design decisions:
+ *  - .ab-dd__menu uses position:fixed to escape overflow:hidden/clip parents (modals, panels).
+ *  - Width auto-expands to fit content (max-content) with a minimum of the trigger width.
+ *  - No horizontal scroll - items wrap or truncate based on container.
+ *  - Z-index 200000 sits above WP admin bar (99999) and most modals.
+ */
+
+.ab-dd {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    font-family: inherit;
+}
+
+/* -- Trigger button ------------------------------------------- */
+.ab-dd__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    height: 36px;
+    min-width: 120px;
+    width: 100%;
+    padding: 0 8px 0 10px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    color: #374151;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.12s;
+    user-select: none;
+    white-space: nowrap;
+    line-height: 1;
+    box-sizing: border-box;
+}
+.ab-dd__trigger:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+.ab-dd--open .ab-dd__trigger,
+.ab-dd__trigger:focus-visible {
+    outline: none;
+    border-color: var(--ab-accent, #2563eb);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    background: #fff;
+}
+
+.ab-dd__value {
+    flex: 1 1 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.ab-dd__arrow {
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    color: #6b7280;
+    transition: transform 0.15s ease;
+}
+.ab-dd--open .ab-dd__arrow {
+    transform: rotate(180deg);
+}
+
+/* -- Dropdown menu -------------------------------------------- */
+/* Uses position:fixed so it escapes overflow:hidden parents (modals, panels).
+   JS sets top/left via inline style on open. */
+.ab-dd__menu {
+    position: fixed;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+    z-index: 200000;
+    padding: 4px;
+    animation: ab-dd-in 0.11s ease;
+    max-height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 120px;
+    /* width set by JS to max(trigger-width, max-content) */
+}
+
+@keyframes ab-dd-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ab-dd-in-up {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* -- Menu items ----------------------------------------------- */
+.ab-dd__item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 7px 10px;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    color: #374151;
+    text-align: left;
+    transition: background 0.1s;
+    white-space: nowrap;
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+.ab-dd__item:hover,
+.ab-dd__item:focus-visible {
+    background: #f3f4f6;
+    color: #111827;
+    outline: none;
+}
+.ab-dd__item--selected {
+    color: var(--ab-accent, #2563eb);
+    font-weight: 500;
+    background: color-mix(in srgb, var(--ab-accent, #2563eb) 6%, #fff);
+}
+.ab-dd__item--selected::after {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ab-accent, #2563eb);
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.ab-dd__item--disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* -- Small size modifier -------------------------------------- */
+.ab-dd--sm .ab-dd__trigger {
+    height: 30px;
+    font-size: 12px;
+    padding: 0 6px 0 8px;
+}
+.ab-dd--sm .ab-dd__item {
+    padding: 5px 8px;
+    font-size: 12px;
+}
+
+/* -- Dark mode modifier --------------------------------------- */
+.ab-dd--dark .ab-dd__trigger {
+    background: #2d2d3f;
+    border-color: #44475a;
+    color: #f8f8f2;
+}
+.ab-dd--dark .ab-dd__trigger:hover {
+    background: #383850;
+    border-color: #6272a4;
+}
+.ab-dd--dark.ab-dd--open .ab-dd__trigger,
+.ab-dd--dark .ab-dd__trigger:focus-visible {
+    border-color: #bd93f9;
+    box-shadow: 0 0 0 3px rgba(189,147,249,0.2);
+    background: #2d2d3f;
+}
+.ab-dd--dark .ab-dd__arrow { color: #6272a4; }
+.ab-dd--dark .ab-dd__menu {
+    background: #282a36;
+    border-color: #44475a;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.ab-dd--dark .ab-dd__item { color: #f8f8f2; }
+.ab-dd--dark .ab-dd__item:hover,
+.ab-dd--dark .ab-dd__item:focus-visible {
+    background: #383850;
+    color: #fff;
+}
+.ab-dd--dark .ab-dd__item--selected {
+    color: #bd93f9;
+    background: rgba(189,147,249,0.1);
+}
+.ab-dd--dark .ab-dd__item--selected::after { background: #bd93f9; }
+.ab-dd--dark .ab-dd__item--disabled { color: #6272a4; }

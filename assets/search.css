@@ -1,0 +1,353 @@
+/**
+ * Admin Buddy - Command Palette Search
+ * Uses --ab-primary → --wp-admin-theme-color → #7c3aed fallback.
+ * Dark mode: uses --ab-ct-* tokens set by class-colours.php when dark palette active.
+ */
+
+/* -- Toolbar button -------------------------------------------------------- */
+
+/* Hide WP's own frontend search - we replace it */
+#wp-admin-bar-search {
+	display: none !important;
+}
+
+#wp-admin-bar-ab-search-trigger > a,
+#wp-admin-bar-ab-search-trigger .ab-item {
+	display:     flex !important;
+	align-items: center !important;
+	gap:         5px !important;
+	cursor:      pointer;
+}
+
+.ab-search-toolbar-icon {
+	display:     flex;
+	align-items: center;
+	color:       inherit;
+	opacity:     0.8;
+}
+
+/* ab-search-toolbar-hint removed - no shortcut hint shown */
+
+/* -- Modal overlay --------------------------------------------------------- */
+.ab-search-modal {
+	position:        fixed;
+	inset:           0;
+	z-index:         180000;
+	display:         flex;
+	justify-content: center;
+	align-items:     flex-start;
+	padding-top:     6vh;
+	padding-left:    var(--ab-space-4, 1rem);
+	padding-right:   var(--ab-space-4, 1rem);
+	box-sizing:      border-box;
+}
+
+.ab-search-modal[hidden] {
+	display: none !important;
+}
+
+/* Backdrop */
+.ab-search-modal__backdrop {
+	position:             fixed;
+	inset:                0;
+	background:           rgba(0, 0, 0, 0.5);
+	backdrop-filter:      blur(3px);
+	-webkit-backdrop-filter: blur(3px);
+	z-index:              -1;
+}
+
+/* Container */
+.ab-search-modal__container {
+	background:     var(--ab-ct-pbox-bg, var(--ab-surface, #fff));
+	border-radius:  var(--ab-radius-xl, 12px);
+	border:         1px solid var(--ab-ct-pbox-bdr, var(--ab-border, #e2e8f0));
+	box-shadow:     0 24px 80px rgba(0,0,0,0.22);
+	width:          100%;
+	min-width:      320px;
+	max-width:      800px;
+	max-height:     80vh;
+	display:        flex;
+	flex-direction: column;
+	overflow:       hidden;
+	box-sizing:     border-box;
+}
+
+/* -- Search input row ------------------------------------------------------ */
+.ab-search-modal__input-wrap {
+	display:       flex;
+	align-items:   center;
+	gap:           var(--ab-space-3, 0.75rem);
+	padding:       var(--ab-space-3, 0.75rem) var(--ab-space-4, 1rem);
+	border-bottom: 1px solid var(--ab-ct-pbox-bdr, var(--ab-border, #e2e8f0));
+	flex-shrink:   0;
+	box-sizing:    border-box;
+}
+
+.ab-search-modal__icon {
+	color:       var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	flex-shrink: 0;
+	opacity:     0.5;
+}
+
+.ab-search-modal__input {
+	flex:       1;
+	border:     none !important;
+	outline:    none !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	font-size:  15px;
+	color:      var(--ab-ct-text, var(--ab-text-body, #1e293b));
+	font-family: system-ui, sans-serif;
+	padding:    var(--ab-space-2, 0.5rem) 0;
+	line-height: 1.5;
+	min-width:  0;
+}
+
+.ab-search-modal__input::placeholder {
+	color:   var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	opacity: 0.45;
+}
+
+.ab-search-modal__esc {
+	font-size:     11px;
+	padding:       2px 6px;
+	border:        1px solid var(--ab-ct-pbox-bdr, var(--ab-border, #e2e8f0));
+	border-radius: var(--ab-radius-sm, 4px);
+	color:         var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	background:    var(--ab-ct-input-bg, var(--ab-surface-raised, #f9fafb));
+	font-family:   system-ui, sans-serif;
+	flex-shrink:   0;
+	opacity:       0.6;
+}
+
+/* -- Results area ---------------------------------------------------------- */
+.ab-search-modal__results {
+	overflow-y:  auto;
+	overflow-x:  hidden;
+	flex:        1;
+	padding:     var(--ab-space-4, 1rem);
+	min-height:  100px;
+	box-sizing:  border-box;
+}
+
+/* Empty state - centered, icon + text */
+.ab-search-modal__empty {
+	display:         flex;
+	flex-direction:  column;
+	align-items:     center;
+	justify-content: center;
+	padding:         var(--ab-space-8, 2rem) var(--ab-space-4, 1rem);
+	color:           var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	text-align:      center;
+	gap:             var(--ab-space-3, 0.75rem);
+	opacity:         0.45;
+}
+.ab-search-modal__empty[hidden] { display: none; }
+
+.ab-search-modal__empty p {
+	font-size: 13px;
+	margin:    0;
+}
+
+/* No results - simple centered text, NO icon */
+.ab-search-modal__no-results {
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	padding:         var(--ab-space-6, 1.5rem) var(--ab-space-4, 1rem);
+	color:           var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	font-size:       13px;
+	opacity:         0.5;
+}
+.ab-search-modal__no-results[hidden] { display: none; }
+
+.ab-search-modal__no-results p {
+	margin: 0;
+}
+
+/* -- Results grid ---------------------------------------------------------- */
+.ab-search-modal__grid[hidden] { display: none; }
+.ab-search-modal__grid {
+	display:               grid;
+	grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+	gap:                   var(--ab-space-3, 0.75rem);
+	align-items:           start;
+	width:                 100%;
+	box-sizing:            border-box;
+}
+
+/* Group column */
+.ab-search-group {
+	display:        flex;
+	flex-direction: column;
+	gap:            2px;
+	min-width:      0;
+}
+
+.ab-search-group__label {
+	font-size:      10px;
+	font-weight:    600;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color:          var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	opacity:        0.55;
+	padding:        var(--ab-space-1, 0.25rem) var(--ab-space-2, 0.5rem);
+	margin-bottom:  var(--ab-space-1, 0.25rem);
+}
+
+/* Result item */
+.ab-search-result {
+	display:        flex;
+	align-items:    center;
+	gap:            var(--ab-space-2, 0.5rem);
+	padding:        var(--ab-space-2, 0.5rem) var(--ab-space-2-5, 0.625rem);
+	border-radius:  var(--ab-radius-md, 6px);
+	cursor:         pointer;
+	text-decoration: none;
+	color:          var(--ab-ct-text, var(--ab-text-body, #1e293b));
+	transition:     background 0.1s ease, color 0.1s ease;
+	min-width:      0;
+	width:          100%;
+	border:         none;
+	background:     transparent;
+	text-align:     left;
+	font-size:      13px;
+	line-height:    1.4;
+	box-sizing:     border-box;
+}
+
+.ab-search-result:hover,
+.ab-search-result.is-active {
+	background:     color-mix(in srgb, var(--ab-primary, var(--wp-admin-theme-color, #7c3aed)) 10%, transparent);
+	color:          var(--ab-primary, var(--wp-admin-theme-color, #7c3aed));
+	text-decoration: none;
+}
+
+.ab-search-result.is-active {
+	outline:        2px solid var(--ab-primary, var(--wp-admin-theme-color, #7c3aed));
+	outline-offset: -2px;
+}
+/* Override WP core's blue focus ring - AB handles focus via .is-active */
+.ab-search-result:focus {
+	box-shadow: none;
+	outline:    2px solid var(--ab-primary, var(--wp-admin-theme-color, #7c3aed));
+	outline-offset: -2px;
+}
+
+.ab-search-result__icon {
+	flex-shrink: 0;
+	color:       var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	display:     flex;
+	align-items: center;
+	opacity:     0.5;
+}
+
+.ab-search-result:hover .ab-search-result__icon,
+.ab-search-result.is-active .ab-search-result__icon {
+	color:   var(--ab-primary, var(--wp-admin-theme-color, #7c3aed));
+	opacity: 1;
+}
+
+.ab-search-result__text {
+	flex:     1;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.ab-search-result__label {
+	display:       block;
+	white-space:   nowrap;
+	overflow:      hidden;
+	text-overflow: ellipsis;
+	font-weight:   500;
+}
+
+.ab-search-result__meta {
+	display:       block;
+	font-size:     11px;
+	color:         var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	opacity:       0.55;
+	white-space:   nowrap;
+	overflow:      hidden;
+	text-overflow: ellipsis;
+}
+
+.ab-search-result:hover .ab-search-result__meta,
+.ab-search-result.is-active .ab-search-result__meta {
+	opacity: 0.7;
+	color:   inherit;
+}
+
+/* Loading spinner */
+.ab-search-modal__loading {
+	display:         flex;
+	align-items:     center;
+	justify-content: center;
+	padding:         var(--ab-space-6, 1.5rem);
+	color:           var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	font-size:       13px;
+	gap:             var(--ab-space-2, 0.5rem);
+	opacity:         0.5;
+}
+
+.ab-search-spinner {
+	width:         16px;
+	height:        16px;
+	border:        2px solid var(--ab-ct-pbox-bdr, var(--ab-border, #e2e8f0));
+	border-top-color: var(--ab-primary, var(--wp-admin-theme-color, #7c3aed));
+	border-radius: 50%;
+	animation:     ab-spin 0.6s linear infinite;
+	flex-shrink:   0;
+}
+
+@keyframes ab-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* -- Footer hints ---------------------------------------------------------- */
+.ab-search-modal__footer {
+	display:     flex;
+	align-items: center;
+	gap:         var(--ab-space-4, 1rem);
+	padding:     var(--ab-space-2-5, 0.625rem) var(--ab-space-4, 1rem);
+	border-top:  1px solid var(--ab-ct-pbox-bdr, var(--ab-border, #e2e8f0));
+	flex-shrink: 0;
+	background:  var(--ab-ct-input-bg, var(--ab-surface-raised, #f9fafb));
+	box-sizing:  border-box;
+}
+
+.ab-search-modal__footer span {
+	display:     flex;
+	align-items: center;
+	gap:         4px;
+	font-size:   11px;
+	color:       var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	opacity:     0.55;
+}
+
+.ab-search-modal__footer kbd {
+	font-size:     10px;
+	padding:       1px 4px;
+	border:        1px solid var(--ab-ct-pbox-bdr, var(--ab-border, #e2e8f0));
+	border-radius: 3px;
+	background:    var(--ab-ct-pbox-bg, var(--ab-surface, #fff));
+	color:         var(--ab-ct-text, var(--ab-text-muted, #94a3b8));
+	font-family:   system-ui, sans-serif;
+	line-height:   1.6;
+}
+
+/* -- Responsive ------------------------------------------------------------ */
+@media (max-width: 480px) {
+	.ab-search-modal {
+		padding-top:   3vh;
+		padding-left:  var(--ab-space-3, 0.75rem);
+		padding-right: var(--ab-space-3, 0.75rem);
+	}
+	.ab-search-modal__grid {
+		grid-template-columns: 1fr;
+	}
+	.ab-search-modal__footer {
+		gap:     var(--ab-space-2, 0.5rem);
+		flex-wrap: wrap;
+	}
+}
