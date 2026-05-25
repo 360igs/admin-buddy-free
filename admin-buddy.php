@@ -2,9 +2,9 @@
 /**
  * Plugin Name:       Admin Buddy
  * Description:       White-label your WordPress admin - custom branding, dashboard page, login styling, notice suppression, and maintenance mode in one place.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 6.4
- * Tested up to:      6.9
+ * Tested up to:      7.0
  * Requires PHP:      8.1
  * Author:            Admin Buddy
  * License:           GPL-2.0-or-later
