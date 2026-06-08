@@ -10,7 +10,7 @@ Each release here matches a version on WordPress.org. The git tag `v1.0.1` corre
 
 ## What's in the Free build
 
-Seven modules ship enabled (or available to enable) in the free build:
+Eight modules ship enabled (or available to enable) in the free build:
 
 - **White Label** - custom admin colours, logos, custom dashboard pages
 - **Colours** - full admin colour customisation
@@ -19,6 +19,7 @@ Seven modules ship enabled (or available to enable) in the free build:
 - **SMTP** - custom outgoing-mail settings for any SMTP server
 - **User Roles** - capability editor + role create/clone/delete
 - **Quick Settings** - common WordPress hardening + UI toggles
+- **Media Manager** - organise the Media Library into nested, colour-coded folders (injected into the native Media Library and every page-builder media modal); drag files to folders, search and sort, reorganise with a multi-select toolbar, and an optional two-step Media Trash. Folders are standard WordPress terms, so they survive deactivation.
 
 ## Reporting issues
 
