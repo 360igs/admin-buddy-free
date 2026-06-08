@@ -2,13 +2,13 @@
 Contributors:      igse
 Tags:              admin, white-label, coming-soon, smtp, login
 Requires at least: 6.4
-Tested up to:      6.9
+Tested up to:      7.0
 Requires PHP:      8.1
-Stable tag:        1.0.1
+Stable tag:        1.1.0
 License:           GPL-2.0-or-later
 License URI:       https://www.gnu.org/licenses/gpl-2.0.html
 
-A modular WordPress admin enhancement suite - branding, colour schemes, login page, maintenance mode, SMTP, user roles, and quick settings.
+A modular WordPress admin enhancement suite - branding, colours, login, maintenance, SMTP, user roles, media folders, and quick settings.
 
 == Description ==
 
@@ -22,6 +22,7 @@ Admin Buddy is a modular admin enhancement suite for WordPress. Each feature is 
 * **Maintenance** - Coming Soon and Maintenance mode with bypass URLs and emergency access
 * **SMTP** - configure outgoing email with multiple provider presets and email logging
 * **User Roles** - capability matrix editor with backup and restore
+* **Media Manager** - organise the Media Library into nested, colour-coded folders, injected into the native Media Library and every page-builder media modal; drag files to folders, search and sort, and reorganise with a multi-select toolbar; optional two-step Media Trash (trash, restore, empty). Folders are standard WordPress terms, so they survive deactivation
 * **Quick Settings** - one-click toggles for common WordPress housekeeping (disable feeds, emojis, XML-RPC, REST API, etc.)
 
 == Installation ==
@@ -51,10 +52,15 @@ Not yet - a public module API is planned for a future release. Right now, all mo
 
 == Screenshots ==
 
-1. Setup screen - enable or disable each module independently.
-2. Colour scheme editor - full admin palette with live preview.
-3. SMTP configuration - encrypted password storage, test email, provider presets.
-4. Maintenance mode - Coming Soon and Maintenance pages with HMAC bypass tokens.
+1. Setup screen - enable any of eight modules independently with a single toggle.
+2. Colours - apply a ready-made colour scheme across the admin, login, and admin bar, with a live preview.
+3. White Label - replace WordPress branding with your own: site favicon, sidebar logo, agency name, admin bar, and dashboard greeting.
+4. Login - restyle the WordPress login page with three layouts (Left, Center, Right), brand colours, and your logo, with a live preview.
+5. Maintenance - Coming Soon and Maintenance modes with custom bypass paths and a regeneratable emergency access URL.
+6. SMTP - route outgoing WordPress mail through a custom server with encrypted credentials and a built-in test-email tool.
+7. User Roles - a capability-matrix editor with per-role backups, cloning, rename, and reset.
+8. Quick Settings - one-toggle housekeeping for common WordPress tweaks: disable feeds, emojis, XML-RPC, REST API access, and more.
+9. Media Manager - nested, colour-coded media folders in the native Media Library, with drag-to-folder, search and sort, a multi-select toolbar, and an optional two-step Media Trash.
 
 == Source Code ==
 
@@ -75,10 +81,32 @@ Because the destination is administrator-supplied, no fixed terms-of-service or 
 
 == Changelog ==
 
+= 1.1.0 =
+* New module: **Media Manager**. Organise the Media Library into nested, colour-coded folders, injected into both the native Media Library and every page-builder media modal (Bricks, Divi, Elementor, Gutenberg, and a generic fallback). Drag files into folders, search across all folders, sort by date/name/modified, and reorganise with a multi-select bulk-ops toolbar (move/trash/restore). Includes an optional two-step Media Trash (trash, restore, empty). Folders are stored as standard WordPress taxonomy terms, so they survive deactivation and carry no lock-in - export the folder map to JSON at any time.
+* Folder operations (create, rename, delete, move, recolour) are restricted to administrators. Enable the module from **Setup → Modules**.
+* All Media Manager scripts are Vanilla ES6+ (no jQuery dependency), consistent with the rest of the free build.
+
+= 1.0.3 =
+* Plugin Data: "Reset Plugin Data" and "Reset and Deactivate Plugin" renamed to "Erase All Admin Buddy Data" and "Erase All Data and Deactivate". Confirmation modal now itemises exactly what will be deleted (Collections, Option Pages, snippets, SVG icons, activity log entries, uploads directory) and requires typing "ERASE" before the destroy button arms. Prevents accidental data loss from a single click.
+* Sidebar: revert custom positioning/overflow overrides. WordPress's native sticky-menu behaviour returns, hover-flyout submenus work as core intends.
+* Internal: sync `ADMBUD_VERSION` constant with the plugin header so asset cache-busting and the stored `admbud_plugin_version` option match the version users see.
+
+= 1.0.2 =
+* Fix mismatched "Tested up to" header between admin-buddy.php (6.9) and readme.txt (7.0) that triggered a Plugin Check error on install. Both now declare 7.0. No functional change.
+
 = 1.0.1 =
 * Initial public release on WordPress.org. Admin Buddy is a modular admin enhancement suite - White Label, Colours, Login, Maintenance, SMTP, User Roles, and Quick Settings - that you enable per-module from the Setup screen.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Adds the new Media Manager module: nested, colour-coded media folders with drag-to-folder, search and sort, a multi-select toolbar, and an optional two-step Media Trash. Enable it in Setup → Modules.
+
+= 1.0.3 =
+Safety upgrade for the Plugin Data tab: the erase buttons now show exactly what will be deleted and require typing "ERASE" to confirm. Sidebar reverted to WordPress default behaviour so native hover-flyout submenus work.
+
+= 1.0.2 =
+Fixes a Plugin Check header mismatch warning. No functional change.
 
 = 1.0.1 =
 Initial public release.

@@ -301,7 +301,11 @@ class QuickSettings {
             }
             if ( $um_show ) {
                 add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_sidebar_user_menu_assets' ] );
-                add_action( 'admin_footer',          [ $this, 'render_sidebar_user_menu'         ] );
+                // Render via the `adminmenu` action - fires inside <ul id="adminmenu">
+                // after _wp_menu_output(), so the LI lands as the last menu child
+                // server-side (no JS-move, no CLS). CSS pins it `position:fixed`
+                // bottom-left of the sidebar.
+                add_action( 'adminmenu',             [ $this, 'render_sidebar_user_menu'         ] );
             }
         }
     }
@@ -310,12 +314,36 @@ class QuickSettings {
      * Inline CSS + JS for the sidebar user-menu widget. Registered on
      * admin_enqueue_scripts so the inline rules attach to the global
      * admbud-icon-inject handle before head/footer print. The HTML
-     * itself is rendered later via render_sidebar_user_menu() on admin_footer.
+     * is rendered server-side via render_sidebar_user_menu() on the
+     * `adminmenu` action (inside <ul#adminmenu>), then pinned to the
+     * viewport bottom-left of the sidebar via `position:fixed`. The
+     * fixed positioning is what gives the "sticky at bottom while
+     * scrolling" behaviour and eliminates the CLS the JS-move approach
+     * caused.
      */
     public function enqueue_sidebar_user_menu_assets(): void {
-        $css = 'li#ab-sidebar-account{display:block!important;list-style:none!important;margin:0!important;padding:0!important;background:transparent!important;line-height:1.3!important;}'
+        // Reserve menu padding-bottom equal to the card height so the last
+        // menu item isn't hidden behind the fixed card when scrolled. With
+        // site-link block the card is taller; bump the reservation.
+        $show_site_link = $this->user_card_has_site_link();
+        $card_h         = $show_site_link ? 100 : 56;
+
+        // background:inherit pulls the menu's computed background onto the
+        // card so menu items scrolling behind the fixed card are opaquely
+        // hidden. Works for solid scheme bg (default WP) and gradients
+        // (themed via class-colours). Fallback #1d2327 covers the rare
+        // case where inherit resolves to transparent.
+        $css = 'li#ab-sidebar-account{position:fixed!important;left:0!important;bottom:0!important;width:var(--admbud-sidebar-width,160px)!important;z-index:100!important;display:block!important;list-style:none!important;margin:0!important;padding:0!important;background:#1d2327!important;background:inherit!important;border-top:1px solid rgba(255,255,255,0.1)!important;line-height:1.3!important;}'
+             // body.folded is added on manual collapse at ANY viewport width.
+             // body.auto-fold is ALWAYS present; only acts as a fold signal
+             // at <=960px (via WP's own media query). Mirror that here so
+             // the card doesn't collapse at desktop widths.
+             . 'body.folded li#ab-sidebar-account{width:36px!important;}'
+             . '@media only screen and (max-width:960px){body.auto-fold li#ab-sidebar-account{width:36px!important;}}'
+             . '#adminmenu{padding-bottom:' . (int) $card_h . 'px!important;}'
              . 'li#ab-sidebar-account::before,li#ab-sidebar-account::after{content:none!important;}'
-             . 'li#ab-sidebar-account,li#ab-sidebar-account:hover,li#ab-sidebar-account:focus,li#ab-sidebar-account a,li#ab-sidebar-account a:hover,li#ab-sidebar-account a:focus,li#ab-sidebar-account a:active{background:transparent!important;background-color:transparent!important;box-shadow:none!important;}'
+             // Anchors inside the card stay transparent; only the LI wrapper carries the opaque bg.
+             . 'li#ab-sidebar-account a,li#ab-sidebar-account a:hover,li#ab-sidebar-account a:focus,li#ab-sidebar-account a:active{background:transparent!important;background-color:transparent!important;box-shadow:none!important;}'
              . '#ab-sidebar-user-menu{display:flex!important;align-items:center!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:6px;padding:8px 10px!important;border-bottom:1px solid rgba(255,255,255,0.08);min-height:44px;}'
              . '.ab-sidebar-user__profile{display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important;gap:8px;flex:1 1 auto;min-width:0;padding:2px 0!important;}'
              . '#ab-sidebar-user-menu .ab-sidebar-user__avatar,.ab-sidebar-user__avatar{width:28px!important;height:28px!important;border-radius:50%!important;flex-shrink:0!important;margin:0!important;padding:0!important;max-width:none!important;display:inline-block!important;}'
@@ -347,11 +375,46 @@ class QuickSettings {
 
         wp_add_inline_style( 'admbud-icon-inject', $css );
 
-        // Move the rendered <li> to the top of #adminmenu and inherit menu link colour.
+        // Copy the menu's resolved background-color (and gradient image, when
+        // class-colours emits one) onto the card so the bg matches exactly —
+        // not just a re-tiled gradient that the `background:inherit` fallback
+        // produces. Also inherit menu link colour onto the card's <a>s so the
+        // text tone matches whatever colour scheme is active.
         wp_add_inline_script(
             'admbud-icon-inject',
-            '(function(){var el=document.getElementById("ab-sidebar-account"),menu=document.getElementById("adminmenu");if(el&&menu){menu.insertBefore(el,menu.firstChild);el.style.display="";var ref=menu.querySelector("li.menu-top > a, li.menu-top a");if(ref){var c=getComputedStyle(ref).color;el.querySelectorAll("a").forEach(function(a){a.style.color=c;});}}})();'
+            '(function(){var el=document.getElementById("ab-sidebar-account"),menu=document.getElementById("adminmenu");if(!el||!menu)return;var ms=getComputedStyle(menu);if(ms.backgroundColor&&ms.backgroundColor!=="rgba(0, 0, 0, 0)"){el.style.backgroundColor=ms.backgroundColor;}if(ms.backgroundImage&&ms.backgroundImage!=="none"){el.style.backgroundImage=ms.backgroundImage;el.style.backgroundSize=ms.backgroundSize;el.style.backgroundPosition=ms.backgroundPosition;}var ref=menu.querySelector("li.menu-top > a, li.menu-top a");if(ref){var c=getComputedStyle(ref).color;el.querySelectorAll("a").forEach(function(a){a.style.color=c;});}})();'
         );
+    }
+
+    /**
+     * Whether Hide Admin Bar (Backend) is currently in effect for the
+     * logged-in user (toggle on + user's role matches the configured list).
+     * Single source of truth used by:
+     *  - the user-card's site-link block (to decide whether to render it),
+     *  - the user-card padding-bottom reservation (taller card when shown),
+     *  - class-core's sidebar position fix-up (the wrap's `top` offset
+     *    needs to be 0, not 32px, when the bar is hidden).
+     *
+     * Static because the call site in class-core runs in a global helper
+     * context and shouldn't need to spin up the QS singleton.
+     */
+    public static function admin_bar_hidden_for_current_user(): bool {
+        if ( admbud_get_option( 'admbud_qs_hide_adminbar_backend', '0' ) !== '1' ) {
+            return false;
+        }
+        $be_roles = array_filter( explode( ',', (string) get_option( 'admbud_qs_hide_adminbar_backend_roles', 'administrator' ) ) );
+        if ( empty( $be_roles ) || ! is_user_logged_in() ) {
+            return false;
+        }
+        $user = wp_get_current_user();
+        foreach ( (array) $user->roles as $role ) {
+            if ( in_array( $role, $be_roles, true ) ) { return true; }
+        }
+        return false;
+    }
+
+    private function user_card_has_site_link(): bool {
+        return self::admin_bar_hidden_for_current_user();
     }
 
     /**
@@ -406,22 +469,16 @@ class QuickSettings {
         // Site-link block: only when admin bar is hidden in the backend AND
         // the current user is in the hide-backend role list (otherwise the
         // admin bar is still visible to them and the link would be redundant).
-        $show_site_link = false;
-        if ( admbud_get_option( 'admbud_qs_hide_adminbar_backend', '0' ) === '1' ) {
-            $be_roles = array_filter( explode( ',', (string) get_option( 'admbud_qs_hide_adminbar_backend_roles', 'administrator' ) ) );
-            foreach ( (array) $user->roles as $role ) {
-                if ( in_array( $role, $be_roles, true ) ) { $show_site_link = true; break; }
-            }
-        }
+        $show_site_link = $this->user_card_has_site_link();
         $site_name = get_bloginfo( 'name' );
         $home_url  = home_url( '/' );
         ?>
-        <?php // Wrapper is a <li> so it's a valid child of <ul#adminmenu>.
-              // We inject it as the first child of #adminmenu so the
-              // ::before pseudo (used by class-core.php for the optional
-              // sidebar logo) still renders above us — giving the natural
-              // visual stack: logo (if set) -> site -> user -> menu items. ?>
-        <li id="ab-sidebar-account" class="ab-sidebar-account" role="presentation" style="display:none;">
+        <?php /* Wrapper is a <li> so it's a valid child of <ul#adminmenu>.
+                 Rendered server-side via the `adminmenu` action - lands as
+                 the last menu child in DOM order, then CSS pins it
+                 `position:fixed` to the viewport bottom-left of the sidebar.
+                 No JS-move, so no CLS on page load. */ ?>
+        <li id="ab-sidebar-account" class="ab-sidebar-account" role="presentation">
         <?php if ( $show_site_link ) :
             // Pull child nodes from the actual admin bar's `site-name` node.
             // This mirrors WP default behaviour (Visit Site, Themes, Widgets,

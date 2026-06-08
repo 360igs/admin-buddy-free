@@ -41,6 +41,12 @@ class Settings {
         add_action( 'admin_post_admbud_reset_deactivate', [ $this, 'handle_reset_deactivate' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets'        ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_global_assets' ] );
+        // Attach the WP-admin-scheme accent to the shared `admbud-tokens`
+        // handle on every surface (admin pages + front-end admin bar), so
+        // off-canvas panels like the Checklist match the scheme too. Priority
+        // 100 runs after any module has registered the handle.
+        add_action( 'admin_enqueue_scripts', [ $this, 'attach_scheme_accent' ], 100 );
+        add_action( 'wp_enqueue_scripts',    [ $this, 'attach_scheme_accent' ], 100 );
         add_action( 'wp_ajax_admbud_modules_toggle',       [ $this, 'ajax_setup_toggle'      ] );
         add_action( 'wp_ajax_admbud_modules_bulk_toggle',  [ $this, 'ajax_setup_bulk_toggle' ] );
         add_action( 'wp_ajax_admbud_modules_group_toggle', [ $this, 'ajax_setup_group_toggle' ] );
@@ -75,6 +81,7 @@ class Settings {
             'admbud_wl_sidebar_logo_url'          => '',
             'admbud_wl_sidebar_logo_width'        => 84,
             'admbud_wl_sidebar_logo_height'       => 0,
+            'admbud_wl_sidebar_width'             => 160,
             'admbud_wl_favicon_id'                => '',
             'admbud_wl_agency_name'               => '',
             'admbud_wl_agency_url'                => '',
@@ -145,7 +152,7 @@ class Settings {
             'admbud_colours_adminbar_submenu_bg'  => '#1a1828',
             'admbud_colours_adminbar_hover_text'  => '#ede9fe',
             'admbud_colours_adminbar_sub_text'    => '#d4d1e0',
-            'admbud_colours_adminbar_sub_hover_bg'   => '#1e1b2e',
+            'admbud_colours_adminbar_sub_hover_bg'   => '',
             'admbud_colours_adminbar_sub_hover_text' => '#ffffff',
             'admbud_colours_pill_maintenance'     => '#dd3333',
             'admbud_colours_pill_coming_soon'     => '#dd3333',
@@ -210,6 +217,12 @@ class Settings {
             'admbud_login_bg_image_url'           => '',
             'admbud_login_bg_overlay_color'       => '#000000',
             'admbud_login_bg_overlay_opacity'     => 30,
+            'admbud_login_card_bg_color'          => '#ffffff',
+            'admbud_login_card_text_auto'         => '1',
+            'admbud_login_card_text_color'        => '#3c434a',
+            'admbud_login_card_width'             => 400,
+            'admbud_login_btn_auto'               => '1',
+            'admbud_login_btn_bg'                 => '#2271b1',
             // -- Maintenance --
             'admbud_maintenance_mode'             => 'off',
             'admbud_coming_soon_title'            => 'Coming Soon',
@@ -271,6 +284,14 @@ class Settings {
             'admbud_option_pages'                 => '{}',
             // -- Collections --
             'admbud_collections'                  => '{}',
+            // -- Media Manager prefs (Pro) --
+            'admbud_mm_default_color'             => '',
+            'admbud_mm_default_expanded'          => '1',
+            'admbud_mm_trash_enabled'             => '1',
+            'admbud_mm_show_count'                => '1',
+            'admbud_mm_show_size'                 => '1',
+            'admbud_mm_recursive_view'            => '0',
+            'admbud_mm_tool_roles'                => [],
         ];
     }
 
@@ -365,7 +386,9 @@ class Settings {
                     'parent' => 'admbud',
                     'id'     => 'ab-bar-' . $gslug,
                     'title'  => $gtab['label'],
-                    'href'   => $base . '&tab=' . $gslug,
+                    // Tab-less modules (e.g. Media Manager) carry their own 'url'
+                    // - they have no &tab= page, so link to where they actually live.
+                    'href'   => $gtab['url'] ?? ( $base . '&tab=' . $gslug ),
                 ] );
             }
         }
@@ -464,6 +487,16 @@ class Settings {
             <?php
             return;
         }
+
+        // Login tab reset confirmation.
+        if ( $key === 'login_reset' ) {
+            ?>
+            <div class="ab-notice ab-notice--success">
+                <?php esc_html_e( 'Login settings have been reset to their defaults.', 'admin-buddy' ); ?>
+            </div>
+            <?php
+            return;
+        }
     }
 
     // ============================================================================
@@ -492,6 +525,9 @@ class Settings {
         ] );
         register_setting( 'admbud_core_group', 'admbud_wl_sidebar_logo_height', [
             'type' => 'integer', 'sanitize_callback' => 'absint', 'default' => 0,
+        ] );
+        register_setting( 'admbud_core_group', 'admbud_wl_sidebar_width', [
+            'type' => 'integer', 'sanitize_callback' => [ $this, 'sanitize_sidebar_width' ], 'default' => 160,
         ] );
         // Favicon: stored in WP's native 'site_icon' option (attachment ID).
         // We register under our group so it saves via our form; WP reads it natively.
@@ -848,6 +884,12 @@ class Settings {
             'admbud_login_bg_image_url'       => [ 'string',  'esc_url_raw', '' ],
             'admbud_login_bg_overlay_color'   => [ 'string',  [ $this, 'sanitize_hex_color' ], '#000000' ],
             'admbud_login_bg_overlay_opacity' => [ 'integer', [ $this, 'sanitize_overlay_opacity' ], 30 ],
+            'admbud_login_card_bg_color'      => [ 'string',  [ $this, 'sanitize_hex_color' ], '#ffffff' ],
+            'admbud_login_card_text_auto'     => [ 'string',  [ $this, 'sanitize_checkbox' ], '1' ],
+            'admbud_login_card_text_color'    => [ 'string',  [ $this, 'sanitize_hex_color' ], '#3c434a' ],
+            'admbud_login_card_width'         => [ 'integer', [ $this, 'sanitize_card_width' ], 400 ],
+            'admbud_login_btn_auto'           => [ 'string',  [ $this, 'sanitize_checkbox' ], '1' ],
+            'admbud_login_btn_bg'             => [ 'string',  [ $this, 'sanitize_hex_color' ], '#2271b1' ],
         ];
         foreach ( $login_opts as $key => [ $type, $cb, $default ] ) {
             register_setting( 'admbud_login_group', $key, [
@@ -954,52 +996,19 @@ class Settings {
         // Tokens must load before component CSS.
         wp_enqueue_style( 'admbud-tokens', $url . 'tokens.css', [], $v );
 
-        // When the Colours module is OFF, AB chrome (buttons, toggles, focus
-        // rings) should match the user's chosen WordPress admin colour scheme
-        // — Fresh, Coffee, Ectoplasm, etc. — not AB's brand purple or a
-        // hardcoded default. `--wp-admin-theme-color` isn't reliably set on
-        // classic admin pages (it's mostly a block-editor variable), so we
-        // resolve the scheme accent in PHP from `$_wp_admin_css_colors` and
-        // emit it as `--ab-primary` scoped to `.ab-wrap`. When the Colours
-        // module is ON, class-colours.php emits its own `--ab-primary` later
-        // in the cascade (with !important on --wp-admin-theme-color), which
-        // takes precedence — so this block is a no-op in that case.
-        $admbud_enabled = admbud_enabled_modules();
-        if ( ! is_array( $admbud_enabled ) || ! in_array( 'colours', $admbud_enabled, true ) ) {
-            global $_wp_admin_css_colors;
-            $admbud_scheme   = get_user_option( 'admin_color' ) ?: 'fresh';
-            $admbud_accent   = '#2271b1'; // Fresh scheme primary; safe fallback.
-            if ( isset( $_wp_admin_css_colors[ $admbud_scheme ]->colors[2] ) ) {
-                $admbud_accent = $_wp_admin_css_colors[ $admbud_scheme ]->colors[2];
-            }
-            $admbud_a = esc_attr( $admbud_accent );
-            // Emit BOTH the source vars (--ab-primary, --ab-secondary,
-            // --wp-admin-theme-color) AND the *derived* accent vars
-            // (--ab-accent, --ab-accent-hover, etc.). The derived vars are
-            // computed at :root in tokens.css using var(--ab-primary, …) —
-            // and CSS custom-property substitution resolves at the element
-            // where the declaration lives, so a .ab-wrap-scoped override of
-            // --ab-primary alone does NOT change the :root-computed value of
-            // --ab-accent. Redeclaring the derived vars at .ab-wrap level is
-            // what actually re-substitutes them with our scheme value.
-            $admbud_scheme_css = '.ab-wrap{'
-                . '--ab-primary:'         . $admbud_a . ';'
-                . '--ab-secondary:'       . $admbud_a . ';'
-                . '--wp-admin-theme-color:' . $admbud_a . ';'
-                . '--ab-accent:'          . $admbud_a . ';'
-                . '--ab-accent-hover:color-mix(in srgb,' . $admbud_a . ' 85%,#000);'
-                . '--ab-accent-subtle:color-mix(in srgb,' . $admbud_a . ' 8%,transparent);'
-                . '--ab-border-focus:'    . $admbud_a . ';'
-                . '}';
-            wp_add_inline_style( 'admbud-tokens', $admbud_scheme_css );
-        }
+        // The WP-admin-scheme accent override (used when the Colours module is
+        // OFF) is attached to `admbud-tokens` centrally by attach_scheme_accent()
+        // - see that method. It applies on every AB surface, not just this
+        // settings page, so off-canvas panels match the admin scheme too.
 
         // Core shared CSS - always loaded.
         wp_enqueue_style( 'admbud-core', $url . 'admin.css', [ 'admbud-tokens' ], $v );
         wp_enqueue_style( 'admbud-dropdown', $url . "ab-dropdown{$min_css}.css", [ 'admbud-core' ], $v );
+        wp_enqueue_style( 'admbud-datepicker', $url . "ab-datepicker{$min_css}.css", [ 'admbud-core' ], $v );
         wp_enqueue_style( 'wp-color-picker' );
         wp_enqueue_script( 'wp-color-picker' );
         wp_enqueue_script( 'admbud-dropdown', $js_url . 'ab-dropdown.js', [], $v, true );
+        wp_enqueue_script( 'admbud-datepicker', $js_url . 'ab-datepicker.js', [], $v, true );
         wp_enqueue_media();
 
 
@@ -1321,6 +1330,168 @@ class Settings {
         wp_enqueue_style( 'admbud-icon-inject' );
     }
 
+    /**
+     * Attach the WP-admin-scheme accent override to the shared `admbud-tokens`
+     * stylesheet - once, regardless of which module enqueued it.
+     *
+     * Hooked late on both admin_enqueue_scripts and wp_enqueue_scripts so every
+     * AB surface picks up the accent from ONE source: the settings page, the
+     * Checklist panel on any admin page or the front-end admin bar, Pro Option
+     * Pages, the Command palette. Previously the accent was emitted only by
+     * enqueue_assets() and scoped to .ab-wrap, so panels rendered outside that
+     * wrapper fell back to the hardcoded Fresh blue.
+     */
+    public function attach_scheme_accent(): void {
+        if ( ! wp_style_is( 'admbud-tokens', 'registered' ) ) {
+            return; // No AB surface loaded on this request.
+        }
+        $css = self::scheme_accent_css();
+        if ( '' !== $css ) {
+            wp_add_inline_style( 'admbud-tokens', $css );
+        }
+    }
+
+    /**
+     * True when the Colours module is active. It then owns every AB accent -
+     * admin chrome AND the Login / Maintenance pages - so the WP-scheme
+     * fallbacks in this group stand down.
+     */
+    public static function colours_module_active(): bool {
+        $enabled = admbud_enabled_modules();
+        return is_array( $enabled ) && in_array( 'colours', $enabled, true );
+    }
+
+    /**
+     * Resolve the active WP admin colour scheme's accent as a hex string.
+     *
+     * Shared by scheme_accent_css() (admin chrome) and scheme_page_palette()
+     * (Login / Maintenance pages) - one resolver, no duplicated logic.
+     *
+     * On the front end admin_init never fires, so the colour schemes are not
+     * registered yet; we register them on demand. With no logged-in user
+     * get_user_option() returns false and we fall back to core's
+     * version-dependent default scheme.
+     */
+    public static function scheme_accent_hex(): string {
+        global $_wp_admin_css_colors;
+        if ( empty( $_wp_admin_css_colors ) && function_exists( 'register_admin_color_schemes' ) ) {
+            register_admin_color_schemes();
+        }
+
+        // WP 7.0 made 'modern' the default admin colour scheme (it was 'fresh'
+        // on 6.x). Mirror core's version-dependent default for users who have
+        // never explicitly picked a scheme.
+        $default = version_compare( get_bloginfo( 'version' ), '7.0', '>=' ) ? 'modern' : 'fresh';
+        $scheme  = get_user_option( 'admin_color' ) ?: $default;
+
+        // A scheme's `colors` array ends [..., accent, accent-light] - the
+        // accent is the second-to-last entry. The index is NOT fixed: classic
+        // 4-colour schemes (Fresh, Coffee, ...) carry it at [2], but WP 7.0's
+        // 3-colour 'modern' scheme carries it at [1]. count() - 2 resolves it
+        // for every registered scheme.
+        $colors = $_wp_admin_css_colors[ $scheme ]->colors ?? null;
+        if ( is_array( $colors ) && count( $colors ) >= 2 ) {
+            $hex = (string) $colors[ count( $colors ) - 2 ];
+            if ( preg_match( '/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/', $hex ) ) {
+                return $hex;
+            }
+        }
+        return '#2271b1'; // Fresh accent; hard fallback if the scheme is gone.
+    }
+
+    /**
+     * The `:root` custom-property block that points AB chrome at the WP admin
+     * scheme accent, used when the Colours module is OFF. Emitted at :root (not
+     * .ab-wrap) so off-canvas panels inherit it too. The derived accent vars
+     * are redeclared because tokens.css computes them at :root from
+     * var(--ab-primary, …) - overriding --ab-primary alone would not
+     * re-substitute the :root copies. See attach_scheme_accent().
+     *
+     * @return string CSS, or '' when the Colours module owns the accent.
+     */
+    public static function scheme_accent_css(): string {
+        if ( self::colours_module_active() ) {
+            return '';
+        }
+        $a = esc_attr( self::scheme_accent_hex() );
+        return ':root{'
+            . '--ab-primary:'      . $a . ';'
+            . '--ab-secondary:'    . $a . ';'
+            . '--ab-accent:'       . $a . ';'
+            . '--ab-accent-hover:color-mix(in srgb,'  . $a . ' 85%,#000);'
+            . '--ab-accent-subtle:color-mix(in srgb,' . $a . ' 8%,transparent);'
+            . '--ab-border-focus:' . $a . ';'
+            . '}';
+    }
+
+    /**
+     * Dark, accent-tinted palette for the Login / Maintenance / Coming-Soon
+     * pages, derived from the WP admin scheme accent. Used when the Colours
+     * module is OFF so those public pages follow the admin scheme instead of
+     * the brand-violet defaults. ONE source, so both pages render identically.
+     *
+     * @return array{bg:string,grad_from:string,grad_to:string,heading:string,message:string}
+     */
+    public static function scheme_page_palette(): array {
+        $a = self::scheme_accent_hex();
+        return [
+            'bg'        => self::mix_hex( $a, '#0d0d14', 12 ), // near-black, accent-tinted
+            'grad_from' => self::mix_hex( $a, '#0d0d14', 24 ), // upper gradient stop
+            'grad_to'   => self::mix_hex( $a, '#0d0d14', 12 ), // lower gradient stop
+            'heading'   => self::mix_hex( $a, '#ffffff', 14 ), // near-white heading
+            'message'   => self::mix_hex( $a, '#ffffff', 45 ), // softer body copy
+        ];
+    }
+
+    /**
+     * Blend two hex colours in sRGB. $weight_a is the percentage (0-100) of
+     * $hex_a; the remainder is $hex_b. Returns a 6-digit hex (or $hex_a
+     * unchanged if either input is not parseable).
+     */
+    public static function mix_hex( string $hex_a, string $hex_b, int $weight_a ): string {
+        $a = self::hex_to_rgb( $hex_a );
+        $b = self::hex_to_rgb( $hex_b );
+        if ( null === $a || null === $b ) {
+            return $hex_a;
+        }
+        $w = max( 0, min( 100, $weight_a ) ) / 100;
+        return sprintf(
+            '#%02x%02x%02x',
+            (int) round( $a[0] * $w + $b[0] * ( 1 - $w ) ),
+            (int) round( $a[1] * $w + $b[1] * ( 1 - $w ) ),
+            (int) round( $a[2] * $w + $b[2] * ( 1 - $w ) )
+        );
+    }
+
+    /**
+     * Pick a readable text colour (near-black or near-white) for content that
+     * sits on $hex, using perceived (YIQ) luminance.
+     */
+    public static function contrast_text( string $hex ): string {
+        $rgb = self::hex_to_rgb( $hex );
+        if ( null === $rgb ) {
+            return '#1d2327';
+        }
+        $yiq = ( $rgb[0] * 299 + $rgb[1] * 587 + $rgb[2] * 114 ) / 1000;
+        return $yiq >= 150 ? '#1d2327' : '#f0f0f1';
+    }
+
+    /** Parse a 3- or 6-digit hex colour to an [r, g, b] array, or null. */
+    private static function hex_to_rgb( string $hex ): ?array {
+        $hex = ltrim( trim( $hex ), '#' );
+        if ( 3 === strlen( $hex ) ) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        if ( ! preg_match( '/^[A-Fa-f0-9]{6}$/', $hex ) ) {
+            return null;
+        }
+        return [
+            hexdec( substr( $hex, 0, 2 ) ),
+            hexdec( substr( $hex, 2, 2 ) ),
+            hexdec( substr( $hex, 4, 2 ) ),
+        ];
+    }
+
     public function render_page(): void {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die( esc_html__( 'You do not have permission to access this page.', 'admin-buddy' ) );
@@ -1384,7 +1555,7 @@ class Settings {
         ];
 
         // Only show the License tab when the licensing SDK is present.
-        if ( file_exists( ADMBUD_DIR . 'licensing/src/Client.php' ) ) {
+        if ( function_exists( 'admbud_fs' ) ) {
             $tabs['license'] = [
                 'group' => 'standalone',
                 'label' => __( 'License', 'admin-buddy' ),
@@ -1413,6 +1584,21 @@ class Settings {
         $loading_class = empty( $_GET['tab'] ) ? ' ab-loading' : ''; // phpcs:ignore WordPress.Security.NonceVerification
         ?>
         <div class="wrap ab-wrap<?php echo esc_attr( $loading_class ); ?>">
+
+            <?php
+            /*
+             * Admin-notice anchor. WordPress core (wp-admin/js/common.js)
+             * relocates every admin notice — including the Freemius opt-in /
+             * "Complete Activation" notice — to immediately after the first
+             * `.wp-header-end` element, or, if none exists, after the first
+             * <h1>/<h2> inside `.wrap`. Our chrome renders its title as an SVG
+             * logo (no heading element), so without this marker the FS notice
+             * was being injected after the Welcome banner's <h2>, landing in
+             * the middle of the banner. Emitting `.wp-header-end` here pins
+             * all notices to the very top of the page, above the topbar.
+             */
+            ?>
+            <hr class="wp-header-end" />
 
             <div class="ab-topbar">
                 <div class="ab-topbar__logo">
@@ -1846,7 +2032,7 @@ class Settings {
             // Replaces the earlier 14-card "Unlock with Pro" grid removed pre
             // WP.org round 4 — the grid read as trialware; this line keeps the
             // Free → Pro discovery path without the upsell vibe.
-            if ( ! file_exists( ADMBUD_DIR . 'licensing/src/Client.php' ) ) : ?>
+            if ( ! function_exists( 'admbud_fs' ) ) : ?>
             <p class="ab-pro-footer" style="margin-top:var(--ab-space-6);padding-top:var(--ab-space-4);border-top:1px solid var(--ab-neutral-200, #e5e7eb);font-size:var(--ab-text-sm);color:var(--ab-text-muted, #6b7280);text-align:center;">
                 <?php esc_html_e( 'Admin Buddy Pro adds more modules for freelancers, agencies, and anyone managing multiple WordPress sites.', 'admin-buddy' ); ?>
                 <a href="<?php echo esc_url( 'https://wpadminbuddy.com' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Learn more', 'admin-buddy' ); ?></a>
@@ -1865,7 +2051,11 @@ class Settings {
                         <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
-                <p id="ab-modal-body" class="ab-modal__body"></p>
+                <div id="ab-modal-body" class="ab-modal__body"></div>
+                <div id="ab-modal-type-confirm" class="ab-modal__type-confirm ab-hidden">
+                    <label for="ab-modal-type-input" id="ab-modal-type-label" class="ab-modal__type-label"></label>
+                    <input type="text" id="ab-modal-type-input" class="ab-modal__type-input" autocomplete="off" spellcheck="false">
+                </div>
                 <div class="ab-modal__actions">
                     <button type="button" id="ab-modal-cancel" class="ab-btn ab-btn--secondary">
                         <?php esc_html_e( 'Cancel', 'admin-buddy' ); ?>
@@ -1956,6 +2146,10 @@ class Settings {
             'roles'        => [ 'group' => 'utilities',    'label' => __( 'User Roles',      'admin-buddy' ), 'icon' => '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>' ],
             // -- Manage -------------------------------------------------------
             'quick-settings' => [ 'group' => 'manage', 'label' => __( 'Quick Settings', 'admin-buddy' ), 'icon' => '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>' ],
+            // Media Manager (FREE folder core): toggleable module with NO settings tab -
+            // config lives in the folder panel on the Media Library (gear icon). 'url'
+            // points the nav/admin-bar quick-link there instead of a non-existent &tab=.
+            'media-manager' => [ 'group' => 'utilities', 'label' => __( 'Media Manager', 'admin-buddy' ), 'url' => admin_url( 'upload.php' ), 'icon' => '<svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="9" cy="12" r="1.5"/><path d="m21 16-4-4-7 7"/></svg>' ],
         ];
     }
 
@@ -2220,6 +2414,7 @@ class Settings {
         // Ensure Admin Bar Flyout Bg always matches Admin Bar Bg.
         $adminbar_bg = admbud_get_option( 'admbud_colours_adminbar_bg', '' );
         if ( $adminbar_bg ) { admbud_update_option( 'admbud_colours_adminbar_submenu_bg', $adminbar_bg ); }
+        $this->sync_login_card_to_page_bg();
         // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
         do_action( 'admbud_colour_preset_applied', $slug, $presets[ $slug ]['label'] ?? $slug );
         wp_send_json_success( [ 'preset' => $slug ] );
@@ -2241,6 +2436,29 @@ class Settings {
         foreach ( $bricks_keys as $key ) {
             delete_option( $key );
         }
+    }
+
+    /**
+     * Adapt the login form (card) background to a freshly-applied login page
+     * background. Called after a preset or palette is applied so the card no
+     * longer stays stark white on a dark scheme - it tracks the page tone:
+     *   - light page background -> keep the card white (WP-like, high contrast).
+     *   - dark page background  -> a subtly elevated surface (10% toward white)
+     *     so the card reads as a raised panel instead of blending into the page.
+     * Card text is forced back to auto-contrast so it stays readable on the new
+     * surface. This only seeds a sensible starting colour - the user can still
+     * tweak admbud_login_card_bg_color / _text afterward on the Login tab.
+     */
+    private function sync_login_card_to_page_bg(): void {
+        $page_bg = sanitize_text_field( admbud_get_option( 'admbud_login_bg_color', '' ) );
+        if ( ! $page_bg || ! preg_match( '/^#?[A-Fa-f0-9]{3}([A-Fa-f0-9]{3})?$/', $page_bg ) ) {
+            return;
+        }
+        $card = ( self::contrast_text( $page_bg ) === '#1d2327' )
+            ? '#ffffff'                              // light page -> white card
+            : self::mix_hex( '#ffffff', $page_bg, 10 ); // dark page -> elevated surface
+        admbud_update_option( 'admbud_login_card_bg_color', $card );
+        admbud_update_option( 'admbud_login_card_text_auto', '1' );
     }
 
     /**
@@ -2277,6 +2495,7 @@ class Settings {
         // Ensure Admin Bar Flyout Bg always matches Admin Bar Bg.
         $adminbar_bg = admbud_get_option( 'admbud_colours_adminbar_bg', '' );
         if ( $adminbar_bg ) { admbud_update_option( 'admbud_colours_adminbar_submenu_bg', $adminbar_bg ); }
+        $this->sync_login_card_to_page_bg();
         Colours::maybe_bust_cache();
         wp_send_json_success( [ 'count' => $count ] );
     }
@@ -2316,7 +2535,7 @@ class Settings {
                     'admbud_colours_adminbar_submenu_bg'     => '#1a1828',
                     'admbud_colours_adminbar_hover_text'     => '#ffffff',
                     'admbud_colours_adminbar_sub_text'       => '#d4d1e0',
-                    'admbud_colours_adminbar_sub_hover_bg'   => '#7c3aed',
+                    'admbud_colours_adminbar_sub_hover_bg'   => '',
                     'admbud_colours_adminbar_sub_hover_text' => '#ffffff',
                     'admbud_colours_shadow_colour'           => '',
                     'admbud_colours_pill_maintenance'        => '#dd3333',
@@ -2408,7 +2627,7 @@ class Settings {
                     'admbud_colours_adminbar_submenu_bg'     => '#0b1a1a',
                     'admbud_colours_adminbar_hover_text'     => '#ffffff',
                     'admbud_colours_adminbar_sub_text'       => '#bbded7',
-                    'admbud_colours_adminbar_sub_hover_bg'   => '#0d9488',
+                    'admbud_colours_adminbar_sub_hover_bg'   => '',
                     'admbud_colours_adminbar_sub_hover_text' => '#ffffff',
                     'admbud_colours_shadow_colour'           => '',
                     'admbud_colours_pill_maintenance'        => '#dd3333',
@@ -2500,7 +2719,7 @@ class Settings {
                     'admbud_colours_adminbar_submenu_bg'     => '#1a0b12',
                     'admbud_colours_adminbar_hover_text'     => '#ffffff',
                     'admbud_colours_adminbar_sub_text'       => '#e1cdce',
-                    'admbud_colours_adminbar_sub_hover_bg'   => '#e11d48',
+                    'admbud_colours_adminbar_sub_hover_bg'   => '',
                     'admbud_colours_adminbar_sub_hover_text' => '#ffffff',
                     'admbud_colours_shadow_colour'           => '',
                     'admbud_colours_pill_maintenance'        => '#dd3333',
@@ -2592,7 +2811,7 @@ class Settings {
                     'admbud_colours_adminbar_submenu_bg'     => '#0d1425',
                     'admbud_colours_adminbar_hover_text'     => '#ffffff',
                     'admbud_colours_adminbar_sub_text'       => '#c6d2e0',
-                    'admbud_colours_adminbar_sub_hover_bg'   => '#2563eb',
+                    'admbud_colours_adminbar_sub_hover_bg'   => '',
                     'admbud_colours_adminbar_sub_hover_text' => '#ffffff',
                     'admbud_colours_shadow_colour'           => '',
                     'admbud_colours_pill_maintenance'        => '#dd3333',
@@ -2684,7 +2903,7 @@ class Settings {
                     'admbud_colours_adminbar_submenu_bg'     => '#141414',
                     'admbud_colours_adminbar_hover_text'     => '#ffffff',
                     'admbud_colours_adminbar_sub_text'       => '#c8c8c8',
-                    'admbud_colours_adminbar_sub_hover_bg'   => '#555555',
+                    'admbud_colours_adminbar_sub_hover_bg'   => '',
                     'admbud_colours_adminbar_sub_hover_text' => '#ffffff',
                     'admbud_colours_shadow_colour'           => '',
                     'admbud_colours_pill_maintenance'        => '#dd3333',
@@ -2752,7 +2971,13 @@ class Settings {
                     'admbud_colours_secondary'               => '#374151',
                     'admbud_colours_hover_bg'                => '#374151',
                     'admbud_colours_active_bg'               => '#4b5563',
-                    'admbud_colours_menu_text'               => '#374151',
+                    // Light sidebar: menu_text is a tinted-neutral dark (~5%
+                    // saturation, slate hue) so labels + dashicons read neutral
+                    // and the dark-forced plugin SVG icons blend in. Any FUTURE
+                    // light preset (menu_bg luminance > 0.55) should likewise
+                    // store a low-saturation menu_text - see Colours::lightness()
+                    // and the Auto Palette desat() generator for the convention.
+                    'admbud_colours_menu_text'               => '#414347',
                     'admbud_colours_menu_bg'                 => '#ffffff',
                     'admbud_colours_active_text'             => '#ffffff',
                     'admbud_colours_sep_color'               => '#e5e7eb',
@@ -2771,12 +2996,13 @@ class Settings {
                     'admbud_colours_submenu_active_bg'       => '#4b5563',
                     'admbud_colours_submenu_active_text'     => '#ffffff',
                     'admbud_colours_adminbar_bg'             => '#f3f4f6',
-                    'admbud_colours_adminbar_text'           => '#4b5563',
+                    // Admin bar + flyout text match the sidebar menu_text for consistency.
+                    'admbud_colours_adminbar_text'           => '#414347',
                     'admbud_colours_adminbar_hover_bg'       => '#f3f4f6',
                     'admbud_colours_adminbar_submenu_bg'     => '#f3f4f6',
                     'admbud_colours_adminbar_hover_text'     => '#111827',
-                    'admbud_colours_adminbar_sub_text'       => '#4b5563',
-                    'admbud_colours_adminbar_sub_hover_bg'   => '#f3f4f6',
+                    'admbud_colours_adminbar_sub_text'       => '#414347',
+                    'admbud_colours_adminbar_sub_hover_bg'   => '',
                     'admbud_colours_adminbar_sub_hover_text' => '#111827',
                     'admbud_colours_shadow_colour'           => '#d1d5db',
                     'admbud_colours_pill_maintenance'        => '#dc2626',

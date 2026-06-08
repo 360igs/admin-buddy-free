@@ -67,4 +67,8 @@
     --ab-shadow-xl:  0 20px 60px rgba(0,0,0,0.15);
     --ab-shadow-bar: 0 -2px 8px rgba(0,0,0,0.04);
     --ab-shadow-panel: -8px 0 40px rgba(0,0,0,0.10);
+
+    /* Backdrop blur - overlay/scrim filters (ready-to-use filter values). */
+    --ab-backdrop-blur: blur(2px);
+    --ab-backdrop-blur-strong: blur(3px);
 }

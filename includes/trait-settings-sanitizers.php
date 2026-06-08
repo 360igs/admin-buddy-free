@@ -24,10 +24,12 @@ trait Settings_Sanitizers {
     public function sanitize_opacity( $v ): string   { $n = (int) $v; return (string) max( 0, min( 100, $n ) ); }
     public function sanitize_card_position( $v ): string { return in_array( $v, [ 'left', 'center', 'right' ], true ) ? $v : 'center'; }
     public function sanitize_maintenance_mode( $v ): string { return in_array( $v, [ 'off', 'coming_soon', 'maintenance' ], true ) ? $v : 'off'; }
-    public function sanitize_logo_width( $v ): int   { $w = absint( $v ); return ( $w >= 40 && $w <= 320 ) ? $w : 84; }
+    public function sanitize_logo_width( $v ): int   { $w = absint( $v ); return ( $w >= 40 && $w <= 280 ) ? $w : 84; }
 
     public function sanitize_logo_height( $v ): int  { $h = absint( $v ); return ( $h === 0 || ( $h >= 30 && $h <= 200 ) ) ? $h : 0; }
     public function sanitize_overlay_opacity( $v ): int { $o = absint( $v ); return $o <= 90 ? $o : 30; }
+    public function sanitize_card_width( $v ): int { $w = absint( $v ); return ( $w >= 320 && $w <= 600 ) ? $w : 400; }
+    public function sanitize_sidebar_width( $v ): int { $w = absint( $v ); return ( $w >= 160 && $w <= 280 ) ? $w : 160; }
 
     /**
      * Sanitize a CSS colour value: accepts #rrggbb, #rgb, rgba(), and hsla().

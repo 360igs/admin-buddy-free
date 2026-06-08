@@ -399,8 +399,8 @@ function admbud_colour_val( string $option, string $fallback = '#000000' ): stri
                                 <td>
                                     <input type="color" id="admbud_colours_adminbar_hover_text" name="admbud_colours_adminbar_hover_text"
                                            value="<?php echo esc_attr( admbud_get_option( 'admbud_colours_adminbar_hover_text', '' ) ); ?>"
-                                           class="ab-native-color-picker" data-default-color="<?php echo esc_attr( Colours::DEFAULT_MENU_TEXT ); ?>">
-                                    <p class="description"><?php esc_html_e( 'Text and icon colour on hover. Leave blank to use Menu Text.', 'admin-buddy' ); ?></p>
+                                           class="ab-native-color-picker" data-default-color="<?php echo esc_attr( Colours::suggest_text_colour( admbud_get_option( 'admbud_colours_adminbar_hover_bg', '' ) ?: admbud_get_option( 'admbud_colours_primary', Colours::DEFAULT_PRIMARY ) ) ); ?>">
+                                    <p class="description"><?php esc_html_e( 'Text and icon colour on hover. Leave blank for automatic contrast (white on a dark bar).', 'admin-buddy' ); ?></p>
                                 </td>
                             </tr>
                             <tr class="ab-form-table__section-heading">
@@ -431,8 +431,8 @@ function admbud_colour_val( string $option, string $fallback = '#000000' ): stri
                                 <td>
                                     <input type="color" id="admbud_colours_adminbar_sub_hover_bg" name="admbud_colours_adminbar_sub_hover_bg"
                                            value="<?php echo esc_attr( admbud_get_option( 'admbud_colours_adminbar_sub_hover_bg', '' ) ); ?>"
-                                           class="ab-native-color-picker" data-default-color="<?php echo esc_attr( Colours::DEFAULT_PRIMARY ); ?>">
-                                    <p class="description"><?php esc_html_e( 'Flyout item background on hover. Leave blank to use primary colour.', 'admin-buddy' ); ?></p>
+                                           class="ab-native-color-picker" data-default-color="<?php echo esc_attr( admbud_get_option( 'admbud_colours_adminbar_submenu_bg', '' ) ?: admbud_get_option( 'admbud_colours_menu_bg', Colours::DEFAULT_MENU_BG ) ); ?>">
+                                    <p class="description"><?php esc_html_e( 'Flyout item background on hover. Leave blank to match the flyout background (no colour change on hover).', 'admin-buddy' ); ?></p>
                                 </td>
                             </tr>
                             <tr>
@@ -440,8 +440,8 @@ function admbud_colour_val( string $option, string $fallback = '#000000' ): stri
                                 <td>
                                     <input type="color" id="admbud_colours_adminbar_sub_hover_text" name="admbud_colours_adminbar_sub_hover_text"
                                            value="<?php echo esc_attr( admbud_get_option( 'admbud_colours_adminbar_sub_hover_text', '' ) ); ?>"
-                                           class="ab-native-color-picker" data-default-color="<?php echo esc_attr( Colours::DEFAULT_MENU_TEXT ); ?>">
-                                    <p class="description"><?php esc_html_e( 'Flyout item text on hover. Leave blank to use Menu Text.', 'admin-buddy' ); ?></p>
+                                           class="ab-native-color-picker" data-default-color="<?php echo esc_attr( Colours::suggest_text_colour( admbud_get_option( 'admbud_colours_adminbar_sub_hover_bg', '' ) ?: ( admbud_get_option( 'admbud_colours_adminbar_submenu_bg', '' ) ?: admbud_get_option( 'admbud_colours_menu_bg', Colours::DEFAULT_MENU_BG ) ) ) ); ?>">
+                                    <p class="description"><?php esc_html_e( 'Flyout item text on hover. Leave blank for automatic contrast.', 'admin-buddy' ); ?></p>
                                 </td>
                             </tr>
                         </table>

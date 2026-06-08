@@ -2,15 +2,15 @@
 # This file is distributed under the same license as the Admin Buddy plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Admin Buddy 1.0.1\n"
+"Project-Id-Version: Admin Buddy 1.1.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/admin-buddy\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-05-13T16:29:34+00:00\n"
-"PO-Revision-Date: 2026-05-13T16:29:34+00:00\n"
+"POT-Creation-Date: 2026-06-08T16:01:54+00:00\n"
+"PO-Revision-Date: 2026-06-08T16:01:54+00:00\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: admin-buddy\n"
 
@@ -320,6 +320,561 @@ msgstr ""
 msgid "We're working on something exciting. Stay tuned!"
 msgstr ""
 
+msgid "Media Folders"
+msgstr ""
+
+msgid "Media Folder"
+msgstr ""
+
+msgid "Folders"
+msgstr ""
+
+msgid "All Folders"
+msgstr ""
+
+msgid "Edit Folder"
+msgstr ""
+
+msgid "Add Folder"
+msgstr ""
+
+msgid "Search Folders"
+msgstr ""
+
+msgid "All Media"
+msgstr ""
+
+msgid "Uncategorized"
+msgstr ""
+
+msgid "Trash"
+msgstr ""
+
+msgid "Empty Trash"
+msgstr ""
+
+#. translators: %d: number of files
+#, php-format
+msgid "Permanently delete all %d items in Trash? This cannot be undone."
+msgstr ""
+
+msgid "Moved to Trash."
+msgstr ""
+
+msgid "Trash emptied."
+msgstr ""
+
+msgid "Edit"
+msgstr ""
+
+msgid "No unused images found - every image has a reference we could detect."
+msgstr ""
+
+#. translators: 1: unused count, 2: total images
+#, php-format
+msgid "%1$d of %2$d images have no reference found."
+msgstr ""
+
+msgid "Move selected to Trash"
+msgstr ""
+
+#. translators: %d: number of images
+#, php-format
+msgid "Move %d to Trash"
+msgstr ""
+
+#. translators: %d: number of images
+#, php-format
+msgid "Move %d image(s) to Trash? You can restore them from the Trash folder."
+msgstr ""
+
+#. translators: %d: number of images
+#, php-format
+msgid "%d moved to Trash."
+msgstr ""
+
+msgid "Done - nothing left to review here."
+msgstr ""
+
+msgid "Turn on Media Trash in folder settings to remove these safely."
+msgstr ""
+
+msgid "No missing files found - every attachment has its file on disk."
+msgstr ""
+
+#. translators: 1: missing count, 2: total attachments
+#, php-format
+msgid "%1$d of %2$d attachments have a missing file."
+msgstr ""
+
+msgid "Delete selected records"
+msgstr ""
+
+#. translators: %d: number of records
+#, php-format
+msgid "Delete %d record(s)"
+msgstr ""
+
+#. translators: %d: number of records
+#, php-format
+msgid "Permanently delete %d library record(s)? The files are already gone, so this only removes the broken entries. This cannot be undone."
+msgstr ""
+
+#. translators: %d: number of records
+#, php-format
+msgid "%d record(s) deleted."
+msgstr ""
+
+msgid "Add file back"
+msgstr ""
+
+msgid "Adding…"
+msgstr ""
+
+msgid "File added back."
+msgstr ""
+
+msgid "No duplicate files found."
+msgstr ""
+
+#. translators: 1: number of redundant copies, 2: reclaimable size e.g. "4 MB"
+#, php-format
+msgid "%1$d redundant copies · %2$s reclaimable"
+msgstr ""
+
+#. translators: %s: the kept original's file name
+#, php-format
+msgid "duplicate of %s"
+msgstr ""
+
+#. translators: %d: number of places the file is used
+#, php-format
+msgid "Used in %d place(s)"
+msgstr ""
+
+msgid "No references found"
+msgstr ""
+
+#. translators: %d: number of additional places beyond those listed
+#, php-format
+msgid "+%d more"
+msgstr ""
+
+#. translators: 1: number trashed, 2: number of references relinked
+#, php-format
+msgid "%1$d removed · %2$d references relinked to the kept copy."
+msgstr ""
+
+msgid "No orphaned files found."
+msgstr ""
+
+#. translators: 1: number of orphan files, 2: reclaimable size e.g. "4 MB"
+#, php-format
+msgid "%1$d orphaned files · %2$s reclaimable"
+msgstr ""
+
+msgid "Appears in content"
+msgstr ""
+
+msgid "Delete selected files"
+msgstr ""
+
+#. translators: %d: number of files
+#, php-format
+msgid "Delete %d file(s)"
+msgstr ""
+
+#. translators: %d: number of files
+#, php-format
+msgid "Permanently delete %d file(s) from disk? There is no Library entry to restore from - this cannot be undone."
+msgstr ""
+
+#. translators: %d: number of files
+#, php-format
+msgid "%d file(s) deleted."
+msgstr ""
+
+msgid "No files would change with this pattern."
+msgstr ""
+
+#. translators: %d: number of files that will be renamed
+#, php-format
+msgid "%d file(s) will be renamed"
+msgstr ""
+
+msgid "→"
+msgstr ""
+
+#. translators: 1: renamed count, 2: references relinked, 3: failed count
+#, php-format
+msgid "%1$d renamed · %2$d references relinked · %3$d failed"
+msgstr ""
+
+msgid "Rename files"
+msgstr ""
+
+#. translators: %d: number of files
+#, php-format
+msgid "Rename %d file(s)"
+msgstr ""
+
+msgid "Rename these files and relink their references? This changes file URLs."
+msgstr ""
+
+msgid "Load more"
+msgstr ""
+
+msgid "to add back"
+msgstr ""
+
+msgid "already present"
+msgstr ""
+
+msgid "added back"
+msgstr ""
+
+#. translators: %d: number of selected files
+#, php-format
+msgid "%d selected"
+msgstr ""
+
+msgid "Select all"
+msgstr ""
+
+msgid "Move to…"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+#. translators: %d: number of files
+#, php-format
+msgid "Permanently delete %d file(s)? This cannot be undone."
+msgstr ""
+
+msgid "Restore"
+msgstr ""
+
+msgid "Restore all"
+msgstr ""
+
+msgid "Restored."
+msgstr ""
+
+msgid "Restored and moved."
+msgstr ""
+
+msgid "Folder deleted."
+msgstr ""
+
+msgid "Delete"
+msgstr ""
+
+msgid "Permanently delete this file? This cannot be undone."
+msgstr ""
+
+msgid "File deleted."
+msgstr ""
+
+msgid "Replace"
+msgstr ""
+
+msgid "Replace media"
+msgstr ""
+
+msgid "Replacing…"
+msgstr ""
+
+msgid "File replaced."
+msgstr ""
+
+msgid "If you still see the old file, purge your CDN / browser cache."
+msgstr ""
+
+msgid "Replace with"
+msgstr ""
+
+msgid "Keep the same filename"
+msgstr ""
+
+msgid "Fastest. Same URL, nothing to relink. Cached or page-builder copies may need a cache clear."
+msgstr ""
+
+msgid "Rename & update links"
+msgstr ""
+
+msgid "New URL. Updates every reference across your content. Best for page builders."
+msgstr ""
+
+msgid "File replaced and renamed."
+msgstr ""
+
+msgid "reference(s) updated."
+msgstr ""
+
+msgid "No references needed updating."
+msgstr ""
+
+msgid "Uploading…"
+msgstr ""
+
+msgid "to replace"
+msgstr ""
+
+msgid "unmatched"
+msgstr ""
+
+msgid "wrong type"
+msgstr ""
+
+msgid "ambiguous"
+msgstr ""
+
+msgid "replaced"
+msgstr ""
+
+msgid "imported"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Download as ZIP"
+msgstr ""
+
+msgid "Select some files first."
+msgstr ""
+
+msgid "How should the files be organised in the ZIP?"
+msgstr ""
+
+msgid "Keep folder structure"
+msgstr ""
+
+msgid "Recreates your folders as subfolders inside the ZIP."
+msgstr ""
+
+msgid "Flat"
+msgstr ""
+
+msgid "All files in one level. Duplicate names get a number."
+msgstr ""
+
+msgid "Move to folder"
+msgstr ""
+
+#. translators: %d: number of files moved
+#, php-format
+msgid "Moved %d file(s)."
+msgstr ""
+
+msgid "Collapse all folders"
+msgstr ""
+
+msgid "Expand all folders"
+msgstr ""
+
+msgid "No folders yet. Create one first."
+msgstr ""
+
+msgid "Preparing download…"
+msgstr ""
+
+msgid "Downloading"
+msgstr ""
+
+msgid "files"
+msgstr ""
+
+msgid "missing, skipped"
+msgstr ""
+
+msgid "This folder has no files to download."
+msgstr ""
+
+msgid "New Folder"
+msgstr ""
+
+msgid "Rename"
+msgstr ""
+
+msgid "Set colour"
+msgstr ""
+
+msgid "Gallery shortcode…"
+msgstr ""
+
+msgid "Copy folder ID"
+msgstr ""
+
+msgid "Visibility…"
+msgstr ""
+
+msgid "Who can see this folder"
+msgstr ""
+
+msgid "No roles selected = everyone. Administrators always see every folder."
+msgstr ""
+
+msgid "Folder visibility updated."
+msgstr ""
+
+msgid "Visible to"
+msgstr ""
+
+msgid "Save"
+msgstr ""
+
+msgid "Tool access updated. Users see the change on their next page load."
+msgstr ""
+
+msgid "Folder ID copied."
+msgstr ""
+
+msgid "Shortcode copied."
+msgstr ""
+
+msgid "Could not copy. Select the text and copy manually."
+msgstr ""
+
+msgid "Files inside are kept and moved to Uncategorized."
+msgstr ""
+
+msgid "Folder name"
+msgstr ""
+
+msgid "Moved."
+msgstr ""
+
+msgid "Folder moved."
+msgstr ""
+
+msgid "Action failed. Please try again."
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Date"
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "Last modified"
+msgstr ""
+
+msgid "Media folders"
+msgstr ""
+
+msgid "+ New"
+msgstr ""
+
+msgid "Collapse folder panel"
+msgstr ""
+
+msgid "Collapse panel"
+msgstr ""
+
+msgid "Search folders and files"
+msgstr ""
+
+msgid "Clear search"
+msgstr ""
+
+msgid "Sort direction"
+msgstr ""
+
+msgid "Current folder path"
+msgstr ""
+
+msgid "Show folder panel"
+msgstr ""
+
+msgid "Show panel"
+msgstr ""
+
+msgid "Folder settings"
+msgstr ""
+
+msgid "Default folder colour"
+msgstr ""
+
+msgid "Colour automatically applied to newly created folders."
+msgstr ""
+
+msgid "Expand folders by default"
+msgstr ""
+
+msgid "Show subfolders expanded when the folder tree first loads."
+msgstr ""
+
+msgid "Show file counts"
+msgstr ""
+
+msgid "Show the number of files beside each folder in the tree."
+msgstr ""
+
+msgid "Show subfolder contents"
+msgstr ""
+
+msgid "When on, opening a folder shows its files plus everything in its subfolders, and the count reflects the total. Off shows only the files directly in that folder."
+msgstr ""
+
+msgid "Media Trash"
+msgstr ""
+
+msgid "Two-step delete for media (the same as posts and pages). Deleted files go to a Trash folder you can restore from. With this off, deleting a file removes it immediately. Already-trashed files remain on disk but become invisible until you turn this back on."
+msgstr ""
+
+msgid "Changes save automatically."
+msgstr ""
+
+msgid "Unauthorized."
+msgstr ""
+
+msgid "Folder name is required."
+msgstr ""
+
+msgid "Invalid folder."
+msgstr ""
+
+msgid "Cannot move a folder into its own subfolder."
+msgstr ""
+
+msgid "Another change is in progress. Please retry."
+msgstr ""
+
+msgid "No files selected."
+msgstr ""
+
+#. translators: %d: count
+#, php-format
+msgid "Permanently deleted %d file"
+msgid_plural "Permanently deleted %d files"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Trash is disabled."
+msgstr ""
+
+msgid "Unknown setting."
+msgstr ""
+
+#. translators: %d: count
+#, php-format
+msgid "Moved %d file to Trash"
+msgid_plural "Moved %d files to Trash"
+msgstr[0] ""
+msgstr[1] ""
+
+#. translators: %d: count
+#, php-format
+msgid "Emptied Trash (%d file)"
+msgid_plural "Emptied Trash (%d files)"
+msgstr[0] ""
+msgstr[1] ""
+
 msgid "REST API requests require authentication."
 msgstr ""
 
@@ -442,6 +997,9 @@ msgid "Remote"
 msgstr ""
 
 msgid "This action is disabled in demo mode."
+msgstr ""
+
+msgid "Login settings have been reset to their defaults."
 msgstr ""
 
 msgid "Setting enabled."
@@ -655,9 +1213,6 @@ msgstr ""
 msgid "Copy"
 msgstr ""
 
-msgid "Delete"
-msgstr ""
-
 msgid "Click to rename"
 msgstr ""
 
@@ -806,10 +1361,10 @@ msgstr ""
 msgid "Learn more"
 msgstr ""
 
-msgid "Cancel"
+msgid "Yes, proceed"
 msgstr ""
 
-msgid "Yes, proceed"
+msgid "Media Manager"
 msgstr ""
 
 msgid "This module requires a Pro license."
@@ -877,6 +1432,12 @@ msgid "Sidebar Logo"
 msgstr ""
 
 msgid "Displayed at the top of the WordPress admin sidebar. Scales to the sidebar width automatically."
+msgstr ""
+
+msgid "Sidebar Width"
+msgstr ""
+
+msgid "Width of the WordPress admin sidebar (160-280px). 160px is the WordPress default."
 msgstr ""
 
 msgid "Admin Bar"
@@ -1226,7 +1787,7 @@ msgstr ""
 msgid "Hover Text"
 msgstr ""
 
-msgid "Text and icon colour on hover. Leave blank to use Menu Text."
+msgid "Text and icon colour on hover. Leave blank for automatic contrast (white on a dark bar)."
 msgstr ""
 
 msgid "Flyout"
@@ -1247,13 +1808,13 @@ msgstr ""
 msgid "Flyout Background Hover"
 msgstr ""
 
-msgid "Flyout item background on hover. Leave blank to use primary colour."
+msgid "Flyout item background on hover. Leave blank to match the flyout background (no colour change on hover)."
 msgstr ""
 
 msgid "Flyout Text Hover"
 msgstr ""
 
-msgid "Flyout item text on hover. Leave blank to use Menu Text."
+msgid "Flyout item text on hover. Leave blank for automatic contrast."
 msgstr ""
 
 msgid "Page"
@@ -1501,31 +2062,28 @@ msgstr ""
 msgid "Data Management"
 msgstr ""
 
-msgid "Reset or permanently remove all Admin Buddy settings and the plugin itself."
+msgid "Permanently erase Admin Buddy data — including your Collections, Option Pages, snippets, SVG icons, and uploaded files. Not just toggle settings."
 msgstr ""
 
 msgid "Warning:"
 msgstr ""
 
-msgid "These actions are irreversible. Deactivating or deleting the plugin does NOT delete settings data automatically. Use the buttons below for a clean removal."
+msgid "These actions erase user-created content (Collections, Option Pages, snippets, SVG icons, activity log, uploaded files), not just preferences. Recovery is not possible without a backup. The confirmation step will show exactly what will be deleted."
 msgstr ""
 
-msgid "Reset Plugin Data?"
+msgid "Erase All Admin Buddy Data?"
 msgstr ""
 
-msgid "This will permanently delete all Admin Buddy settings from the database. The plugin will remain active. This cannot be undone."
+msgid "Erase All Admin Buddy Data"
 msgstr ""
 
-msgid "Reset Plugin Data"
+msgid "Erase All Data and Deactivate?"
 msgstr ""
 
-msgid "Reset and Deactivate Plugin?"
+msgid "The plugin will also be deactivated. You can reactivate it later from the Plugins screen, but the erased data will not return."
 msgstr ""
 
-msgid "This will delete all Admin Buddy settings and deactivate the plugin. You can reactivate it later from the Plugins screen."
-msgstr ""
-
-msgid "Reset and Deactivate Plugin"
+msgid "Erase All Data and Deactivate"
 msgstr ""
 
 msgid "Left"
@@ -1546,6 +2104,42 @@ msgstr ""
 msgid "Left / Right: full-height frosted-glass panel. Center: classic floating card."
 msgstr ""
 
+msgid "Form Card"
+msgstr ""
+
+msgid "The panel the login form sits on - shared by all three layouts."
+msgstr ""
+
+msgid "Background Colour"
+msgstr ""
+
+msgid "Applied at 88% opacity over the frosted-glass blur. Default white."
+msgstr ""
+
+msgid "Width"
+msgstr ""
+
+msgid "Width of the card / panel, 320-600px."
+msgstr ""
+
+msgid "Text Colour"
+msgstr ""
+
+msgid "Automatic - high-contrast with the card colour"
+msgstr ""
+
+msgid "Colour for the form labels and links on the card."
+msgstr ""
+
+msgid "Button Colour"
+msgstr ""
+
+msgid "Automatic - follow the admin colour scheme"
+msgstr ""
+
+msgid "Login button background. The label colour adjusts automatically for contrast."
+msgstr ""
+
 msgid "Logo"
 msgstr ""
 
@@ -1559,6 +2153,9 @@ msgid "Background"
 msgstr ""
 
 msgid "Choose how the login page background looks."
+msgstr ""
+
+msgid "While the Colours module is off, the login page automatically follows your WordPress admin colour scheme. The colour and background fields below have no effect — enable the Colours module to set custom colours."
 msgstr ""
 
 msgid "Type"
@@ -1594,6 +2191,15 @@ msgstr ""
 msgid "Live preview. Updates as you change settings."
 msgstr ""
 
+msgid "Reset Login Settings?"
+msgstr ""
+
+msgid "This restores every Login tab setting - logo, layout, background, and form card - to its default. This cannot be undone."
+msgstr ""
+
+msgid "Reset Login Settings"
+msgstr ""
+
 msgid "Mode & Pages"
 msgstr ""
 
@@ -1625,6 +2231,9 @@ msgid "Coming Soon Page"
 msgstr ""
 
 msgid "Customise what visitors see before launch."
+msgstr ""
+
+msgid "While the Colours module is off, this page automatically follows your WordPress admin colour scheme. The colour and background fields below have no effect — enable the Colours module to set custom colours."
 msgstr ""
 
 msgid "Heading"
@@ -1924,9 +2533,6 @@ msgstr ""
 msgid "Backup Roles"
 msgstr ""
 
-msgid "Rename"
-msgstr ""
-
 msgid "Clone"
 msgstr ""
 
@@ -2123,9 +2729,6 @@ msgid "Coming soon page preview"
 msgstr ""
 
 msgid "Live preview. Updates as you change settings above. Save to apply."
-msgstr ""
-
-msgid "Width"
 msgstr ""
 
 msgid "Height"

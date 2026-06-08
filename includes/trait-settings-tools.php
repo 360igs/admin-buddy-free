@@ -77,14 +77,21 @@ trait Settings_Tools {
             case 'import':
                 $this->handle_import();
                 break;
+            case 'rollback_import':
+                $this->handle_rollback_import();
+                break;
             case 'reset_data':
                 $this->handle_reset_data();
                 break;
             case 'reset_deactivate':
                 $this->handle_reset_deactivate();
                 break;
+            case 'reset_login':
+                $this->handle_reset_login();
+                break;
         }
     }
+
 
     private function require_manage_options(): void {
         if ( ! current_user_can( 'manage_options' ) ) {
@@ -96,6 +103,12 @@ trait Settings_Tools {
     public function handle_reset_data(): void {
         $this->require_manage_options();
         check_admin_referer( 'admbud_reset_data', 'admbud_reset_nonce' );
+
+        // Emit BEFORE delete_all_options() — the activity-log option could be
+        // wiped by the reset itself, but the log row was already inserted.
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
+        do_action( 'admbud_data_reset', 'full' );
+
         $this->delete_all_options();
         wp_cache_flush();
         wp_safe_redirect( add_query_arg( 'admbud_notice', 'reset_ok',
@@ -103,9 +116,35 @@ trait Settings_Tools {
         exit;
     }
 
+    /**
+     * Reset just the Login tab: delete every option in the 'login' group so
+     * each one falls back to its registered default. Scoped reset - leaves all
+     * other modules' settings untouched (unlike handle_reset_data()).
+     */
+    public function handle_reset_login(): void {
+        $this->require_manage_options();
+        check_admin_referer( 'admbud_reset_login', 'admbud_reset_login_nonce' );
+
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
+        do_action( 'admbud_data_reset', 'login' );
+
+        $groups = $this->option_key_groups();
+        foreach ( ( $groups['login']['keys'] ?? [] ) as $key ) {
+            delete_option( $key );
+        }
+        wp_cache_delete( 'alloptions', 'options' );
+        wp_safe_redirect( add_query_arg( 'admbud_notice', 'login_reset',
+            admin_url( 'admin.php?page=admbud&tab=login' ) ) );
+        exit;
+    }
+
     public function handle_reset_deactivate(): void {
         $this->require_manage_options();
         check_admin_referer( 'admbud_reset_deactivate', 'admbud_reset_deactivate_nonce' );
+
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
+        do_action( 'admbud_data_reset', 'deactivate' );
+
         $this->delete_all_options();
         deactivate_plugins( ADMBUD_BASENAME );
         wp_safe_redirect( add_query_arg( 'admbud_notice', 'deactivated', admin_url( 'plugins.php' ) ) );
@@ -152,6 +191,15 @@ trait Settings_Tools {
             }
             delete_option( $key );
         }
+
+        // Sweep AB-owned transients too. The foreach above deletes options by
+        // exact name and misses transients (stored as `_transient_<key>` and
+        // `_transient_timeout_<key>`). SQL LIKE with `\_` escapes the literal
+        // underscores.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $wpdb->query( // phpcs:ignore WordPress.DB
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE '\\_transient\\_admbud\\_%' OR option_name LIKE '\\_transient\\_timeout\\_admbud\\_%'"
+        );
 
         // Delete per-user multisite notice dismissal flags.
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -258,6 +306,72 @@ trait Settings_Tools {
         }
     }
 
+    /**
+     * Snapshot of user-created content that Reset would destroy. Powers the
+     * itemised confirmation modal so the user sees exactly what they're about
+     * to lose (Collections, Option Pages, snippets, SVG icons, activity log
+     * entries, uploads/ size). Zero-count categories are kept in the return
+     * array; the JS side decides whether to render them.
+     *
+     * Cheap to run: 2 option lookups, 1-2 COUNT(*) queries on plugin-owned
+     * tables (skipped when the table doesn't exist), 1 glob + 1 recursive
+     * directory walk. Safe to call on every render of the Plugin Data tab.
+     */
+    public function data_inventory(): array {
+        global $wpdb;
+
+        $collections  = admbud_get_option( 'admbud_collections',  [] );
+        $option_pages = admbud_get_option( 'admbud_option_pages', [] );
+        $svg_icons    = admbud_get_option( 'admbud_svg_icons',    [] );
+
+        $activity_log_count = 0;
+        $activity_table     = $wpdb->prefix . 'admbud_activity_log';
+        $wpdb->suppress_errors( true );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+        $exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $activity_table ) ); // phpcs:ignore WordPress.DB
+        if ( $exists === $activity_table ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            $activity_log_count = (int) $wpdb->get_var( "SELECT COUNT(*) FROM `" . esc_sql( $activity_table ) . "`" ); // phpcs:ignore WordPress.DB
+        }
+        $wpdb->suppress_errors( false ); // phpcs:ignore WordPress.DB
+
+        // Snippets live as .php files in uploads/admin-buddy/snippets/.
+        $snippets_count = 0;
+        if ( class_exists( '\\Admbud\\Snippets' ) ) {
+            $dir = \Admbud\Snippets::snippets_dir();
+            if ( is_dir( $dir ) ) {
+                $snippets_count = count( glob( $dir . '/ab-snippet-*.php' ) ?: [] );
+            }
+        }
+
+        $uploads_dir   = trailingslashit( wp_upload_dir()['basedir'] ) . 'admin-buddy';
+        $uploads_bytes = is_dir( $uploads_dir ) ? $this->dir_size( $uploads_dir ) : 0;
+
+        return [
+            'collections'   => is_array( $collections )  ? count( $collections )  : 0,
+            'option_pages'  => is_array( $option_pages ) ? count( $option_pages ) : 0,
+            'snippets'      => $snippets_count,
+            'svg_icons'     => is_array( $svg_icons )    ? count( $svg_icons )    : 0,
+            'activity_log'  => $activity_log_count,
+            'uploads_bytes' => $uploads_bytes,
+        ];
+    }
+
+    private function dir_size( string $path ): int {
+        $bytes = 0;
+        try {
+            $iter = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator( $path, \FilesystemIterator::SKIP_DOTS )
+            );
+            foreach ( $iter as $file ) {
+                if ( $file->isFile() ) { $bytes += $file->getSize(); }
+            }
+        } catch ( \Throwable $e ) {
+            return 0;
+        }
+        return $bytes;
+    }
+
     // ============================================================================
     // OPTION MANIFEST
     // ============================================================================
@@ -338,7 +452,7 @@ trait Settings_Tools {
 
             // -- Local backup pointers / install-tied state ------------------
             'admbud_roles_last_backup',          // Points to a local backup file that may not exist on the target
-            'admbud_license_activation_limit',   // SureCart-issued, tied to this specific install
+            'admbud_import_rollback',            // Per-site snapshot for "Restore previous state" — local-only, expires in 7d
         ];
     }
 
@@ -351,7 +465,7 @@ trait Settings_Tools {
             'ui_tweaks'    => [ 'group' => 'interface',         'label' => __( 'White Label',               'admin-buddy' ), 'icon' => '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>', 'keys' => [
                 'admbud_core_remove_logo', 'admbud_core_remove_help', 'admbud_core_remove_screen_options',
                 'admbud_core_custom_footer_enabled', 'admbud_core_custom_footer_text',
-                'admbud_wl_sidebar_logo_url', 'admbud_wl_sidebar_logo_width', 'admbud_wl_sidebar_logo_height',
+                'admbud_wl_sidebar_logo_url', 'admbud_wl_sidebar_logo_width', 'admbud_wl_sidebar_logo_height', 'admbud_wl_sidebar_width',
                 'admbud_wl_favicon_id', 'admbud_wl_agency_name', 'admbud_wl_agency_url', 'admbud_wl_greeting',
                 'admbud_wl_remove_wp_links', 'admbud_wl_footer_version', 'admbud_wl_footer_quote', 'admbud_wl_hide_wp_news',
                 'admbud_dashboard_role_pages', 'admbud_dashboard_keep_widgets', 'admbud_dashboard_custom_widgets',
@@ -380,7 +494,11 @@ trait Settings_Tools {
             ] ],
             'login'        => [ 'group' => 'interface',         'label' => __( 'Login',            'admin-buddy' ), 'icon' => '<svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>', 'keys' => [
                 'admbud_login_logo_url', 'admbud_login_logo_width', 'admbud_login_logo_height',
-                'admbud_login_card_position', 'admbud_login_bg_type', 'admbud_login_bg_color',
+                'admbud_login_card_position',
+                'admbud_login_card_bg_color', 'admbud_login_card_text_auto',
+                'admbud_login_card_text_color', 'admbud_login_card_width',
+                'admbud_login_btn_auto', 'admbud_login_btn_bg',
+                'admbud_login_bg_type', 'admbud_login_bg_color',
                 'admbud_login_grad_from', 'admbud_login_grad_to', 'admbud_login_grad_direction',
                 'admbud_login_bg_image_url', 'admbud_login_bg_overlay_color', 'admbud_login_bg_overlay_opacity',
             ] ],

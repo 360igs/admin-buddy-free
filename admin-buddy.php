@@ -2,9 +2,9 @@
 /**
  * Plugin Name:       Admin Buddy
  * Description:       White-label your WordPress admin - custom branding, dashboard page, login styling, notice suppression, and maintenance mode in one place.
- * Version:           1.0.1
+ * Version:           1.1.0
  * Requires at least: 6.4
- * Tested up to:      6.9
+ * Tested up to:      7.0
  * Requires PHP:      8.1
  * Author:            Admin Buddy
  * License:           GPL-2.0-or-later
@@ -19,6 +19,18 @@
 // Prevent direct file access.
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
+}
+
+
+// -- Uninstall cleanup ---------------------------------------------------------
+// Loaded unconditionally so admbud_uninstall_cleanup() is available both at
+// runtime (when WP needs to register the hook) and at uninstall time (when WP
+// re-includes this file before firing the hook).
+require_once dirname( __FILE__ ) . '/includes/uninstall.php';
+
+if ( ! function_exists( 'admbud_fs' ) ) {
+    // Free build (no FS SDK): standard WP uninstall hook.
+    register_uninstall_hook( __FILE__, 'admbud_uninstall_cleanup' );
 }
 
 // -- Duplicate plugin guard ----------------------------------------------------
@@ -42,7 +54,7 @@ if ( defined( 'ADMBUD_FILE' ) ) {
 
 // -- Plugin constants ----------------------------------------------------------
 
-define( 'ADMBUD_VERSION',  '1.0.1' );
+define( 'ADMBUD_VERSION',  '1.1.0' );
 define( 'ADMBUD_FILE',     __FILE__ );
 define( 'ADMBUD_DIR',      plugin_dir_path( __FILE__ ) );
 define( 'ADMBUD_URL',      plugin_dir_url( __FILE__ ) );
@@ -266,6 +278,23 @@ function admbud_init() {
 
 
 
+    if ( $has( 'media-manager' ) ) {
+        // Folder-core is FREE (taxonomy + native-library sidebar + folder CRUD);
+        // the tools (Bulk SEO/Replace/scans/rename/gallery), per-role visibility
+        // and Trash are Pro, stripped from this class via AB_PRO markers inside it.
+        // Boots whenever the module is enabled (not tied to a settings tab).
+        require_once ADMBUD_DIR . 'includes/class-media-manager.php';
+        Admbud\MediaManager::get_instance();
+
+        // Media Trash (Free): opt-in to WP's native attachment trash. WP gates this
+        // on the MEDIA_TRASH constant, only read in admin/ajax delete paths that run
+        // AFTER plugins_loaded - so a guarded runtime define here is enough (no
+        // wp-config edit). The `! defined` guard respects a user-set MEDIA_TRASH.
+        if ( Admbud\MediaManager::trash_enabled() && ! defined( 'MEDIA_TRASH' ) ) {
+            define( 'MEDIA_TRASH', true );
+        }
+    }
+
 
     // Quick Settings always boots - applies saved toggles site-wide.
     require_once ADMBUD_DIR . 'includes/class-quick-settings.php';
@@ -311,54 +340,31 @@ function admbud_activate_site(): void {
  * Check if the plugin has an active license.
  *
  * Returns true if:
- *   - The SureCart SDK is not present (Lite version - no license needed)
- *   - Demo mode is active (always unlocked)
- *   - A valid license key is activated via SureCart
+ *   - The Freemius SDK is not present (Free build - no license needed)
+ *   - The user has connected the plugin via Freemius (free or paid plan)
  *
  * @return bool
  */
 function admbud_is_licensed(): bool {
-    // Lite version: no SDK = no license needed, features are just absent.
-    if ( ! file_exists( ADMBUD_DIR . 'licensing/src/Client.php' ) ) {
+    // Free build: no SDK = no license needed, Pro features are physically absent.
+    if ( ! function_exists( 'admbud_fs' ) ) {
         return true;
     }
 
-    // Check via SureCart SDK client.
-    if ( isset( $GLOBALS['admbud_license_client'] ) ) {
-        try {
-            $license = $GLOBALS['admbud_license_client']->license();
-            return $license ? $license->is_valid() : false;
-        } catch ( \Throwable $e ) {
-            return false;
-        }
-    }
-
-    return false;
+    return admbud_fs()->can_use_premium_code();
 }
 
 /**
  * Check if the license is a paid tier.
  *
- * SureCart license activation_limit values:
- *   null = unlimited activations = free tier
- *   > 0  = paid tier (20, 50, 100, etc)
- *
  * @return bool
  */
 function admbud_is_paid(): bool {
-    if ( ! admbud_is_licensed() ) {
+    if ( ! function_exists( 'admbud_fs' ) ) {
         return false;
     }
 
-    // activation_limit stored values:
-    //   option not set = no license synced yet
-    //   'unlimited'    = null from SureCart = free tier
-    //   integer > 0    = paid tier (20, 50, 100, etc)
-    $limit = get_option( 'admbud_license_activation_limit', '' );
-    if ( $limit === '' || $limit === 'unlimited' ) {
-        return false;
-    }
-    return ( (int) $limit > 0 );
+    return admbud_fs()->is_paying();
 }
 
 /**
@@ -378,6 +384,8 @@ function admbud_allowed_modules(): array {
         'smtp',            // SMTP (full in free)
         'roles',           // User Roles (full in free)
         'quick-settings',  // Quick Settings (full in free)
+        'media-manager',   // Media Manager - FREE folder core (folders/tree/drag/upload/filter);
+                           // all tools + gallery + per-role visibility + trash are Pro (AB_PRO-stripped in-class).
     ];
 
 

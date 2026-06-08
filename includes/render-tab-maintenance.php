@@ -48,6 +48,10 @@ use Admbud\Maintenance;
         $maint_text_color   = esc_attr( admbud_get_option( 'admbud_maint_text_color',   Colours::DEFAULT_PAGE_TEXT    ) );
         $maint_message_color= esc_attr( admbud_get_option( 'admbud_maint_message_color',Colours::DEFAULT_PAGE_MESSAGE ) );
 
+        // Colours module OFF: page colours auto-follow the WP admin scheme.
+        // The colour fields stay visible but inert, flagged with a notice.
+        $colours_off = ! \Admbud\Settings::colours_module_active();
+
         $directions = [
             'to top left' => '↖', 'to top' => '↑', 'to top right' => '↗',
             'to left'     => '←',                   'to right'     => '→',
@@ -139,6 +143,11 @@ use Admbud\Maintenance;
                     <div><h3><?php esc_html_e( 'Coming Soon Page', 'admin-buddy' ); ?></h3><p><?php esc_html_e( 'Customise what visitors see before launch.', 'admin-buddy' ); ?></p></div>
                 </div>
                 <div class="ab-section__body">
+                    <?php if ( $colours_off ) : ?>
+                    <div class="ab-notice ab-notice--info" style="margin-bottom:14px;">
+                        <?php esc_html_e( 'While the Colours module is off, this page automatically follows your WordPress admin colour scheme. The colour and background fields below have no effect — enable the Colours module to set custom colours.', 'admin-buddy' ); ?>
+                    </div>
+                    <?php endif; ?>
                     <table class="form-table ab-form-table" role="presentation">
                         <tr>
                             <th scope="row"><label for="admbud_coming_soon_title"><?php esc_html_e( 'Heading', 'admin-buddy' ); ?></label></th>
@@ -248,6 +257,11 @@ use Admbud\Maintenance;
                     <div><h3><?php esc_html_e( 'Maintenance Page', 'admin-buddy' ); ?></h3><p><?php esc_html_e( 'Customise what visitors see during maintenance.', 'admin-buddy' ); ?></p></div>
                 </div>
                 <div class="ab-section__body">
+                    <?php if ( $colours_off ) : ?>
+                    <div class="ab-notice ab-notice--info" style="margin-bottom:14px;">
+                        <?php esc_html_e( 'While the Colours module is off, this page automatically follows your WordPress admin colour scheme. The colour and background fields below have no effect — enable the Colours module to set custom colours.', 'admin-buddy' ); ?>
+                    </div>
+                    <?php endif; ?>
                     <table class="form-table ab-form-table" role="presentation">
                         <tr>
                             <th scope="row"><label for="admbud_maintenance_title"><?php esc_html_e( 'Heading', 'admin-buddy' ); ?></label></th>

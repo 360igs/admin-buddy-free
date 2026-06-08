@@ -86,6 +86,22 @@ trait Settings_Render {
             $initial_bg = $bg_color;
         }
 
+        // Colours module OFF: the live page follows the WP admin colour scheme
+        // (see Maintenance::render_page()), so the preview must mirror that -
+        // not the stored brand palette. An explicit background image is still
+        // honoured on the page, so skip the override in that case.
+        $scheme_active = false;
+        if ( ! self::colours_module_active() ) {
+            $has_bg_img = ( $bg_type === 'image' && admbud_get_option( "admbud_{$prefix}_bg_image_url", '' ) );
+            if ( ! $has_bg_img ) {
+                $pal           = self::scheme_page_palette();
+                $initial_bg    = 'linear-gradient(to bottom right, ' . $pal['grad_from'] . ', ' . $pal['grad_to'] . ')';
+                $heading_c     = esc_attr( $pal['heading'] );
+                $message_c     = esc_attr( $pal['message'] );
+                $scheme_active = true;
+            }
+        }
+
         $heading_text = admbud_get_option(
             $is_maint ? 'admbud_maintenance_title' : 'admbud_coming_soon_title',
             $is_maint ? __( 'Under Maintenance', 'admin-buddy' ) : __( 'Coming Soon', 'admin-buddy' )
@@ -105,6 +121,12 @@ trait Settings_Render {
         <div
             id="<?php echo esc_attr( $iframe_id ); ?>"
             data-prefix="<?php echo esc_attr( $prefix ); ?>"
+            <?php if ( $scheme_active ) : ?>
+            data-scheme-active="1"
+            data-scheme-bg="<?php echo esc_attr( $initial_bg ); ?>"
+            data-scheme-heading="<?php echo esc_attr( $heading_c ); ?>"
+            data-scheme-message="<?php echo esc_attr( $message_c ); ?>"
+            <?php endif; ?>
             class="ab-maint-preview"
             style="<?php echo esc_attr( $preview_styles ); ?>"
             role="img"

@@ -104,9 +104,20 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
                                 true,
                                 'admbud_wl_sidebar_logo_width',
                                 'admbud_wl_sidebar_logo_height',
-                                40, 320, 120
+                                40, 280, 120
                             );
+                            $sidebar_width = absint( admbud_get_option( 'admbud_wl_sidebar_width', 160 ) );
                             ?>
+                            <tr>
+                                <th scope="row"><label for="admbud_wl_sidebar_width"><?php esc_html_e( 'Sidebar Width', 'admin-buddy' ); ?></label></th>
+                                <td>
+                                    <div class="ab-flex-row--sm">
+                                        <input type="range" id="admbud_wl_sidebar_width" name="admbud_wl_sidebar_width" min="160" max="280" step="4" value="<?php echo esc_attr( $sidebar_width ); ?>" style="width:220px;">
+                                        <span id="admbud_wl_sidebar_width_val" class="ab-range-value"><?php echo esc_html( $sidebar_width ); ?>px</span>
+                                    </div>
+                                    <p class="description"><?php esc_html_e( 'Width of the WordPress admin sidebar (160-280px). 160px is the WordPress default.', 'admin-buddy' ); ?></p>
+                                </td>
+                            </tr>
                         </table>
                         <?php $settings->card_close(); ?>
 

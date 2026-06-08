@@ -486,7 +486,18 @@ class Maintenance {
         $def_to   = \Admbud\Colours::DEFAULT_SIDEBAR_GRAD_TO;
         $def_bg   = \Admbud\Colours::DEFAULT_PAGE_BG;
 
-        if ( $bg_type === 'gradient' ) {
+        // Colours module OFF: the page follows the active WP admin colour
+        // scheme (dark, accent-tinted) instead of the stored brand palette. An
+        // explicit background image is still honoured. scheme_page_palette()
+        // is the single source shared with the login page.
+        $has_bg_img = ( $bg_type === 'image' && admbud_get_option( "admbud_{$prefix}_bg_image_url", '' ) );
+        $accent_pal = ( ! \Admbud\Settings::colours_module_active() && ! $has_bg_img )
+            ? \Admbud\Settings::scheme_page_palette()
+            : null;
+
+        if ( $accent_pal ) {
+            $bg_css = "background: linear-gradient(to bottom right, {$accent_pal['grad_from']}, {$accent_pal['grad_to']});";
+        } elseif ( $bg_type === 'gradient' ) {
             $from    = sanitize_hex_field( admbud_get_option( "admbud_{$prefix}_grad_from", $def_from ) ) ?: $def_from;
             $to      = sanitize_hex_field( admbud_get_option( "admbud_{$prefix}_grad_to",   $def_to   ) ) ?: $def_to;
             $dir     = admbud_get_option( "admbud_{$prefix}_grad_direction", 'to bottom right' );
@@ -535,15 +546,21 @@ class Maintenance {
         $def_text    = \Admbud\Colours::DEFAULT_PAGE_TEXT;
         $def_message = \Admbud\Colours::DEFAULT_PAGE_MESSAGE;
 
-        $heading_color = $is_maint
-            ? ( sanitize_hex_field( admbud_get_option( 'admbud_maint_text_color',    $def_text    ) ) ?: $def_text    )
-            : ( sanitize_hex_field( admbud_get_option( 'admbud_cs_text_color',       $def_text    ) ) ?: $def_text    );
-        $message_color = $is_maint
-            ? ( sanitize_hex_field( admbud_get_option( 'admbud_maint_message_color', $def_message ) ) ?: $def_message )
-            : ( sanitize_hex_field( admbud_get_option( 'admbud_cs_message_color',    $def_message ) ) ?: $def_message );
+        if ( $accent_pal ) {
+            // Colours module OFF: heading + message follow the WP admin accent.
+            $heading_color = $accent_pal['heading'];
+            $message_color = $accent_pal['message'];
+        } else {
+            $heading_color = $is_maint
+                ? ( sanitize_hex_field( admbud_get_option( 'admbud_maint_text_color',    $def_text    ) ) ?: $def_text    )
+                : ( sanitize_hex_field( admbud_get_option( 'admbud_cs_text_color',       $def_text    ) ) ?: $def_text    );
+            $message_color = $is_maint
+                ? ( sanitize_hex_field( admbud_get_option( 'admbud_maint_message_color', $def_message ) ) ?: $def_message )
+                : ( sanitize_hex_field( admbud_get_option( 'admbud_cs_message_color',    $def_message ) ) ?: $def_message );
+        }
         $locale     = esc_attr( str_replace( '_', '-', get_locale() ) );
         $robots     = '<meta name="robots" content="noindex, nofollow">';
-        $body_color = esc_attr( \Admbud\Colours::DEFAULT_PAGE_TEXT ); // pre-assigned for heredoc interpolation
+        $body_color = esc_attr( $accent_pal ? $accent_pal['heading'] : \Admbud\Colours::DEFAULT_PAGE_TEXT ); // pre-assigned for heredoc interpolation
 
         // Build the inline CSS body. Dynamic colour values come from
         // sanitize_hex_field() above; $bg_css is built upstream from the same

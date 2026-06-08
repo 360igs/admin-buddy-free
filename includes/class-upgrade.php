@@ -265,7 +265,6 @@ class Upgrade {
 
         // Other frequently-read options with sensible defaults.
         $other_defaults = [
-            'admbud_license_activation_limit'  => '',
         ];
 
         foreach ( $qs_defaults as $opt ) {

@@ -205,7 +205,7 @@ class Notices {
 
                 // If the class isn't loaded yet, reflecting on a method would
                 // trigger the autoloader - which can cause third-party plugins
-                // (e.g. SureCart) to load translations before init.
+                // (e.g. licensing SDKs) to load translations before init.
                 // Resolve via ReflectionClass::getFileName() instead, which
                 // doesn't require the method to be inspected.
                 $class_name = is_object( $object_or_class )

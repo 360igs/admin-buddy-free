@@ -288,6 +288,19 @@ class Colours {
         $primary_tint  = $this->lighten( $primary, 0.88 );  // very light - table row bg
         $menu_bg_dark  = $this->darken( $menu_bg, 0.12 );   // admin bar bg
         $menu_bg_light = $this->lighten( $menu_bg, 0.08 );  // hover state bg
+        // Is the sidebar a light surface? Plugin SVG icons ship a light fill
+        // tuned for WP's dark sidebar and disappear on a light one - used below
+        // to force resting menu icons dark so they stay visible. The label/icon
+        // *colour* is NOT transformed here: light palettes store an already
+        // tinted-neutral menu_text (baked by the Auto Palette generator and the
+        // light presets) so the colour picker reflects exactly what renders.
+        // Only the icon opacity is derived, to land the neutral-black SVGs at
+        // the same perceived darkness as that stored text colour.
+        $sidebar_is_light = self::luminance( $menu_bg ) > 0.55;
+        $svg_icon_opacity = 0.6;
+        if ( $sidebar_is_light && preg_match( '/^#[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{3})?$/', $menu_text ) ) {
+            $svg_icon_opacity = max( 0.55, min( 0.92, 1 - $this->lightness( $menu_text ) ) );
+        }
         $menu_text_dim = $this->dim_colour( $menu_text, 0.75 ); // dimmed label text
         $neutral_gray  = '#646970';                          // WP standard neutral for inputs/buttons
 
@@ -393,9 +406,12 @@ class Colours {
         $p17 = $adminbar_hover_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_hover_bg', $primary ) ) : esc_attr( $primary ); // admin bar hover bg
         $p18 = $adminbar_sub_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_submenu_bg', $menu_bg_dark ) ) : esc_attr( $menu_bg_dark ); // admin bar submenu bg
         $p19 = $adminbar_bg_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_bg', $menu_bg_dark ) ) : esc_attr( $menu_bg_dark ); // admin bar bg
-        $p20 = $adminbar_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_hover_text', $menu_text ) ) : esc_attr( $menu_text ); // admin bar hover text
+        // Hover text default contrasts the hover bg (white on the dark accent
+        // bar) instead of inheriting the neutral menu_text, which would render
+        // the hover state the same grey as the resting state. Picker overrides.
+        $p20 = $adminbar_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_hover_text', $menu_text ) ) : esc_attr( self::suggest_text_colour( $adminbar_hover_raw ? $this->colour( 'admbud_colours_adminbar_hover_bg', $primary ) : $primary ) ); // admin bar hover text
         $p21 = $adminbar_sub_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_sub_text', $menu_text_dim ) ) : esc_attr( $menu_text_dim ); // admin bar submenu text
-        $p22 = $adminbar_sub_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_sub_hover_text', $menu_text ) ) : esc_attr( $menu_text ); // admin bar submenu hover text
+        $p22 = $adminbar_sub_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_sub_hover_text', $menu_text ) ) : esc_attr( self::suggest_text_colour( $adminbar_sub_hover_bg_raw ? $this->colour( 'admbud_colours_adminbar_sub_hover_bg', $primary ) : ( $adminbar_sub_raw ? $this->colour( 'admbud_colours_adminbar_submenu_bg', $menu_bg_dark ) : $menu_bg_dark ) ) ); // admin bar flyout hover text - default contrasts the flyout hover bg, picker overrides
         $p23 = $submenu_bg_raw ? esc_attr( $this->colour( 'admbud_colours_submenu_bg', $primary ) ) : esc_attr( $primary ); // sidebar submenu/flyout bg
         $p24 = $submenu_hover_bg_raw ? esc_attr( $this->colour( 'admbud_colours_submenu_hover_bg', $secondary ) ) : esc_attr( $secondary ); // sidebar submenu hover bg
         $p25 = $submenu_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_submenu_hover_text', $menu_text ) ) : esc_attr( $menu_text ); // sidebar submenu hover text
@@ -419,11 +435,25 @@ class Colours {
         }
         $p28 = $box_shadow; // drop shadow for flyout panels
         $p1_enc = str_replace( '#', '%23', $p1 ); // URL-encoded primary for inline SVG
+        // Contrast colour for content that sits ON the primary (checkbox tick,
+        // radio dot, etc.). The primary itself paints those controls' *background*
+        // - primary-on-primary is invisible. Picked by luminance: near-white on
+        // dark primaries, near-black on light ones. Plain hex for CSS use, URL-
+        // encoded form for inline SVG `fill` attributes.
+        $p1_text     = esc_attr( \Admbud\Settings::contrast_text( $primary ) );
+        $p1_text_enc = str_replace( '#', '%23', $p1_text );
         // Buffer the CSS string and emit via wp_add_inline_style instead of
         // direct <style> echoes so WP.org's enqueue rules are honoured.
         // phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- All colour vars pre-sanitised via esc_attr(). CSS context only.
         ob_start();
-        echo ':root {';
+        // WP 7.0 sets --wp-admin-theme-color on `body.admin-color-<scheme>`
+        // (wp-includes/css/dist/base-styles/admin-schemes.css). A direct
+        // declaration on `body` always wins for body and its descendants
+        // over an inherited one from `:root` - even when :root has !important
+        // - because inheritance only applies when the element has no direct
+        // declaration. So we *also* declare on `body`; that lands at the same
+        // element as WP's rule, and our !important wins from there.
+        echo ':root, body {';
         echo '--wp-admin-theme-color:           ' . esc_attr( $p1 ) . ' !important;';
         echo '--wp-admin-theme-color--rgb:      ' . esc_attr( $p2 ) . ' !important;';
         echo '--wp-admin-theme-color-darker-10: ' . esc_attr( $p3 ) . ' !important;';
@@ -478,8 +508,12 @@ class Colours {
         echo 'background: ' . esc_attr( $p_active_bg ) . ' !important;';
         echo 'color: ' . esc_attr( $p16 ) . ' !important;';
         echo '}';
+        // Sidebar width: single source of truth is --admbud-sidebar-width
+        // (emitted by Core::inject_sidebar_width_css on every admin page).
+        // Fallback 160px keeps this rule correct even if the var is absent.
         echo '#adminmenu li.wp-has-current-submenu .wp-submenu-wrap {';
         echo 'background: ' . esc_attr( $p23 ) . ' !important;';
+        echo 'width: var(--admbud-sidebar-width, 160px) !important;';
         echo '}';
         echo '#adminmenu li.wp-has-current-submenu a.wp-has-current-submenu .wp-menu-image:before,';
         echo '#adminmenu li.wp-has-current-submenu a.wp-has-current-submenu .wp-menu-name,';
@@ -624,7 +658,28 @@ class Colours {
         echo 'html body #wpadminbar .quicklinks .menupop ul li a:hover,';
         echo 'html body #wpadminbar .quicklinks .menupop .ab-sub-wrapper .ab-submenu > li:hover > a,';
         echo 'html body #wpadminbar .quicklinks .menupop .ab-sub-wrapper .ab-submenu > li > a:hover {';
-        echo 'background: ' . esc_attr( $p26 ) . ' !important;';
+        // Only paint a hover background when the user explicitly chose one in
+        // Colours settings. Default matches WP's admin bar: text colour shifts
+        // on submenu-item hover, background stays.
+        if ( $adminbar_sub_hover_bg_raw ) { echo 'background: ' . esc_attr( $p26 ) . ' !important;'; }
+        echo 'color: ' . esc_attr( $p22 ) . ' !important;';
+        echo '}';
+        // WP 7.0 Modern's colors.css also paints the resting username +
+        // "Edit Profile" .display-name spans with its own colour, which the
+        // inherited link colour above can't override. Force the flyout text
+        // colour so they stay readable on light flyout backgrounds too.
+        echo 'html body #wpadminbar #wp-admin-bar-user-info a .display-name,';
+        echo 'html body #wpadminbar #wp-admin-bar-user-info a:link .display-name,';
+        echo 'html body #wpadminbar #wp-admin-bar-user-info a:visited .display-name {';
+        echo 'color: ' . esc_attr( $p21 ) . ' !important;';
+        echo '}';
+        // WP 7.0 Modern's colors.css paints
+        // `#wpadminbar #wp-admin-bar-user-info a:hover .display-name { color: #7b90ff }`,
+        // turning the username + "Edit Profile" spans blue on hover while the
+        // sibling Log Out row uses the regular submenu hover text colour.
+        // Normalise so the whole flyout matches.
+        echo 'html body #wpadminbar #wp-admin-bar-user-info a:hover .display-name,';
+        echo 'html body #wpadminbar #wp-admin-bar-user-info a:focus .display-name {';
         echo 'color: ' . esc_attr( $p22 ) . ' !important;';
         echo '}';
         echo 'html body #wpadminbar .ab-submenu > li:hover > a .ab-icon:before,';
@@ -673,7 +728,7 @@ class Colours {
         echo '}';
         echo 'html body #wpadminbar #wp-admin-bar-site-name .ab-submenu li:hover > a,';
         echo 'html body #wpadminbar #wp-admin-bar-site-name .ab-submenu li a:hover {';
-        echo 'background: ' . esc_attr( $p26 ) . ' !important;';
+        if ( $adminbar_sub_hover_bg_raw ) { echo 'background: ' . esc_attr( $p26 ) . ' !important;'; }
         echo 'color: ' . esc_attr( $p22 ) . ' !important;';
         echo '}';
         $admbud_css = ob_get_clean();
@@ -1246,6 +1301,16 @@ class Colours {
         echo '}';
         echo '#adminmenu .wp-menu-image.svg {';
         echo 'transition: filter 0.1s, opacity 0.1s !important;';
+        if ( $sidebar_is_light ) {
+            // Plugin-registered SVG icons (Bricks, Admin Buddy, Freemius, etc.)
+            // usually ship a light/white fill for WP's dark sidebar, so they
+            // vanish on a light sidebar. brightness(0) forces any fill - white,
+            // black, or coloured - to solid dark so the icon stays visible;
+            // opacity matches the dimmed label tone. Active/hover rules below
+            // out-specify this and restore the white (inverted) treatment.
+            echo 'filter: brightness(0) saturate(100%) !important;';
+            echo 'opacity: ' . esc_attr( rtrim( rtrim( number_format( $svg_icon_opacity, 2, '.', '' ), '0' ), '.' ) ) . ' !important;';
+        }
         echo '}';
         echo '#adminmenu li:hover .wp-menu-image.svg,';
         echo '#adminmenu li.wp-has-current-submenu .wp-menu-image.svg,';
@@ -1329,11 +1394,11 @@ class Colours {
         echo '}';
         echo '#wpcontent input[type="radio"]:checked::before,';
         echo '.wp-core-ui input[type="radio"]:checked::before {';
-        echo 'background-color: ' . esc_attr( $p1 ) . ' !important;';
+        echo 'background-color: ' . $p1_text . ' !important;';
         echo '}';
         echo '#wpcontent input[type="checkbox"]:checked::before,';
         echo '.wp-core-ui input[type="checkbox"]:checked::before {';
-        echo 'content: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27' . esc_attr( $p1_enc ) . '%27%2F%3E%3C%2Fsvg%3E") !important;';
+        echo 'content: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27' . esc_attr( $p1_text_enc ) . '%27%2F%3E%3C%2Fsvg%3E") !important;';
         echo '}';
         echo '#wpcontent select:not([multiple]):not([size]),';
         echo '.ab-wrap select:not([multiple]):not([size]) {';
@@ -2125,9 +2190,9 @@ class Colours {
         $p17 = $adminbar_hover_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_hover_bg', $primary ) ) : esc_attr( $primary );
         $p18 = $adminbar_sub_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_submenu_bg', $menu_bg_dark ) ) : esc_attr( $menu_bg_dark );
         $p19 = $adminbar_bg_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_bg', $menu_bg_dark ) ) : esc_attr( $menu_bg_dark );
-        $p20 = $adminbar_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_hover_text', $menu_text ) ) : esc_attr( $menu_text );
+        $p20 = $adminbar_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_hover_text', $menu_text ) ) : esc_attr( self::suggest_text_colour( $adminbar_hover_raw ? $this->colour( 'admbud_colours_adminbar_hover_bg', $primary ) : $primary ) );
         $p21 = $adminbar_sub_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_sub_text', $menu_text_dim ) ) : esc_attr( $menu_text_dim );
-        $p22 = $adminbar_sub_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_sub_hover_text', $menu_text ) ) : esc_attr( $menu_text );
+        $p22 = $adminbar_sub_hover_text_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_sub_hover_text', $menu_text ) ) : esc_attr( self::suggest_text_colour( $adminbar_sub_hover_bg_raw ? $this->colour( 'admbud_colours_adminbar_sub_hover_bg', $primary ) : ( $adminbar_sub_raw ? $this->colour( 'admbud_colours_adminbar_submenu_bg', $menu_bg_dark ) : $menu_bg_dark ) ) );
         $p26 = $adminbar_sub_hover_bg_raw ? esc_attr( $this->colour( 'admbud_colours_adminbar_sub_hover_bg', $primary ) ) : esc_attr( $primary );
 
         // Build box-shadow string (mirrors inject_css logic).
@@ -2168,10 +2233,18 @@ class Colours {
              . 'html body #wpadminbar .ab-submenu .ab-item,'
              . 'html body #wpadminbar .ab-submenu a,'
              . 'html body #wpadminbar .quicklinks .menupop ul li a{color:' . esc_attr( $p21 ) . '!important;background:transparent!important}'
+             // Resting username + "Edit Profile" spans: WP Modern paints them with
+             // its own colour; force the flyout text colour so they stay readable.
+             . 'html body #wpadminbar #wp-admin-bar-user-info a .display-name,'
+             . 'html body #wpadminbar #wp-admin-bar-user-info a:link .display-name,'
+             . 'html body #wpadminbar #wp-admin-bar-user-info a:visited .display-name{color:' . esc_attr( $p21 ) . '!important}'
              . 'html body #wpadminbar .ab-submenu>li>a:hover,'
              . 'html body #wpadminbar .ab-submenu>li:hover>a,'
              . 'html body #wpadminbar .quicklinks .menupop ul li:hover>a,'
-             . 'html body #wpadminbar .quicklinks .menupop ul li a:hover{background:' . esc_attr( $p26 ) . '!important;color:' . esc_attr( $p22 ) . '!important}'
+             . 'html body #wpadminbar .quicklinks .menupop ul li a:hover{' . ( $adminbar_sub_hover_bg_raw ? 'background:' . esc_attr( $p26 ) . '!important;' : '' ) . 'color:' . esc_attr( $p22 ) . '!important}'
+             // Override WP Modern's blue .display-name hover so user-info matches Log Out.
+             . 'html body #wpadminbar #wp-admin-bar-user-info a:hover .display-name,'
+             . 'html body #wpadminbar #wp-admin-bar-user-info a:focus .display-name{color:' . esc_attr( $p22 ) . '!important}'
              . 'html body #wpadminbar .ab-submenu li,'
              . 'html body #wpadminbar .ab-submenu li a,'
              . 'html body #wpadminbar .quicklinks .menupop ul li{box-shadow:none!important}';
@@ -2286,6 +2359,21 @@ class Colours {
      */
     private function dim_colour( string $hex, float $opacity ): string {
         return $this->blend( $hex, '#888888', 1 - $opacity );
+    }
+
+    /**
+     * HSL lightness (0.0–1.0) of a hex colour. Used to tune the resting plugin
+     * SVG icon opacity on light sidebars so the dark-forced icons land at the
+     * same perceived darkness as the (tinted-neutral) menu label colour.
+     */
+    private function lightness( string $hex ): float {
+        $hex = preg_replace( '/[^A-Fa-f0-9]/', '', $hex );
+        if ( strlen( $hex ) === 3 ) { $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2]; }
+        if ( strlen( $hex ) < 6 ) { $hex = '000000'; }
+        $r = hexdec( substr( $hex, 0, 2 ) ) / 255;
+        $g = hexdec( substr( $hex, 2, 2 ) ) / 255;
+        $b = hexdec( substr( $hex, 4, 2 ) ) / 255;
+        return ( max( $r, $g, $b ) + min( $r, $g, $b ) ) / 2;
     }
 
     /**

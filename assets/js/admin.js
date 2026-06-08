@@ -399,7 +399,7 @@
         modalCb = null; releaseFocus();
     }
 
-    window.openConfirmModal = function( title, body, onConfirm, label, variant, htmlBody ) {
+    window.openConfirmModal = function( title, body, onConfirm, label, variant, htmlBody, requireType ) {
         if ( ! modal ) { if (typeof onConfirm==='function') { onConfirm(); } return; }
         if (modalTitle) { modalTitle.textContent = title; }
         if (modalBody)  {
@@ -409,11 +409,41 @@
         modalCb = onConfirm;
         if (modalConfirm) {
             modalConfirm.textContent = label || modalConfirm.getAttribute('data-default-label') || 'Yes, proceed';
-            // Semantic button variant: 'danger' (default), 'success', 'primary'
             modalConfirm.className = 'ab-btn ' + ( variant || 'ab-btn--danger' );
         }
+
+        // Type-to-confirm: when requireType is a non-empty string, render a
+        // text input and disable the confirm button until the input matches
+        // exactly (case-sensitive). Defeats Enter-key autopilot dismissal.
+        var typeWrap  = qs('#ab-modal-type-confirm');
+        var typeInput = qs('#ab-modal-type-input');
+        var typeLabel = qs('#ab-modal-type-label');
+        if ( typeWrap && typeInput && typeLabel ) {
+            if ( requireType ) {
+                typeLabel.innerHTML = 'Type <code>' + requireType.replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}) + '</code> to confirm:';
+                typeInput.value = '';
+                typeInput.setAttribute('data-require', requireType);
+                typeWrap.classList.remove('ab-hidden');
+                if (modalConfirm) { modalConfirm.disabled = true; }
+                typeInput.oninput = function() {
+                    if (modalConfirm) {
+                        modalConfirm.disabled = ( typeInput.value !== requireType );
+                    }
+                };
+            } else {
+                typeWrap.classList.add('ab-hidden');
+                typeInput.value = '';
+                typeInput.removeAttribute('data-require');
+                typeInput.oninput = null;
+                if (modalConfirm) { modalConfirm.disabled = false; }
+            }
+        }
+
         modal.classList.remove('ab-hidden');
-        if (modalConfirm) { modalConfirm.focus(); }
+        // Focus the type-input when present (so user can start typing
+        // immediately), otherwise focus the confirm button as before.
+        if ( requireType && typeInput ) { typeInput.focus(); }
+        else if (modalConfirm) { modalConfirm.focus(); }
         trapFocus(modal);
     };
 
@@ -818,6 +848,26 @@
                 }
             }
         });
+        // Native colour pickers tagged data-is-default="1" hold a JS-injected
+        // fallback (the input was empty on load and HTML5 <input type=color>
+        // can't render an empty state, so admin.js auto-fills from
+        // data-default-color). Without intervention the form would POST that
+        // fallback as if the user had picked it — e.g. Tealy saves
+        // admbud_colours_adminbar_sub_hover_bg='' but on save it gets
+        // overwritten with #7c3aed (Colours::DEFAULT_PRIMARY), and the user
+        // submenu hover bg then renders violet against a teal theme. Re-route
+        // the input so the form POSTs an empty string instead.
+        qsa('.ab-native-color-picker[data-is-default="1"]', form).forEach(function(picker){
+            var opt = picker.name;
+            if (!opt || opt.indexOf('__skip')!==-1) { return; }
+            picker.setAttribute('name', opt+'__skip');
+            var parent = picker.parentNode;
+            if (parent && !parent.querySelector('input[name="'+opt+'"]')) {
+                var h = document.createElement('input');
+                h.type='hidden'; h.name=opt; h.value='';
+                parent.appendChild(h);
+            }
+        });
         form.submit();
     });
 
@@ -856,15 +906,78 @@
     }); }
 
     // -- Reset forms ----------------------------------------------------------
+    // Two paths:
+    //  1. data-inventory present → itemised modal that enumerates exactly what
+    //     gets erased (Collections, snippets, etc) + type-to-confirm friction.
+    //     Used by Plugin Data tab buttons that wipe user content.
+    //  2. data-confirm-body present → legacy simple modal. Used by smaller
+    //     reset actions like "Reset Login Settings" that only touch one group.
     on( document, 'submit', '.ab-reset-form', function(e) {
         e.preventDefault();
-        var form = this;
+        var form        = this;
+        var title       = form.getAttribute('data-confirm-title') || 'Are you sure?';
+        var inventoryJson = form.getAttribute('data-inventory');
+        var requireType   = form.getAttribute('data-require-type') || '';
+
+        if ( inventoryJson ) {
+            var inv = {};
+            try { inv = JSON.parse( inventoryJson ); } catch(err) {}
+            var body = buildEraseModalBody( inv, form.getAttribute('data-extra-note') );
+            window.openConfirmModal(
+                title,
+                body,
+                function(){ form.submit(); },
+                'Erase permanently',
+                'ab-btn--danger',
+                true,        // htmlBody
+                requireType  // type-to-confirm string
+            );
+            return;
+        }
+
+        // Legacy path: simple text body, no inventory, no type-to-confirm.
         window.openConfirmModal(
-            form.getAttribute('data-confirm-title'),
-            form.getAttribute('data-confirm-body'),
+            title,
+            form.getAttribute('data-confirm-body') || '',
             function(){ form.submit(); }
         );
     });
+
+    // Build the HTML body for the erase-confirmation modal. Lists categories
+    // with non-zero counts; falls back to a clean message when there's nothing
+    // user-created to lose (covers a fresh install where reset is harmless).
+    function buildEraseModalBody( inv, extraNote ) {
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+        }
+        function fmtBytes(n) {
+            if (n < 1024) { return n + ' B'; }
+            if (n < 1024*1024) { return (n/1024).toFixed(1) + ' KB'; }
+            return (n/(1024*1024)).toFixed(1) + ' MB';
+        }
+        var rows = [];
+        if (inv.collections  > 0) { rows.push(esc(inv.collections)  + ' Collection'   + (inv.collections===1?'':'s')); }
+        if (inv.option_pages > 0) { rows.push(esc(inv.option_pages) + ' Option Page'  + (inv.option_pages===1?'':'s')); }
+        if (inv.snippets     > 0) { rows.push(esc(inv.snippets)     + ' code snippet' + (inv.snippets===1?'':'s')); }
+        if (inv.svg_icons    > 0) { rows.push(esc(inv.svg_icons)    + ' SVG icon'     + (inv.svg_icons===1?'':'s')); }
+        if (inv.activity_log > 0) { rows.push(esc(inv.activity_log) + ' activity log entr' + (inv.activity_log===1?'y':'ies')); }
+        if (inv.uploads_bytes> 0) { rows.push('uploads/admin-buddy/ (' + fmtBytes(inv.uploads_bytes) + ')'); }
+
+        var html = '<p style="margin:0 0 12px;">This will permanently delete <strong>all Admin Buddy data</strong> from this site:</p>';
+        if (rows.length) {
+            html += '<ul style="margin:0 0 12px 20px;padding:0;list-style:disc;">';
+            rows.forEach(function(r){ html += '<li>' + r + '</li>'; });
+            html += '</ul>';
+            html += '<p style="margin:0 0 8px;">Plus all toggle/preference settings, custom capabilities, scheduled tasks, and cached data.</p>';
+        } else {
+            html += '<p style="margin:0 0 12px;">No user-created content was found, but all toggle/preference settings, custom capabilities, and cached data will still be cleared.</p>';
+        }
+        html += '<p style="margin:0;color:var(--ab-danger,#b32d2e);"><strong>This cannot be undone.</strong></p>';
+        if (extraNote) {
+            html += '<p style="margin:8px 0 0;">' + esc(extraNote) + '</p>';
+        }
+        return html;
+    }
 
     // -- Media upload (.ab-media-upload → URL target) -------------------------
     var mediaFrame = null, mediaTarget = null;
@@ -1033,6 +1146,29 @@
         function darken(h, a) { return mix(h, '#000000', a); }
         function lighten(h, a) { return mix(h, '#ffffff', a); }
         function contrastText(bg) { return lum(bg) > 0.4 ? '#1d2327' : '#ffffff'; }
+        // Force a colour to a given saturation (0-1), keeping hue + lightness.
+        // Used so light-sidebar menu labels store a tinted-neutral dark (~5%)
+        // rather than a saturated accent shade - the value the picker then shows.
+        function desat(hex, s) {
+            var c = hexToRgb(hex), r = c.r/255, g = c.g/255, b = c.b/255;
+            var mx = Math.max(r,g,b), mn = Math.min(r,g,b), l = (mx+mn)/2, d = mx-mn, h = 0;
+            if (d) {
+                if (mx === r) { h = (g-b)/d + (g < b ? 6 : 0); }
+                else if (mx === g) { h = (b-r)/d + 2; }
+                else { h = (r-g)/d + 4; }
+                h /= 6;
+            }
+            if (s === 0) { return rgbToHex(l*255, l*255, l*255); }
+            var q = l < 0.5 ? l*(1+s) : l+s-l*s, p = 2*l-q;
+            function f(t) {
+                if (t < 0) { t += 1; } if (t > 1) { t -= 1; }
+                if (t < 1/6) { return p + (q-p)*6*t; }
+                if (t < 1/2) { return q; }
+                if (t < 2/3) { return p + (q-p)*(2/3-t)*6; }
+                return p;
+            }
+            return rgbToHex(f(h+1/3)*255, f(h)*255, f(h-1/3)*255);
+        }
 
         // -- Primary is NEVER mutated --
         var isLight = lum(primary) > 0.65;
@@ -1099,8 +1235,9 @@
                 admbud_colours_adminbar_hover_text: onPrimary,
                 admbud_colours_adminbar_submenu_bg: admbudBg,
                 admbud_colours_adminbar_sub_text: lighten(sb, 0.70),
-                admbud_colours_adminbar_sub_hover_bg: primary,
-                admbud_colours_adminbar_sub_hover_text: onPrimary,
+                // Flyout hover: bg unchanged (= flyout bg), only the text brightens.
+                admbud_colours_adminbar_sub_hover_bg: admbudBg,
+                admbud_colours_adminbar_sub_hover_text: contrastText(admbudBg),
                 // Chrome
                 admbud_colours_body_bg: '#ffffff', admbud_colours_shadow_colour: '',
                 admbud_colours_pill_maintenance: '#dd3333', admbud_colours_pill_coming_soon: '#dd3333',
@@ -1136,11 +1273,17 @@
             // LIGHT SIDEBAR
             // ================================================================
             var menuTxt = isLight ? darken(anchor, 0.20) : darken(primary, 0.20);
+            // Admin bar surface + text. Hover bg = bar bg (the Whitey approach):
+            // hover never introduces a contrasting colour, so every item stays
+            // readable on hover regardless of which menupop the hover-text rule
+            // reaches. Hover text is a readable contrast of that unchanged bar.
+            var barBg = isLight ? primary : lighten(primary, 0.92);
+            var barText = desat(menuTxt, 0.05);
 
             m = {
                 admbud_colours_primary: primary, admbud_colours_secondary: secondary, admbud_colours_hover_bg: secondary, admbud_colours_active_bg: primary,
                 // Sidebar - white
-                admbud_colours_menu_bg: '#ffffff', admbud_colours_menu_text: menuTxt,
+                admbud_colours_menu_bg: '#ffffff', admbud_colours_menu_text: desat(menuTxt, 0.05),
                 admbud_colours_active_text: onPrimary,
                 admbud_colours_hover_text: contrastText(secondary),
                 admbud_colours_active_parent_text: onPrimary,
@@ -1154,15 +1297,19 @@
                 admbud_colours_submenu_text: onPrimary,
                 admbud_colours_submenu_hover_bg: secondary,
                 admbud_colours_submenu_hover_text: onSecondary, admbud_colours_submenu_active_bg: primary, admbud_colours_submenu_active_text: onSecondary,
-                // Admin bar - light tinted surface, flyout matches bar bg
-                admbud_colours_adminbar_bg: isLight ? primary : lighten(primary, 0.92),
-                admbud_colours_adminbar_text: menuTxt,
-                admbud_colours_adminbar_hover_bg: primary,
-                admbud_colours_adminbar_hover_text: onPrimary,
-                admbud_colours_adminbar_submenu_bg: isLight ? primary : lighten(primary, 0.92),
-                admbud_colours_adminbar_sub_text: menuTxt,
-                admbud_colours_adminbar_sub_hover_bg: primary,
-                admbud_colours_adminbar_sub_hover_text: onPrimary,
+                // Admin bar - light tinted surface. Bar + flyout text match the
+                // sidebar menu_text (barText) for consistency. Hover bg = bar bg
+                // (and flyout hover bg = flyout bg) so hover never adds a
+                // contrasting colour; hover text is a readable contrast of that
+                // unchanged surface.
+                admbud_colours_adminbar_bg: barBg,
+                admbud_colours_adminbar_text: barText,
+                admbud_colours_adminbar_hover_bg: barBg,
+                admbud_colours_adminbar_hover_text: contrastText(barBg),
+                admbud_colours_adminbar_submenu_bg: barBg,
+                admbud_colours_adminbar_sub_text: barText,
+                admbud_colours_adminbar_sub_hover_bg: barBg,
+                admbud_colours_adminbar_sub_hover_text: contrastText(barBg),
                 // Chrome
                 admbud_colours_body_bg: '#ffffff',
                 admbud_colours_shadow_colour: isLight ? mix(primary, anchor, 0.25) : lighten(primary, 0.72),
@@ -1238,8 +1385,9 @@
                 admbud_colours_adminbar_hover_text: onPrimary,
                 admbud_colours_adminbar_submenu_bg: darken(db, 0.40),
                 admbud_colours_adminbar_sub_text: dm,
-                admbud_colours_adminbar_sub_hover_bg: primary,
-                admbud_colours_adminbar_sub_hover_text: onPrimary,
+                // Flyout hover: bg unchanged (= flyout bg), only the text brightens to white.
+                admbud_colours_adminbar_sub_hover_bg: darken(db, 0.40),
+                admbud_colours_adminbar_sub_hover_text: contrastText(darken(db, 0.40)),
                 // Chrome
                 admbud_colours_body_bg: db, admbud_colours_shadow_colour: darken(db, 0.50),
                 admbud_colours_pill_maintenance: '#ef4444', admbud_colours_pill_coming_soon: '#ef4444',
@@ -1359,8 +1507,16 @@
 
     function updateLoginPreview() {
         var el=qs('#ab-login-preview'); if(!el){ return; }
+        // Colours module OFF: button + logo follow the WP admin scheme accent
+        // (PHP-supplied) instead of the brand primary. Empty when Colours is on.
+        var schemeAccent=el.dataset.schemeAccent||'';
         var type=(qs('input[name="admbud_login_bg_type"]:checked')||{}).value||'solid';
-        if (type==='gradient') {
+        if (el.dataset.schemeActive==='1') {
+            // Colours module OFF: the login page follows the WP admin scheme;
+            // the colour fields are inert. Use the PHP-supplied scheme gradient.
+            el.style.background=el.dataset.schemeBg||'';
+            var ovSch=qs('#ab-login-preview-overlay'); if(ovSch){ovSch.style.background='';}
+        } else if (type==='gradient') {
             var from=(qs('#admbud_login_grad_from')||{}).value||'#2e1065',
                 to  =(qs('#admbud_login_grad_to'  )||{}).value||'#1e1b2e',
                 dir =(qs('input[name="admbud_login_grad_direction"]:checked')||{}).value||'to bottom right';
@@ -1384,7 +1540,7 @@
             if(lImg){ lImg.src=lUrl; }
             else { wrap2.innerHTML='<img id="ab-preview-logo-img" src="'+escHtml(lUrl)+'" alt="" style="max-height:28px;max-width:90px;object-fit:contain;display:block;margin:0 auto;">'; }
         } else if (wrap2 && !lUrl) {
-            var bc = ( qs( '#admbud_colours_primary' ) || {} ).value || S.primaryColour || '#7c3aed';
+            var bc = schemeAccent || ( qs( '#admbud_colours_primary' ) || {} ).value || S.primaryColour || '#7c3aed';
             // Default WordPress mark used when the user hasn't uploaded a login
             // logo yet. Each <path> is the original WP logo path data — kept as
             // single strings since path coordinates aren't really splittable.
@@ -1408,14 +1564,42 @@
                             + '</svg>';
         }
         var btn2=qs('#ab-preview-login-btn');
-        if(btn2){ var c2=(qs('#admbud_colours_primary')||{}).value||S.primaryColour||'#7c3aed'; btn2.style.backgroundColor=c2; btn2.style.borderColor=c2; }
+        if(btn2){
+            var btnAuto=qs('#admbud_login_btn_auto');
+            var c2=( btnAuto && ! btnAuto.checked )
+                ? ( ( qs('#admbud_login_btn_bg')||{} ).value || '#2271b1' )
+                : ( schemeAccent || (qs('#admbud_colours_primary')||{}).value || S.primaryColour || '#7c3aed' );
+            btn2.style.backgroundColor=c2; btn2.style.borderColor=c2;
+            var btnSpan=btn2.querySelector('span');
+            if(btnSpan){ btnSpan.style.color=contrastText(c2); }
+        }
         updateLoginPreviewCard();
+    }
+    // Perceived (YIQ) luminance -> readable text colour. Mirrors PHP
+    // Settings::contrast_text() so the preview matches the live page.
+    function contrastText( hex ) {
+        var h = ( hex || '' ).replace( '#', '' );
+        if ( h.length === 3 ) { h = h[0]+h[0] + h[1]+h[1] + h[2]+h[2]; }
+        if ( h.length !== 6 ) { return '#1d2327'; }
+        var r = parseInt( h.substr(0,2), 16 ),
+            g = parseInt( h.substr(2,2), 16 ),
+            b = parseInt( h.substr(4,2), 16 );
+        return ( ( r*299 + g*587 + b*114 ) / 1000 ) >= 150 ? '#1d2327' : '#f0f0f1';
     }
     function updateLoginPreviewCard() {
         var pos   = ( qs( 'input[name="admbud_login_card_position"]:checked' ) || {} ).value || 'center';
         var card  = qs( '#ab-login-preview-card' );
         var wrap3 = qs( '#ab-login-preview' );
         if ( ! card || ! wrap3 ) { return; }
+
+        // Form Card surface: background colour, width, and text colour.
+        var cardBg = ( qs( '#admbud_login_card_bg_color' ) || {} ).value || '#ffffff';
+        var cardW  = parseInt( ( qs( '#admbud_login_card_width' ) || {} ).value || 400, 10 ) || 400;
+        var autoEl = qs( '#admbud_login_card_text_auto' );
+        var cardText = ( autoEl && ! autoEl.checked )
+            ? ( ( qs( '#admbud_login_card_text_color' ) || {} ).value || '#3c434a' )
+            : contrastText( cardBg );
+        qsa( '.ab-lp-text', card ).forEach( function( t ) { t.style.color = cardText; } );
 
         if ( pos === 'left' || pos === 'right' ) {
             Object.assign( wrap3.style, {
@@ -1428,7 +1612,7 @@
                 bottom:         '0',
                 left:           pos === 'left'  ? '0' : 'auto',
                 right:          pos === 'right' ? '0' : 'auto',
-                width:          '38%',
+                width:          ( cardW / 400 * 38 ).toFixed( 1 ) + '%',
                 borderRadius:   '0',
                 display:        'flex',
                 flexDirection:  'column',
@@ -1438,7 +1622,7 @@
                 boxShadow:      pos === 'left'
                                     ? '4px 0 18px rgba(0,0,0,.18)'
                                     : '-4px 0 18px rgba(0,0,0,.18)',
-                background:     'rgba(255,255,255,.97)',
+                background:     cardBg,
             } );
         } else {
             Object.assign( wrap3.style, {
@@ -1451,7 +1635,7 @@
                 bottom:         'auto',
                 left:           'auto',
                 right:          'auto',
-                width:          '130px',
+                width:          Math.round( cardW * 0.32 ) + 'px',
                 borderRadius:   '4px',
                 display:        'block',
                 flexDirection:  '',
@@ -1459,9 +1643,40 @@
                 justifyContent: '',
                 padding:        '20px 22px 18px',
                 boxShadow:      '0 1px 3px rgba(0,0,0,.13)',
-                background:     '#fff',
+                background:     cardBg,
             } );
         }
+    }
+    // Form Card controls -> live preview.
+    var cardWidthEl = qs( '#admbud_login_card_width' );
+    if ( cardWidthEl ) {
+        cardWidthEl.addEventListener( 'input', function() {
+            var s = qs( '#admbud_login_card_width_val' );
+            if ( s ) { s.textContent = this.value + 'px'; }
+            updateLoginPreviewCard();
+        } );
+    }
+    var cardBgEl = qs( '#admbud_login_card_bg_color' );
+    if ( cardBgEl ) { cardBgEl.addEventListener( 'input', updateLoginPreviewCard ); }
+    var cardTextColEl = qs( '#admbud_login_card_text_color' );
+    if ( cardTextColEl ) { cardTextColEl.addEventListener( 'input', updateLoginPreviewCard ); }
+    var cardAutoEl = qs( '#admbud_login_card_text_auto' );
+    if ( cardAutoEl ) {
+        cardAutoEl.addEventListener( 'change', function() {
+            var row = qs( '.ab-login-card-text-row' );
+            if ( row ) { row.classList.toggle( 'ab-hidden', this.checked ); }
+            updateLoginPreviewCard();
+        } );
+    }
+    var btnBgEl = qs( '#admbud_login_btn_bg' );
+    if ( btnBgEl ) { btnBgEl.addEventListener( 'input', updateLoginPreview ); }
+    var btnAutoEl = qs( '#admbud_login_btn_auto' );
+    if ( btnAutoEl ) {
+        btnAutoEl.addEventListener( 'change', function() {
+            var row = qs( '.ab-login-btn-row' );
+            if ( row ) { row.classList.toggle( 'ab-hidden', this.checked ); }
+            updateLoginPreview();
+        } );
     }
     syncBgType(true); updateLoginPreview();
 
@@ -1493,6 +1708,8 @@
     if(csOp){ csOp.addEventListener('input',function(){ var s=qs('#admbud_cs_overlay_op_val'); if(s){s.textContent=this.value+'%';} }); }
     var mOp=qs('#admbud_maint_bg_overlay_opacity');
     if(mOp){ mOp.addEventListener('input',function(){ var s=qs('#admbud_maint_overlay_op_val'); if(s){s.textContent=this.value+'%';} }); }
+    var sbW=qs('#admbud_wl_sidebar_width');
+    if(sbW){ sbW.addEventListener('input',function(){ var s=qs('#admbud_wl_sidebar_width_val'); if(s){s.textContent=this.value+'px';} }); }
 
     // Live-update the maintenance / coming-soon page preview.
     // Preview is a styled <div> (was an iframe srcdoc previously — switched
@@ -1526,7 +1743,20 @@
             return;
         }
 
-        var pfx    = mode === 'coming_soon' ? 'cs' : 'maint';
+        var pfx = mode === 'coming_soon' ? 'cs' : 'maint';
+        var tid = pfx === 'maint' ? '#admbud_maintenance_title'   : '#admbud_coming_soon_title';
+        var mid = pfx === 'maint' ? '#admbud_maintenance_message' : '#admbud_coming_soon_message';
+        var ttl = ( qs( tid ) || {} ).value || ( pfx === 'maint' ? 'Under Maintenance' : 'Coming Soon' );
+        var msg = ( qs( mid ) || {} ).value || ( pfx === 'maint' ? "We'll be back shortly." : "We're working on something exciting." );
+
+        // Colours module OFF: the page follows the WP admin colour scheme; the
+        // colour fields are inert. Render the fixed scheme palette that PHP
+        // supplied as data-scheme-* attributes instead of reading the fields.
+        if ( wrapper.dataset.schemeActive === '1' ) {
+            applyMaintPreview( wrapper, wrapper.dataset.schemeBg, wrapper.dataset.schemeHeading, wrapper.dataset.schemeMessage, ttl, msg );
+            return;
+        }
+
         var bgType = ( qs( 'input[name="admbud_' + pfx + '_bg_type"]:checked' ) || {} ).value || 'solid';
         var bg;
         if ( bgType === 'gradient' ) {
@@ -1541,12 +1771,8 @@
             bg = ( qs( '#admbud_' + pfx + '_bg_color' ) || {} ).value || '#1e1b2e';
         }
 
-        var hc  = ( qs( '#admbud_' + pfx + '_text_color'    ) || {} ).value || '#ede9fe';
-        var mc  = ( qs( '#admbud_' + pfx + '_message_color' ) || {} ).value || '#c4b5fd';
-        var tid = pfx === 'maint' ? '#admbud_maintenance_title'   : '#admbud_coming_soon_title';
-        var mid = pfx === 'maint' ? '#admbud_maintenance_message' : '#admbud_coming_soon_message';
-        var ttl = ( qs( tid ) || {} ).value || ( pfx === 'maint' ? 'Under Maintenance' : 'Coming Soon' );
-        var msg = ( qs( mid ) || {} ).value || ( pfx === 'maint' ? "We'll be back shortly." : "We're working on something exciting." );
+        var hc = ( qs( '#admbud_' + pfx + '_text_color'    ) || {} ).value || '#ede9fe';
+        var mc = ( qs( '#admbud_' + pfx + '_message_color' ) || {} ).value || '#c4b5fd';
 
         applyMaintPreview( wrapper, bg, hc, mc, ttl, msg );
     }

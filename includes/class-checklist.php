@@ -628,5 +628,58 @@ class Checklist {
             $v,
             true
         );
+
+        // Dark-mode adaptation: when AB's content background is dark, re-theme
+        // the panel's design tokens so it matches (the panel CSS is fully
+        // token-driven). Sidebar colours are independent of this.
+        $dark = $this->dark_panel_css();
+        if ( '' !== $dark ) {
+            wp_add_inline_style( 'ab-checklist', $dark );
+        }
+    }
+
+    /**
+     * Token overrides that re-theme the Checklist panel for AB dark mode.
+     * Returns '' unless the Colours module is on AND the content/body
+     * background is dark.
+     */
+    private function dark_panel_css(): string {
+        if ( ! in_array( 'colours', (array) ( admbud_enabled_modules() ?: [] ), true ) ) {
+            return '';
+        }
+        $bg = sanitize_hex_color( admbud_get_option( 'admbud_colours_body_bg', '' ) );
+        if ( ! $bg ) {
+            return '';
+        }
+        $hex = ltrim( $bg, '#' );
+        if ( strlen( $hex ) === 3 ) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        $lum = ( 0.299 * hexdec( substr( $hex, 0, 2 ) )
+               + 0.587 * hexdec( substr( $hex, 2, 2 ) )
+               + 0.114 * hexdec( substr( $hex, 4, 2 ) ) ) / 255;
+        if ( $lum >= 0.5 ) {
+            return ''; // content background is light - keep the default light panel.
+        }
+
+        $text = sanitize_hex_color( admbud_get_option( 'admbud_colours_content_text', '' ) );
+        if ( ! $text ) {
+            $text = '#e6e8eb';
+        }
+        $bg   = esc_attr( $bg );
+        $text = esc_attr( $text );
+
+        return '#ab-checklist-panel{'
+            . '--ab-surface:' . $bg . ';'
+            . '--ab-surface-raised:color-mix(in srgb,' . $bg . ' 86%,#fff);'
+            . '--ab-surface-sunken:color-mix(in srgb,' . $bg . ' 92%,#000);'
+            . '--ab-border:color-mix(in srgb,' . $text . ' 18%,transparent);'
+            . '--ab-border-subtle:color-mix(in srgb,' . $text . ' 10%,transparent);'
+            . '--ab-text-heading:' . $text . ';'
+            . '--ab-text-strong:' . $text . ';'
+            . '--ab-text-body:color-mix(in srgb,' . $text . ' 88%,transparent);'
+            . '--ab-text-secondary:color-mix(in srgb,' . $text . ' 68%,transparent);'
+            . '--ab-text-muted:color-mix(in srgb,' . $text . ' 48%,transparent);'
+            . '}';
     }
 }

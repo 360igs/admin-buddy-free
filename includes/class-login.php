@@ -55,6 +55,8 @@ class Login {
         $css  = $this->css_background();
         $css .= $this->css_logo();
         $css .= $this->css_card_position();
+        $css .= $this->css_card_surface();
+        $css .= $this->css_button();
 
         if ( ! $css ) {
             return;
@@ -68,7 +70,20 @@ class Login {
     // -- Background ------------------------------------------------------------
 
     private function css_background(): string {
-        $type = admbud_get_option( 'admbud_login_bg_type', 'solid' );
+        $type    = admbud_get_option( 'admbud_login_bg_type', 'solid' );
+        $has_img = ( $type === 'image' && admbud_get_option( 'admbud_login_bg_image_url', '' ) );
+
+        // Colours module OFF: solid / gradient backgrounds follow the active
+        // WP admin colour scheme (dark, accent-tinted) instead of the stored
+        // brand palette. An explicit background image is still honoured.
+        // Settings::scheme_page_palette() is the single shared source.
+        if ( ! \Admbud\Settings::colours_module_active() && ! $has_img ) {
+            $p = \Admbud\Settings::scheme_page_palette();
+            return sprintf(
+                'body.login { background: linear-gradient(to bottom right, %s, %s) !important; }',
+                esc_attr( $p['grad_from'] ), esc_attr( $p['grad_to'] )
+            );
+        }
 
         switch ( $type ) {
             case 'gradient':
@@ -288,6 +303,81 @@ class Login {
             esc_attr( $shadow ),
             $position === 'left'  ? '0' : 'auto',
             $position === 'right' ? '0' : 'auto'
+        );
+    }
+
+    // -- Card surface (background / width / text) ------------------------------
+
+    /**
+     * Background colour, width, and text colour for the card / panel the login
+     * form sits in. Emitted AFTER css_card_position() so these three override
+     * its hardcoded defaults (white @ 88%, 360/400px) without disturbing the
+     * layout rules. Applies to all three card positions.
+     *
+     * Independent of the Colours module - a plain Login setting. The frosted
+     * blur stays on #login from css_card_position(); only the tint changes.
+     */
+    private function css_card_surface(): string {
+        $bg_hex = sanitize_hex_field( admbud_get_option( 'admbud_login_card_bg_color', '#ffffff' ) ) ?: '#ffffff';
+
+        $width = absint( admbud_get_option( 'admbud_login_card_width', 400 ) );
+        $width = ( $width >= 320 && $width <= 600 ) ? $width : 400;
+
+        // Text colour: auto-contrast against the card colour, or an explicit
+        // override. Covers the field labels and the nav / back-to-site links.
+        if ( admbud_get_option( 'admbud_login_card_text_auto', '1' ) === '1' ) {
+            $text = \Admbud\Settings::contrast_text( $bg_hex );
+        } else {
+            $text = sanitize_hex_field( admbud_get_option( 'admbud_login_card_text_color', '#3c434a' ) ) ?: '#3c434a';
+        }
+
+        // Frosted glass: the chosen colour at 88% (the blur already lives on
+        // #login from css_card_position()).
+        $bg_rgba = $this->hex_to_rgba( $bg_hex, 0.88 ) ?: 'rgba(255,255,255,0.88)';
+
+        return sprintf(
+            'body.login #login { background: %s !important; width: %dpx !important; }'
+            . 'body.login #login label,'
+            . 'body.login #login #nav a,'
+            . 'body.login #login #backtoblog a { color: %s !important; }',
+            esc_attr( $bg_rgba ),
+            $width,
+            esc_attr( $text )
+        );
+    }
+
+    // -- Login button ----------------------------------------------------------
+
+    /**
+     * Background colour for the login button (#wp-submit).
+     *
+     * Automatic (default): when the Colours module is ON it already styles the
+     * button via inject_login_css() - leave it. When OFF, the button follows
+     * the WP admin scheme accent so it tracks the rest of the page.
+     *
+     * Override: an explicit colour, scoped under #login (two ids) so it also
+     * beats the Colours module's `body.login #wp-submit` rule when both apply.
+     * Label colour auto-contrasts; hover is an auto-darkened shade.
+     */
+    private function css_button(): string {
+        if ( admbud_get_option( 'admbud_login_btn_auto', '1' ) === '1' ) {
+            if ( \Admbud\Settings::colours_module_active() ) {
+                return ''; // Colours module owns the button styling.
+            }
+            $bg = \Admbud\Settings::scheme_accent_hex();
+        } else {
+            $bg = sanitize_hex_field( admbud_get_option( 'admbud_login_btn_bg', '#2271b1' ) ) ?: '#2271b1';
+        }
+
+        $hover = \Admbud\Settings::mix_hex( $bg, '#000000', 85 );
+        $text  = \Admbud\Settings::contrast_text( $bg );
+
+        return sprintf(
+            'body.login #login #wp-submit,body.login #login .button-primary{background:%1$s!important;border-color:%1$s!important;color:%2$s!important}'
+            . 'body.login #login #wp-submit:hover,body.login #login .button-primary:hover{background:%3$s!important;border-color:%3$s!important;color:%2$s!important}',
+            esc_attr( $bg ),
+            esc_attr( $text ),
+            esc_attr( $hover )
         );
     }
 

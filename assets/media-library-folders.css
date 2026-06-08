@@ -1,0 +1,1022 @@
+/**
+ * Admin Buddy - Media Manager native-library injection.
+ *
+ *   1. Page-level folder panel on upload.php (list AND grid).
+ *   2. In-frame sidebar inside the wp.media insert MODAL only.
+ *
+ * Styling is driven by AB design tokens (--ab-*, from tokens.css) so the sidebar
+ * matches the rest of AB and adapts to the Colours module for free. Accent
+ * resolves through --acc (AB primary when Colours on, else WP scheme accent).
+ *
+ * The MM sidebar renders on the FRONT END too (Bricks/Divi/Elementor builders),
+ * where themes commonly set html{font-size:10px} (a rem hack). rem-based space /
+ * text tokens would shrink there, so we lock those tokens to px on the MM roots
+ * (same technique .ab-slide-panel uses) - values match the admin 16px default.
+ */
+
+.admbud-mm-panel,
+.admbud-mm-sidebar,
+.admbud-mm-ctx,
+.admbud-mm-modal,
+.admbud-mm-modal-overlay,
+.admbud-mm-colorpop,
+.admbud-mm-vispop,
+.admbud-mm-drag-ghost,
+.admbud-mm-bulkbar,
+.admbud-mm-bulkmenu,
+.admbud-mm-topbar,
+.admbud-mm-slidepanel {
+	--acc: var(--admbud-mm-accent, var(--ab-accent));
+	/* px-lock the rem tokens so front-end rem-hack themes can't shrink us. */
+	--ab-text-xs: 12px; --ab-text-sm: 13px; --ab-text-base: 14px; --ab-text-lg: 16px;
+	--ab-space-1: 4px; --ab-space-1-5: 6px; --ab-space-2: 8px; --ab-space-2-5: 10px;
+	--ab-space-3: 12px; --ab-space-4: 16px; --ab-space-5: 20px; --ab-space-6: 24px;
+}
+
+/* Accent text-selection inside MM surfaces. These render OUTSIDE .ab-wrap (injected
+   into the native media library), so admin.css's `.ab-wrap ::selection` rule doesn't
+   reach them - without this the highlight falls back to the browser default blue,
+   inconsistent with AB's own pages. Scoped to MM roots so the rest of the library
+   keeps its native selection. */
+.admbud-mm-panel ::selection,
+.admbud-mm-sidebar ::selection,
+.admbud-mm-ctx ::selection,
+.admbud-mm-modal ::selection,
+.admbud-mm-colorpop ::selection,
+.admbud-mm-slidepanel ::selection {
+	background: var(--acc);
+	color: var(--ab-text-on-accent, #fff);
+}
+.admbud-mm-panel ::-moz-selection,
+.admbud-mm-sidebar ::-moz-selection,
+.admbud-mm-ctx ::-moz-selection,
+.admbud-mm-modal ::-moz-selection,
+.admbud-mm-colorpop ::-moz-selection,
+.admbud-mm-slidepanel ::-moz-selection {
+	background: var(--acc);
+	color: var(--ab-text-on-accent, #fff);
+}
+
+/* ===================================================================== */
+/*  1. Page-level panel (upload.php)                                      */
+/* ===================================================================== */
+
+body.upload-php #wpbody-content { position: relative; min-height: calc(100vh - 32px); }
+/* The folder panel is absolutely positioned at left:0 of #wpbody-content, but WP
+   gives #wpcontent a default 20px padding-left - that leaves a gap between the admin
+   menu and the panel. Zero it on the media page so the panel sits flush; .wrap keeps
+   its own 244px margin so page content still clears the panel. */
+body.upload-php #wpcontent { padding-left: 0; }
+body.upload-php .wrap { margin-left: 244px; }
+/* The WP admin footer ("Thank you for creating with WordPress") sits under the
+   full-height folder panel and overlaps its Bulk SEO / Tools buttons. The panel
+   has its own footer, so just hide WP's on the media page. */
+body.upload-php #wpfooter { display: none; }
+
+/* Top action toolbar - relocated by JS inline after the "Add New Media File" button.
+   Both the toolbar and WP's heading button are forced to vertical-align:middle so
+   they sit on a shared centre-line (the tall h1 otherwise leaves them misaligned). */
+body.admbud-mm-has-topbar .wrap .page-title-action { vertical-align: middle; }
+.admbud-mm-topbar { display: inline-flex; align-items: center; gap: 3px; margin: 0 0 0 10px; vertical-align: middle; }
+.admbud-mm-topbar[hidden] { display: none; }
+.admbud-mm-topbar__div { width: 1px; height: 18px; background: var(--ab-border); margin: 0 4px; flex: none; }
+.admbud-mm-topbtn {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 30px; height: 30px; padding: 0;
+	border: 1px solid var(--ab-border);
+	background: var(--ab-surface);
+	color: var(--ab-text-secondary);
+	border-radius: var(--ab-radius-sm);
+	cursor: pointer;
+	transition: background-color .12s ease, color .12s ease, border-color .12s ease;
+}
+.admbud-mm-topbtn:hover, .admbud-mm-topbtn:focus-visible { background: var(--acc); border-color: var(--acc); color: var(--ab-text-on-accent, #fff); outline: none; }
+/* Rich two-line tooltip (built in JS, appended to body). */
+.admbud-mm-toptip {
+	position: fixed; z-index: 2147483647;
+	display: flex; flex-direction: column; gap: 2px;
+	max-width: 230px; padding: 6px 9px;
+	background: #1d2327; color: #fff;
+	border-radius: var(--ab-radius-sm, 4px);
+	box-shadow: 0 4px 16px rgba(0,0,0,.28);
+	pointer-events: none;
+}
+.admbud-mm-toptip strong { font-size: 12px; font-weight: 600; line-height: 1.25; }
+.admbud-mm-toptip span { font-size: 11px; opacity: .82; line-height: 1.3; }
+/* When the toolbar is active, the folder-panel footer + the Tools-panel find
+   launchers are redundant (those actions are top icons), so hide them. Without the
+   toolbar (fallback) they stay, keeping every action reachable. */
+body.admbud-mm-has-topbar .admbud-mm-panel__foot { display: none; }
+body.admbud-mm-has-topbar .admbud-mm-tool--launcher { display: none; }
+
+/* Closed slide-panels sit just off-screen right (transform: translateX(100%)) but
+   stay painted - MM's open/close only toggles .is-open, it doesn't display:none them
+   like the shared admin.js panels. Their leftward panel shadow (--ab-shadow-panel:
+   -8px 0 40px) therefore bleeds back onto the viewport's right edge, and with several
+   panels stacked it shows as a grey band. Kill the shadow while closed; it's restored
+   on .is-open (when the panel is actually visible). */
+.admbud-mm-slidepanel:not(.is-open) { box-shadow: none; }
+/* WP's list/grid view-switch hover uses the admin SCHEME colour (e.g. #3858e9 on
+   "Modern") via --wp-admin-theme-color, which AB's Colours module doesn't touch.
+   Align the hover with AB's active accent so it matches the rest of the chrome. */
+body.upload-php .view-switch a:hover:before { color: var(--admbud-mm-accent, var(--ab-accent)); }
+/* Leave room for the reopen handle so it doesn't overlap the page title. */
+body.upload-php.admbud-mm-collapsed .wrap { margin-left: 36px; }
+
+.admbud-mm-panel {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;               /* full height */
+	width: 220px;
+	display: flex;
+	flex-direction: column;
+	background: var(--ab-surface);
+	border-right: 1px solid var(--ab-border);
+}
+.admbud-mm-collapsed .admbud-mm-panel { display: none; }
+
+.admbud-mm-panel__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--ab-space-2);
+	padding: var(--ab-space-2-5) var(--ab-space-3);
+	border-bottom: 1px solid var(--ab-border-subtle);
+	flex: 0 0 auto;
+}
+.admbud-mm-panel__title {
+	font-size: var(--ab-text-xs);
+	font-weight: var(--ab-font-semibold);
+	text-transform: uppercase;
+	letter-spacing: .04em;
+	color: var(--ab-text-strong);
+}
+.admbud-mm-panel__actions { display: flex; align-items: center; gap: var(--ab-space-2); }
+
+.admbud-mm-panel__new {
+	border: 1px solid var(--acc);
+	background: transparent;
+	color: var(--acc);
+	border-radius: var(--ab-radius-sm);
+	padding: var(--ab-space-1) var(--ab-space-2-5);
+	cursor: pointer;
+	font-size: var(--ab-text-xs);
+	font-weight: var(--ab-font-semibold);
+}
+.admbud-mm-panel__new:hover { background: var(--acc); color: var(--ab-text-on-accent); }
+
+/* ── Canonical panel icon button ──────────────────────────────────────────
+   ONE bordered-square style for every icon action in the panel: collapse-all,
+   collapse / reopen the panel, sort direction, and the footer launchers. Size
+   is a token so it tunes in one place. Each carries a styled hover label via a
+   data-ab-tip attribute (see the [data-ab-tip] rules below) - aria-label stays
+   for the accessible name. */
+.admbud-mm-iconbtn {
+	--admbud-mm-iconbtn-size: 30px;
+	position: relative;
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--admbud-mm-iconbtn-size);
+	height: var(--admbud-mm-iconbtn-size);
+	padding: 0;
+	border: 1px solid var(--ab-border);
+	background: var(--ab-surface);
+	color: var(--ab-text-body);
+	border-radius: var(--ab-radius-sm);
+	cursor: pointer;
+}
+.admbud-mm-iconbtn:hover { border-color: var(--acc); color: var(--acc); background: var(--ab-surface-sunken); }
+.admbud-mm-iconbtn svg { display: block; transition: transform .15s ease; }
+/* Rotation states - JS toggles these classes on the button (kept by id). */
+#admbud-mm-toggle-all.is-collapsed svg { transform: rotate(-90deg); }
+/* #admbud-mm-sort-dir does NOT rotate: its A-Z / Z-A glyph is swapped in JS
+   (paintSortDir) so the letters stay upright in both directions. */
+
+/* Styled hover label: one consistent bubble for every icon button. Replaces the
+   native title tooltip (no OS variance, no ~1s delay). Inverts automatically in
+   dark mode via the panel token remap. Visual only - pointer-events:none. */
+.admbud-mm-iconbtn[data-ab-tip]::after {
+	content: attr(data-ab-tip);
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 20;
+	white-space: nowrap;
+	background: var(--ab-text-strong);
+	color: var(--ab-surface);
+	font-size: var(--ab-text-xs);
+	font-weight: var(--ab-font-medium);
+	line-height: 1.2;
+	padding: 3px 7px;
+	border-radius: var(--ab-radius-sm);
+	box-shadow: var(--ab-shadow-md);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity .12s ease;
+}
+.admbud-mm-iconbtn[data-ab-tip]:hover::after,
+.admbud-mm-iconbtn[data-ab-tip]:focus-visible::after { opacity: 1; }
+/* Footer launchers sit at the panel bottom - flip the label above. */
+.admbud-mm-iconbtn--tip-up[data-ab-tip]::after { top: auto; bottom: calc(100% + 6px); }
+/* Reopen sits at the screen's left edge - put the label to its right so it can't
+   clip off-viewport. */
+.admbud-mm-iconbtn--tip-right[data-ab-tip]::after { top: 50%; left: calc(100% + 6px); bottom: auto; transform: translateY(-50%); }
+
+/* Toolbar row: search + sort */
+.admbud-mm-panel__toolbar {
+	display: flex;
+	flex-direction: column;
+	gap: var(--ab-space-2);
+	padding: var(--ab-space-2) var(--ab-space-3);
+	border-bottom: 1px solid var(--ab-border-subtle);
+	flex: 0 0 auto;
+}
+.admbud-mm-search { position: relative; display: flex; align-items: center; }
+.admbud-mm-search__icon { position: absolute; left: var(--ab-space-2-5); top: 50%; transform: translateY(-50%); display: flex; color: var(--ab-text-muted); pointer-events: none; z-index: 1; }
+/* Scoped under .admbud-mm-search so the padding beats WP admin's input[type=search]. */
+.admbud-mm-search input.admbud-mm-search__input {
+	width: 100%;
+	box-sizing: border-box;
+	margin: 0;
+	padding: var(--ab-space-1-5) var(--ab-space-6) var(--ab-space-1-5) var(--ab-space-8);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius-sm);
+	background: var(--ab-surface);
+	color: var(--ab-text-body);
+	font-size: var(--ab-text-sm);
+	line-height: 1.4;
+	min-height: 0;
+}
+.admbud-mm-search input.admbud-mm-search__input:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc); }
+/* Suppress the browser's native type=search clear (×) - we render our own
+   themed .admbud-mm-search__clear button, so the native one is a duplicate X. */
+.admbud-mm-search input.admbud-mm-search__input::-webkit-search-cancel-button,
+.admbud-mm-search input.admbud-mm-search__input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+.admbud-mm-search__clear {
+	position: absolute;
+	right: var(--ab-space-2);
+	border: 0;
+	background: none;
+	cursor: pointer;
+	color: var(--ab-text-muted);
+	font-size: var(--ab-text-base);
+	line-height: 1;
+	padding: 2px 4px;
+}
+.admbud-mm-search__clear:hover { color: var(--ab-text-strong); }
+
+.admbud-mm-sortrow { display: flex; align-items: center; gap: var(--ab-space-2); }
+.admbud-mm-sortrow .ab-dropdown { flex: 1 1 auto; min-width: 0; }
+/* Sort-direction button styling/rotation now comes from .admbud-mm-iconbtn +
+   the #admbud-mm-sort-dir.is-asc rule above. */
+
+/* Matched folder row while a search is active */
+.admbud-mm-row--match .admbud-mm-row__label { font-weight: var(--ab-font-semibold); color: var(--ab-text-strong); }
+
+/* Folder picker popover (Move to folder) */
+.admbud-mm-folderpick { min-width: 180px; }
+.admbud-mm-move-selected { margin-left: 6px; }
+
+/* Reopen handle: shares .admbud-mm-iconbtn (border / bg / hover / tooltip); only
+   its edge-anchored position + shape differ. */
+.admbud-mm-reopen {
+	display: none;
+	position: absolute;
+	top: 4px;
+	left: 0;
+	width: 28px;
+	height: 30px;
+	border-left: 0;
+	border-radius: 0 var(--ab-radius-md) var(--ab-radius-md) 0;
+	color: var(--acc);
+	z-index: 5;
+}
+.admbud-mm-collapsed .admbud-mm-reopen { display: inline-flex; }
+
+/* Dark adaptation: JS adds body.admbud-mm-dark and sets --admbud-mm-bg /
+   --admbud-mm-text from AB's CONTENT colours when the content background is
+   dark. We re-map the design tokens on the panel/sidebar roots so every
+   token-driven rule below adapts at once (no per-element dark rules). The
+   sidebar's own colours are independent of this. */
+body.admbud-mm-dark .admbud-mm-panel,
+body.admbud-mm-dark .admbud-mm-sidebar,
+body.admbud-mm-dark .admbud-mm-reopen {
+	--ab-surface: var(--admbud-mm-bg, #1d2327);
+	--ab-surface-raised: color-mix(in srgb, var(--admbud-mm-bg, #1d2327) 90%, #fff);
+	--ab-surface-sunken: color-mix(in srgb, var(--admbud-mm-bg, #1d2327) 92%, #fff);
+	--ab-border: rgba(255,255,255,.14);
+	--ab-border-subtle: rgba(255,255,255,.09);
+	--ab-text-strong: var(--admbud-mm-text, #fff);
+	--ab-text-body: var(--admbud-mm-text, rgba(255,255,255,.85));
+	--ab-text-secondary: var(--admbud-mm-text, rgba(255,255,255,.6));
+	--ab-text-muted: rgba(255,255,255,.45);
+}
+/* Stronger active tint reads better on a dark surface. */
+body.admbud-mm-dark .admbud-mm-row.is-active {
+	background: color-mix( in srgb, var(--acc) 30%, transparent );
+	color: #fff;
+}
+body.admbud-mm-dark .admbud-mm-row.is-active .admbud-mm-row__icon { color: #fff; }
+
+/* ===================================================================== */
+/*  2. Tree (shared by panel + modal)                                    */
+/* ===================================================================== */
+
+.admbud-mm-tree, .admbud-mm-tree ul { list-style: none; margin: 0; padding: 0; }
+.admbud-mm-tree { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--ab-space-1-5); }
+/* Nested levels get an indented left branch line for hierarchy clarity. */
+.admbud-mm-tree ul { margin-left: 15px; padding-left: 9px; border-left: 1px solid var(--ab-border); }
+
+.admbud-mm-row {
+	display: flex;
+	align-items: center;
+	gap: var(--ab-space-1-5);
+	padding: var(--ab-space-1-5) var(--ab-space-2);
+	border-radius: var(--ab-radius-sm);
+	cursor: pointer;
+	font-size: var(--ab-text-sm);
+	color: var(--ab-text-body);
+	user-select: none;
+}
+.admbud-mm-row:hover { background: var(--ab-surface-sunken); }
+/* Active = light accent tint (the panel's own right divider is the edge). */
+.admbud-mm-row.is-active {
+	background: color-mix( in srgb, var(--acc) 12%, transparent );
+	color: var(--ab-text-strong);
+	font-weight: var(--ab-font-semibold);
+}
+.admbud-mm-row.is-active .admbud-mm-row__icon { color: var(--acc); }
+.admbud-mm-row.is-droptarget { outline: 2px dashed var(--acc); outline-offset: -2px; background: color-mix( in srgb, var(--acc) 10%, transparent ); }
+
+.admbud-mm-row__toggle { width: 14px; flex: 0 0 14px; display: flex; align-items: center; justify-content: center; color: var(--ab-text-muted); opacity: .85; transition: transform var(--ab-duration-dropdown); }
+.admbud-mm-row__toggle svg { display: block; }
+.admbud-mm-row__toggle.is-open { transform: rotate(90deg); }
+.admbud-mm-row__toggle--leaf { visibility: hidden; }
+
+/* Folder icon: neutral by default; tinted inline when a colour is set. */
+.admbud-mm-row__icon { flex: 0 0 15px; display: inline-flex; align-items: center; color: var(--ab-text-secondary); }
+
+.admbud-mm-row__label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admbud-mm-row__count { color: var(--ab-text-muted); font-size: var(--ab-text-xs); flex: 0 0 auto; }
+.admbud-mm-row__size { color: var(--ab-text-muted); opacity: .8; font-size: var(--ab-text-xs); flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+/* Access-control indicator (restricted-visibility folders, admin-only).
+   Matches the count / size colour so it reads as muted metadata, not an action. */
+.admbud-mm-row__access { display: inline-flex; align-items: center; color: var(--ab-text-muted); opacity: .8; flex: 0 0 auto; }
+.admbud-mm-row__access svg { width: 13px; height: 13px; }
+/* "Show file counts" off (folder settings) - body class hides every count AND size. */
+body.admbud-mm-hide-count .admbud-mm-row__count,
+body.admbud-mm-hide-count .admbud-mm-row__size { display: none; }
+
+/* Active-folder breadcrumb (between the toolbar and the tree). */
+.admbud-mm-breadcrumb { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: var(--ab-space-2) var(--ab-space-3); border-bottom: 1px solid var(--ab-border-subtle); font-size: var(--ab-text-xs); }
+.admbud-mm-crumb { background: none; border: 0; padding: 1px 3px; margin: 0; font: inherit; font-size: var(--ab-text-xs); color: var(--acc); cursor: pointer; border-radius: var(--ab-radius-sm); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admbud-mm-crumb:hover { text-decoration: underline; }
+.admbud-mm-crumb.is-current { color: var(--ab-text-strong); font-weight: var(--ab-font-medium); cursor: default; }
+.admbud-mm-crumb.is-current:hover { text-decoration: none; }
+.admbud-mm-crumb__sep { color: var(--ab-text-muted); }
+
+/* Row actions live in the right-click context menu (admbud-mm-ctx), not on hover -
+   hover icons crowded nested labels and caused a row-height jump. The count stays
+   visible at all times. */
+
+/* "Download" button injected into WP's native grid Bulk-select toolbar. */
+.admbud-mm-dl-selected { margin-left: 6px; }
+
+/* Inline create / rename input */
+.admbud-mm-edit-input {
+	flex: 1;
+	min-width: 0;
+	border: 1px solid var(--acc);
+	border-radius: var(--ab-radius-sm);
+	padding: 2px var(--ab-space-1-5);
+	font-size: var(--ab-text-sm);
+	outline: none;
+	box-shadow: 0 0 0 1px var(--acc);
+	background: var(--ab-surface);
+	color: var(--ab-text-body);
+}
+
+/* ===================================================================== */
+/*  3. Right-click context menu                                           */
+/* ===================================================================== */
+
+.admbud-mm-ctx {
+	min-width: 170px;
+	background: var(--ab-surface);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	box-shadow: var(--ab-shadow-lg);
+	padding: var(--ab-space-1);
+	font-size: var(--ab-text-sm);
+}
+.admbud-mm-ctx__item {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: var(--ab-space-2);
+	padding: var(--ab-space-1-5) var(--ab-space-2-5);
+	border: 0;
+	background: none;
+	cursor: pointer;
+	border-radius: var(--ab-radius-sm);
+	color: var(--ab-text-body);
+	text-align: left;
+}
+.admbud-mm-ctx__icon { flex: 0 0 16px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; opacity: .8; }
+.admbud-mm-ctx__icon svg { width: 15px; height: 15px; display: block; }
+.admbud-mm-ctx__item:hover { background: var(--ab-surface-sunken); }
+.admbud-mm-ctx__item.is-danger { color: var(--ab-danger); }
+.admbud-mm-ctx__item.is-danger:hover { background: var(--ab-danger-bg); }
+.admbud-mm-ctx__sep { height: 1px; background: var(--ab-border-subtle); margin: var(--ab-space-1) 0; }
+
+/* Colour swatch popover */
+.admbud-mm-colorpop {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--ab-space-1-5);
+	width: 168px;
+	padding: var(--ab-space-2-5);
+	background: var(--ab-surface);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	box-shadow: var(--ab-shadow-lg);
+}
+.admbud-mm-swatch {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	border: 2px solid var(--ab-surface);
+	box-shadow: 0 0 0 1px var(--ab-border);
+	cursor: pointer;
+	padding: 0;
+}
+.admbud-mm-swatch:hover { transform: scale(1.12); }
+.admbud-mm-swatch.is-current { box-shadow: 0 0 0 2px var(--acc); }
+.admbud-mm-swatch--clear { background: var(--ab-surface); color: var(--ab-text-muted); font-size: var(--ab-text-xs); line-height: 1; display: flex; align-items: center; justify-content: center; }
+.admbud-mm-swatch--custom { background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); color: #fff; font-size: var(--ab-text-sm); font-weight: var(--ab-font-bold); display: flex; align-items: center; justify-content: center; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+
+/* Per-role folder visibility popover */
+.admbud-mm-vispop {
+	width: 240px;
+	padding: var(--ab-space-3);
+	background: var(--ab-surface);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	box-shadow: var(--ab-shadow-lg);
+	color: var(--ab-text-body);
+}
+.admbud-mm-vispop__head { font-weight: var(--ab-font-semibold); font-size: var(--ab-text-sm); margin-bottom: var(--ab-space-1); }
+.admbud-mm-vispop__hint { margin: 0 0 var(--ab-space-2-5); font-size: var(--ab-text-xs); color: var(--ab-text-muted); line-height: 1.4; }
+.admbud-mm-vispop__list { display: flex; flex-direction: column; gap: var(--ab-space-1-5); max-height: 220px; overflow-y: auto; }
+.admbud-mm-vispop__row { display: flex; align-items: center; gap: var(--ab-space-2); font-size: var(--ab-text-sm); cursor: pointer; }
+.admbud-mm-vispop__row input { accent-color: var(--acc); margin: 0; }
+.admbud-mm-vispop__foot { display: flex; justify-content: flex-end; margin-top: var(--ab-space-3); }
+
+/* Tool access matrix (tools x roles) */
+.admbud-mm-toolmatrix-wrap { overflow-x: auto; }
+.admbud-mm-toolmatrix { width: 100%; border-collapse: collapse; font-size: var(--ab-text-sm); }
+.admbud-mm-toolmatrix th,
+.admbud-mm-toolmatrix td { padding: var(--ab-space-2) var(--ab-space-3); border-bottom: 1px solid var(--ab-border); text-align: center; }
+.admbud-mm-toolmatrix thead th { font-weight: var(--ab-font-semibold); color: var(--ab-text-muted); white-space: nowrap; border-bottom: 2px solid var(--ab-border); }
+.admbud-mm-toolmatrix th[scope="row"] { text-align: left; font-weight: var(--ab-font-medium); color: var(--ab-text-strong); white-space: nowrap; }
+.admbud-mm-toolmatrix tbody tr:hover { background: color-mix(in srgb, var(--acc) 8%, transparent); }
+.admbud-mm-toolmatrix__cell { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.admbud-mm-toolmatrix__cell input { accent-color: var(--acc); margin: 0; width: 16px; height: 16px; cursor: pointer; }
+
+/* Pointer-drag: ghost + prevent native image drag (which triggers WP's
+   "Drop files to upload" overlay). */
+.attachments .attachment,
+.attachments .attachment img,
+.attachments .attachment .thumbnail,
+body.upload-php #the-list tr img {
+	-webkit-user-drag: none;
+	user-drag: none;
+}
+/* Ctrl/Cmd+click pick-set (our own multi-select, upload.php grid). Mirrors WP's
+   selected-attachment look but tinted to the AB accent. --acc isn't in scope on
+   grid .attachment nodes, so resolve --admbud-mm-accent directly. */
+.attachments .attachment.admbud-mm-picked { position: relative; }
+.attachments .attachment.admbud-mm-picked .thumbnail {
+	outline: 3px solid var(--admbud-mm-accent, var(--ab-accent, #2271b1));
+	outline-offset: -3px;
+}
+.attachments .attachment.admbud-mm-picked:after {
+	content: '';
+	position: absolute;
+	top: 8px; right: 8px;
+	width: 16px; height: 16px;
+	box-sizing: border-box;     /* guard against inherited box-sizing distorting the circle */
+	padding: 0; margin: 0;
+	flex: none;
+	border-radius: 50%;
+	background: var(--admbud-mm-accent, var(--ab-accent, #2271b1));
+	box-shadow: 0 0 0 2px #fff;
+	pointer-events: none;
+	z-index: 2;
+}
+/* Per-card action overlay: hover-revealed buttons on every grid card. Button
+   mix is decided by JS based on view (Trash vs other) + trash toggle. Injected
+   by Mutation Observer; shown only on hover/focus/picked so it doesn't fight
+   WP's own card chrome. */
+body.upload-php .attachments .attachment { position: relative; } /* positioning context for the absolute overlay - WP cards don't set it by default. */
+.admbud-mm-card-actions {
+	position: absolute;
+	top: 8px; right: 8px;
+	display: inline-flex;
+	gap: 4px;
+	z-index: 3;
+	opacity: 0;
+	transition: opacity .12s ease;
+}
+.attachments .attachment:hover .admbud-mm-card-actions,
+.attachments .attachment.details .admbud-mm-card-actions,
+.attachments .attachment.admbud-mm-picked .admbud-mm-card-actions,
+.admbud-mm-card-actions:focus-within { opacity: 1; }
+.admbud-mm-card-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px; height: 26px;
+	padding: 0;
+	border: 0;
+	border-radius: var(--ab-radius-sm, 4px);
+	background: rgba(20, 25, 30, .82);
+	color: #fff;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 1px 3px rgba(0,0,0,.35);
+	transition: background-color .12s ease;
+}
+.admbud-mm-card-btn svg { width: 14px; height: 14px; flex: none; }
+.admbud-mm-card-btn--restore:hover { background: var(--admbud-mm-accent, var(--ab-accent, #2271b1)); }
+.admbud-mm-card-btn--replace:hover { background: var(--admbud-mm-accent, var(--ab-accent, #2271b1)); } /* non-destructive: accent, not red. */
+.admbud-mm-card-btn--trash:hover   { background: #b32d2e; } /* WP "Move to Trash" link colour - dimmer than Delete to signal "reversible". */
+.admbud-mm-card-btn--delete:hover  { background: #d63638; } /* WP danger red - irreversible. */
+.admbud-mm-card-btn:focus { outline: 2px solid var(--admbud-mm-accent, var(--ab-accent, #2271b1)); outline-offset: 2px; }
+
+/* Bulk-ops floating toolbar (appears when grid items are Ctrl/Cmd-picked). */
+.admbud-mm-bulkbar {
+	position: fixed;
+	bottom: 24px;
+	left: 50%;
+	transform: translateX(-50%) translateY(16px);
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	background: rgba(20, 25, 30, .95);
+	color: #fff;
+	border-radius: var(--ab-radius-md, 8px);
+	box-shadow: 0 6px 24px rgba(0,0,0,.28);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity .15s ease, transform .15s ease;
+}
+.admbud-mm-bulkbar.is-open { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.admbud-mm-bulkbar__count { font-size: 13px; font-weight: 600; padding: 0 4px; white-space: nowrap; }
+.admbud-mm-bulkbar__btn {
+	border: 0;
+	background: rgba(255,255,255,.14);
+	color: #fff;
+	border-radius: var(--ab-radius-sm, 4px);
+	padding: 5px 11px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1;
+	cursor: pointer;
+	transition: background-color .12s ease;
+}
+.admbud-mm-bulkbar__btn:hover { background: rgba(255,255,255,.26); }
+.admbud-mm-bulkbar__btn--ghost { background: transparent; }
+.admbud-mm-bulkbar__btn--ghost:hover { background: rgba(255,255,255,.14); }
+.admbud-mm-bulkbar__btn--trash:hover  { background: #b32d2e; } /* reversible */
+.admbud-mm-bulkbar__btn--danger       { background: rgba(214,54,56,.92); }
+.admbud-mm-bulkbar__btn--danger:hover { background: #d63638; } /* irreversible */
+
+/* Move-to-folder popover opened from the bulk bar. */
+.admbud-mm-bulkmenu {
+	position: fixed;
+	z-index: 101;
+	min-width: 190px;
+	max-height: 340px;
+	overflow-y: auto;
+	padding: 4px;
+	background: var(--ab-surface);
+	color: var(--ab-text-body);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	box-shadow: var(--ab-shadow-lg);
+}
+.admbud-mm-bulkmenu__item {
+	display: block;
+	width: 100%;
+	text-align: left;
+	border: 0;
+	background: transparent;
+	color: var(--ab-text-body);
+	padding: 6px 10px;
+	font-size: 13px;
+	line-height: 1.3;
+	cursor: pointer;
+	border-radius: var(--ab-radius-sm);
+	white-space: nowrap;
+}
+.admbud-mm-bulkmenu__item:hover { background: var(--acc); color: var(--ab-text-on-accent, #fff); }
+
+/* "Replace media" button injected into the wp.media Attachment Details sidebar.
+   Full-width block below the native action links, with clear top spacing. */
+/* Render as a text link in WP's attachment-details ".actions" row
+   (View media file | Edit more details | … | Replace media), not a button:
+   a leading "|" separator + link styling that tracks the admin scheme colour. */
+.admbud-mm-replace-btn {
+	display: inline;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	box-shadow: none;
+	font: inherit;
+	color: var(--wp-admin-theme-color, #2271b1);
+	cursor: pointer;
+}
+.admbud-mm-replace-btn:hover,
+.admbud-mm-replace-btn:focus { color: var(--wp-admin-theme-color-darker-10, #135e96); text-decoration: underline; box-shadow: none; }
+.admbud-mm-replace-btn::before { content: "|"; margin: 0 6px; color: #c3c4c7; }
+
+/* Fallback toast (used when admin.js / window.showToast isn't loaded - upload.php
+   and front-end builders). Absolute px so rem-hack front-end themes don't shrink it. */
+.admbud-mm-toast {
+	position: fixed;
+	right: 20px;
+	bottom: 20px;
+	z-index: 2147483647;
+	max-width: 360px;
+	padding: 11px 15px;
+	background: #1d2327;
+	color: #fff;
+	border-radius: 6px;
+	box-shadow: 0 8px 24px rgba(0,0,0,.22);
+	font-size: 13px;
+	line-height: 1.45;
+	opacity: 0;
+	transform: translateY(8px);
+	transition: opacity .2s ease, transform .2s ease;
+}
+.admbud-mm-toast.is-in { opacity: 1; transform: translateY(0); }
+.admbud-mm-toast--error { background: #b32d2e; }
+
+body.admbud-mm-dragging { cursor: grabbing !important; user-select: none; }
+.admbud-mm-drag-ghost {
+	position: fixed;
+	z-index: 2147483647; /* must beat the builder's inline 999999999 on .media-frame */
+	pointer-events: none;
+	background: #1d2327;        /* always-dark floating label, independent of mode */
+	color: #fff;
+	font-size: var(--ab-text-xs);
+	font-weight: var(--ab-font-semibold);
+	padding: var(--ab-space-1) var(--ab-space-2-5);
+	border-radius: var(--ab-radius-sm);
+	box-shadow: var(--ab-shadow-md);
+}
+
+/* ===================================================================== */
+/*  4. AB-style confirm modal                                            */
+/* ===================================================================== */
+
+.admbud-mm-modal-overlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,.45);
+	backdrop-filter: var(--ab-backdrop-blur);
+	-webkit-backdrop-filter: var(--ab-backdrop-blur);
+	z-index: 2147483647; /* must beat the builder's inline 999999999 on .media-frame */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.admbud-mm-modal {
+	background: var(--ab-surface);
+	border-radius: var(--ab-radius-lg);
+	box-shadow: var(--ab-shadow-xl);
+	width: 410px;
+	max-width: 92vw;
+	overflow: hidden;
+}
+.admbud-mm-modal__head { padding: var(--ab-space-4) var(--ab-space-5) var(--ab-space-1); font-size: var(--ab-text-lg); font-weight: var(--ab-font-semibold); color: var(--ab-text-strong); }
+.admbud-mm-modal__body { padding: var(--ab-space-1) var(--ab-space-5) var(--ab-space-4); color: var(--ab-text-secondary); font-size: var(--ab-text-base); line-height: var(--ab-leading-normal); }
+.admbud-mm-modal__foot { display: flex; justify-content: flex-end; gap: var(--ab-space-2-5); padding: var(--ab-space-3) var(--ab-space-5); background: var(--ab-surface-raised); border-top: 1px solid var(--ab-border-subtle); }
+.admbud-mm-btn { border-radius: var(--ab-radius-sm); padding: var(--ab-space-1-5) var(--ab-space-4); cursor: pointer; font-size: var(--ab-text-sm); border: 1px solid var(--ab-border); background: var(--ab-surface); color: var(--ab-text-body); }
+.admbud-mm-btn:hover { background: var(--ab-surface-sunken); }
+.admbud-mm-btn--primary { background: var(--acc); border-color: var(--acc); color: var(--ab-text-on-accent); }
+.admbud-mm-btn--primary:hover { background: color-mix( in srgb, var(--acc) 86%, #000 ); border-color: color-mix( in srgb, var(--acc) 86%, #000 ); color: var(--ab-text-on-accent); }
+.admbud-mm-btn--danger { background: var(--ab-danger); border-color: var(--ab-danger); color: #fff; }
+.admbud-mm-btn--danger:hover { background: var(--ab-danger-hover); }
+
+/* Replace mode picker (Keep filename vs Rename + relink). */
+.admbud-mm-choice-intro { margin: 0 0 var(--ab-space-3); font-weight: var(--ab-font-semibold); color: var(--ab-text-strong); word-break: break-all; }
+.admbud-mm-choice {
+	display: flex;
+	gap: var(--ab-space-2-5);
+	align-items: flex-start;
+	padding: var(--ab-space-2-5) var(--ab-space-3);
+	margin-bottom: var(--ab-space-2);
+	border: 1px solid var(--ab-border);
+	border-radius: var(--ab-radius-md);
+	cursor: pointer;
+}
+.admbud-mm-choice:hover { border-color: var(--acc); }
+.admbud-mm-choice:has(input:checked) { border-color: var(--acc); background: color-mix( in srgb, var(--acc) 6%, transparent ); }
+.admbud-mm-choice input { margin-top: 3px; flex: none; }
+.admbud-mm-choice span { font-size: var(--ab-text-xs); color: var(--ab-text-secondary); line-height: 1.4; }
+.admbud-mm-choice strong { display: block; color: var(--ab-text-strong); margin-bottom: 2px; font-size: var(--ab-text-sm); }
+
+/* ===================================================================== */
+/*  5. Modal in-frame sidebar (insert dialog only)                       */
+/* ===================================================================== */
+
+.media-modal .attachments-browser.admbud-mm-has-sidebar { position: relative; }
+.media-modal .attachments-browser.admbud-mm-has-sidebar .media-toolbar,
+.media-modal .attachments-browser.admbud-mm-has-sidebar .attachments,
+.media-modal .attachments-browser.admbud-mm-has-sidebar .attachments-wrapper,
+.media-modal .attachments-browser.admbud-mm-has-sidebar .uploader-inline {
+	left: 200px !important;
+}
+
+/* The grid-mode toolbar is two rows (mode + filters) ~82px tall, but core sizes
+   its box to 72px with overflow:auto - which paints a stray vertical scrollbar
+   right beside the Search box once the sidebar narrows the toolbar. Let the
+   toolbar show its full height and drop the grid below it so they don't collide.
+   Desktop only; the <=782 layout (responsive section below) stays untouched. */
+@media screen and (min-width: 783px) {
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .media-toolbar {
+		overflow: visible !important;
+	}
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .attachments,
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .attachments-wrapper,
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .uploader-inline {
+		top: 84px !important;
+	}
+}
+
+.admbud-mm-sidebar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 200px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--ab-surface);
+	border-right: 1px solid var(--ab-border);
+	z-index: 3;
+}
+.admbud-mm-sidebar__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--ab-space-2-5) var(--ab-space-3);
+	border-bottom: 1px solid var(--ab-border-subtle);
+	font-weight: var(--ab-font-semibold);
+	font-size: var(--ab-text-xs);
+	text-transform: uppercase;
+	letter-spacing: .04em;
+	color: var(--ab-text-strong);
+}
+/* Match the page panel's accent "+ New" button. */
+.admbud-mm-sidebar__new {
+	border: 1px solid var(--acc);
+	background: transparent;
+	border-radius: var(--ab-radius-sm);
+	padding: 2px var(--ab-space-2);
+	cursor: pointer;
+	color: var(--acc);
+	font-size: var(--ab-text-sm);
+	font-weight: var(--ab-font-semibold);
+	line-height: 1.2;
+}
+.admbud-mm-sidebar__new:hover { background: var(--acc); color: var(--ab-text-on-accent); }
+
+/* ===================================================================== */
+/*  7. Tree-column footer + slide-panel launchers (upload.php only)       */
+/* ===================================================================== */
+
+.admbud-mm-panel__foot {
+	flex: 0 0 auto;
+	display: flex;
+	gap: var(--ab-space-1);
+	padding: var(--ab-space-2);
+	border-top: 1px solid var(--ab-border-subtle);
+}
+/* Footer launchers (Bulk SEO / Bulk replace / Tools / Settings): the shared
+   .admbud-mm-iconbtn look, but filling the row equally instead of fixed-square.
+   Label shows on hover via data-ab-tip (--tip-up, above the button). */
+.admbud-mm-foot-btn { flex: 1 1 0; width: auto; height: 32px; min-width: 0; border-radius: var(--ab-radius-md); }
+.admbud-mm-foot-btn svg { flex: 0 0 auto; }
+
+/* Folder-settings slide-panel (moved from the old Admin Buddy "Media Manager" tab).
+   Ported from tab-media-manager.css so the rows render styled on upload.php, where
+   that tab stylesheet no longer loads. */
+.ab-mm-settings { display: flex; flex-direction: column; }
+.ab-mm-setting {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--ab-space-4);
+	padding: var(--ab-space-4) 0;
+	border-bottom: 1px solid var(--ab-border-subtle);
+}
+.ab-mm-setting:first-child { padding-top: 0; }
+.ab-mm-setting:last-child { border-bottom: 0; }
+.ab-mm-setting__label { flex: 1; min-width: 0; }
+.ab-mm-setting__label .ab-label {
+	display: block;
+	font-weight: var(--ab-font-semibold);
+	font-size: var(--ab-text-sm);
+	color: var(--ab-text-strong);
+	margin: 0 0 var(--ab-space-1);
+}
+.ab-mm-setting__label .description { margin: 0; }
+.ab-mm-setting__control { flex: 0 0 auto; display: flex; align-items: center; gap: var(--ab-space-3); }
+.ab-mm-setting__control input[type="color"] {
+	width: 40px; height: 28px; padding: 0;
+	border: 1px solid var(--ab-border); border-radius: var(--ab-radius-sm);
+	background: var(--ab-surface); cursor: pointer;
+}
+.ab-mm-setting__control input[type="color"]:disabled { opacity: .4; cursor: not-allowed; }
+.admbud-mm-foot-note { color: var(--ab-text-muted); font-size: var(--ab-text-xs); }
+
+/* Unused images panel. The .admbud-mm-unused-* result-row classes are the shared
+   scan-list look, reused as-is by the Missing files panel (distinct element IDs). */
+.admbud-mm-unused-caveat { margin-bottom: var(--ab-space-4); }
+.admbud-mm-unused-progress { margin: var(--ab-space-3) 0; }
+.admbud-mm-unused-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--ab-space-3); padding: var(--ab-space-2) 0; border-bottom: 1px solid var(--ab-border-subtle); margin-bottom: var(--ab-space-2); }
+.admbud-mm-unused-selall { display: inline-flex; align-items: center; gap: var(--ab-space-2); font-size: var(--ab-text-sm); font-weight: var(--ab-font-medium); cursor: pointer; }
+.admbud-mm-unused-summary { font-size: var(--ab-text-xs); color: var(--ab-text-muted); }
+.admbud-mm-unused-list { display: flex; flex-direction: column; }
+.admbud-mm-unused-empty { color: var(--ab-text-body); padding: var(--ab-space-4) 0; }
+.admbud-mm-unused-item {
+	display: flex;
+	align-items: center;
+	gap: var(--ab-space-3);
+	padding: var(--ab-space-2) var(--ab-space-1);
+	border-bottom: 1px solid var(--ab-border-subtle);
+	cursor: pointer;
+}
+.admbud-mm-unused-item:hover { background: var(--ab-surface-sunken); }
+.admbud-mm-unused-cb { flex: 0 0 auto; margin: 0; }
+.admbud-mm-unused-thumb {
+	flex: 0 0 auto;
+	width: 44px; height: 44px;
+	object-fit: cover;
+	border-radius: var(--ab-radius-sm);
+	background: var(--ab-surface-sunken);
+	border: 1px solid var(--ab-border-subtle);
+}
+.admbud-mm-unused-info { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.admbud-mm-unused-name { font-size: var(--ab-text-sm); color: var(--ab-text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admbud-mm-unused-sub { font-size: var(--ab-text-xs); color: var(--ab-text-muted); }
+/* Bulk-rename form + preview (old -> new). */
+/* Gallery shortcode configurator (admbud-mm-panel-shortcode) */
+.admbud-mm-sc-form { display: flex; flex-direction: column; gap: var(--ab-space-3); }
+.admbud-mm-sc-row { display: flex; gap: var(--ab-space-3); }
+.admbud-mm-sc-row .ab-field { flex: 1; min-width: 0; }
+.admbud-mm-sc-form .ab-mm-setting { padding: var(--ab-space-2) 0; }
+.admbud-mm-sc-more { margin-top: var(--ab-space-1); }
+.admbud-mm-sc-more > summary {
+	cursor: pointer;
+	font-weight: var(--ab-font-semibold);
+	color: var(--ab-text-strong);
+	padding: var(--ab-space-2) 0;
+	user-select: none;
+}
+.admbud-mm-sc-more[open] > summary { margin-bottom: var(--ab-space-2); }
+.admbud-mm-sc-more .admbud-mm-sc-row { margin-bottom: var(--ab-space-3); }
+.admbud-mm-sc-output { margin-top: var(--ab-space-3); }
+.admbud-mm-sc-code {
+	width: 100%;
+	box-sizing: border-box;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: var(--ab-text-sm);
+	resize: vertical;
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.admbud-mm-rn-form { display: flex; flex-direction: column; gap: var(--ab-space-3); margin-bottom: var(--ab-space-4); }
+.admbud-mm-rn-group { display: flex; flex-direction: column; gap: var(--ab-space-3); }
+/* The class's display:flex would otherwise beat the [hidden] UA rule, so inactive
+   pattern groups (toggled via JS) kept showing - only the active mode's fields show. */
+.admbud-mm-rn-group[hidden] { display: none; }
+.admbud-mm-rn-row { display: flex; gap: var(--ab-space-3); }
+.admbud-mm-rn-row .ab-field { flex: 1; min-width: 0; }
+.admbud-mm-rn-input { width: 100%; box-sizing: border-box; }
+.admbud-mm-rn-summary { font-weight: var(--ab-font-semibold); color: var(--ab-text-strong); margin-bottom: var(--ab-space-2); }
+.admbud-mm-rn-list { display: flex; flex-direction: column; }
+.admbud-mm-rn-item { display: flex; align-items: center; gap: var(--ab-space-2); padding: var(--ab-space-2) var(--ab-space-1); border-bottom: 1px solid var(--ab-border-subtle); font-size: var(--ab-text-xs); }
+.admbud-mm-rn-item img, .admbud-mm-rn-noimg { width: 28px; height: 28px; object-fit: cover; border-radius: var(--ab-radius-sm); flex: none; background: var(--ab-surface-sunken); border: 1px solid var(--ab-border-subtle); }
+.admbud-mm-rn-old { color: var(--ab-text-muted); text-decoration: line-through; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 38%; }
+.admbud-mm-rn-arrow { color: var(--ab-text-muted); flex: none; }
+.admbud-mm-rn-new { color: var(--ab-text-strong); font-weight: var(--ab-font-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.admbud-mm-rn-more { padding: var(--ab-space-3) 0; text-align: center; }
+
+/* Duplicate-scan inline usage line ("Used in N: PostA, PostB"). */
+.admbud-mm-dup-used { font-size: var(--ab-text-xs); color: var(--ab-text-secondary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admbud-mm-dup-used strong { font-weight: var(--ab-font-semibold); color: var(--ab-warning, #b26a00); }
+.admbud-mm-dup-used a { color: var(--acc); text-decoration: none; }
+.admbud-mm-dup-used a:hover { text-decoration: underline; }
+.admbud-mm-dup-used--none { color: var(--ab-text-muted); font-style: italic; }
+.admbud-mm-dup-used--none::before { content: ''; }
+.admbud-mm-unused-edit { flex: 0 0 auto; font-size: var(--ab-text-xs); color: var(--acc); text-decoration: none; }
+.admbud-mm-unused-edit:hover { text-decoration: underline; }
+.admbud-mm-restore-btn { flex: 0 0 auto; font: inherit; font-size: var(--ab-text-xs); color: var(--acc); background: none; border: 0; padding: 0; cursor: pointer; }
+.admbud-mm-restore-btn:hover { text-decoration: underline; }
+.admbud-mm-restore-btn:disabled { opacity: .6; cursor: default; text-decoration: none; }
+.admbud-mm-unused-more { padding: var(--ab-space-3) 0; text-align: center; }
+
+/* Missing files: collapsible bulk "add files back" section (reuses .admbud-mm-bulk-* styles inside). */
+.admbud-mm-mb { margin-bottom: var(--ab-space-4); border: 1px solid var(--ab-border-subtle); border-radius: var(--ab-radius-md); background: var(--ab-surface-sunken); }
+.admbud-mm-mb__summary { display: flex; align-items: center; gap: var(--ab-space-2); padding: var(--ab-space-3); font-size: var(--ab-text-sm); font-weight: var(--ab-font-medium); color: var(--ab-text-strong); cursor: pointer; list-style: none; }
+.admbud-mm-mb__summary::-webkit-details-marker { display: none; }
+.admbud-mm-mb__summary::after { content: '▸'; margin-left: auto; color: var(--ab-text-muted); transition: transform .15s ease; }
+.admbud-mm-mb[open] .admbud-mm-mb__summary::after { transform: rotate(90deg); }
+.admbud-mm-mb > :not(summary) { margin-left: var(--ab-space-3); margin-right: var(--ab-space-3); }
+.admbud-mm-mb__actions { display: flex; gap: var(--ab-space-2); padding-bottom: var(--ab-space-3); }
+
+/* MM slide-panels open over the WP admin page. Two deviations from the base
+   .ab-slide-panel: (1) lift z-index above the admin bar (the .ab-wrap bump
+   doesn't apply - we're not inside .ab-wrap); (2) slide via `right` instead of
+   transform, because a transform makes the panel the containing block for the
+   position:fixed ab-dropdown menus inside it, mis-positioning them. */
+body.ab-modal-open { overflow: hidden; } /* scroll-lock while a panel is open (admin.css doesn't define this) */
+.admbud-mm-backdrop { z-index: 160010; }
+.admbud-mm-slidepanel {
+	z-index: 160020;
+	transform: none !important;
+	transition: right var(--ab-duration-panel) var(--ab-ease-out);
+}
+.admbud-mm-slidepanel.ab-slide-panel--sm { right: calc(-1 * min(var(--ab-panel-sm), 95vw)); }
+.admbud-mm-slidepanel.ab-slide-panel--md { right: calc(-1 * min(var(--ab-panel-md), 95vw)); }
+.admbud-mm-slidepanel.ab-slide-panel--lg { right: calc(-1 * min(var(--ab-panel-lg), 95vw)); }
+.admbud-mm-slidepanel.ab-slide-panel--xl { right: calc(-1 * min(var(--ab-panel-xl), 95vw)); }
+.admbud-mm-slidepanel.is-open { right: 0; }
+
+.admbud-mm-panel-intro { margin: 0 0 var(--ab-space-4); color: var(--ab-text-secondary); font-size: var(--ab-text-sm); line-height: var(--ab-leading-normal); }
+.admbud-mm-seo-field__controls { display: flex; flex-direction: column; gap: var(--ab-space-2); }
+.admbud-mm-seo-tokens { margin: var(--ab-space-2) 0 var(--ab-space-4); color: var(--ab-text-muted); font-size: var(--ab-text-xs); line-height: var(--ab-leading-relaxed); }
+.admbud-mm-seo-tokens code { background: var(--ab-surface-sunken); padding: 1px 5px; border-radius: var(--ab-radius-sm); font-size: var(--ab-text-xs); }
+.admbud-mm-seo-guard { display: flex; align-items: center; gap: var(--ab-space-2); font-size: var(--ab-text-sm); color: var(--ab-text-body); cursor: pointer; }
+.admbud-mm-seo-progress { margin-top: var(--ab-space-4); }
+.admbud-mm-seo-bar { height: 8px; background: var(--ab-surface-sunken); border-radius: 999px; overflow: hidden; }
+.admbud-mm-seo-bar > span { display: block; height: 100%; width: 0; background: var(--acc); transition: width var(--ab-duration-base); }
+#ab-mm-seo-progress-label { display: inline-block; margin-top: var(--ab-space-1); font-size: var(--ab-text-xs); color: var(--ab-text-muted); }
+.admbud-mm-tool { padding: var(--ab-space-4) 0; border-bottom: 1px solid var(--ab-border-subtle); }
+.admbud-mm-tool:first-child { padding-top: 0; }
+.admbud-mm-tool:last-child { border-bottom: 0; padding-bottom: 0; }
+.admbud-mm-tool__title { margin: 0 0 var(--ab-space-2); font-size: var(--ab-text-sm); font-weight: var(--ab-font-semibold); color: var(--ab-text-strong); }
+.admbud-mm-import-result { margin: var(--ab-space-2) 0 0; font-size: var(--ab-text-sm); color: var(--ab-success-text); }
+
+/* ---- Bulk replace panel ---- */
+.admbud-mm-bulk-drop {
+	border: 2px dashed var(--ab-border);
+	border-radius: var(--ab-radius-lg);
+	padding: var(--ab-space-6) var(--ab-space-4);
+	text-align: center;
+	color: var(--ab-text-secondary);
+	transition: border-color .15s, background .15s;
+}
+.admbud-mm-bulk-drop.is-drag { border-color: var(--acc); background: color-mix( in srgb, var(--acc) 6%, transparent ); }
+.admbud-mm-bulk-drop svg { color: var(--ab-text-muted); }
+.admbud-mm-bulk-drop__hint { margin: var(--ab-space-2) 0 var(--ab-space-1); color: var(--ab-text-strong); }
+.admbud-mm-bulk-drop__or { display: flex; gap: var(--ab-space-2); justify-content: center; margin: var(--ab-space-3) 0 0; }
+.admbud-mm-bulk-summary { display: flex; flex-wrap: wrap; gap: var(--ab-space-2); margin-bottom: var(--ab-space-3); }
+.admbud-mm-bulk-chip { font-size: var(--ab-text-xs); font-weight: var(--ab-font-semibold); padding: 3px 10px; border-radius: 999px; }
+.admbud-mm-bulk-chip--ok { background: var(--ab-success-bg); color: var(--ab-success-text); }
+.admbud-mm-bulk-chip--warn { background: var(--ab-warning-bg); color: var(--ab-warning-text); }
+.admbud-mm-bulk-list { list-style: none; margin: 0 0 var(--ab-space-4); padding: 0; max-height: 320px; overflow-y: auto; border: 1px solid var(--ab-border-subtle); border-radius: var(--ab-radius-md); }
+.admbud-mm-bulk-list li { display: flex; align-items: center; gap: var(--ab-space-2); padding: var(--ab-space-1-5) var(--ab-space-2-5); font-size: var(--ab-text-sm); border-bottom: 1px solid var(--ab-border-subtle); }
+.admbud-mm-bulk-list li:last-child { border-bottom: 0; }
+.admbud-mm-bulk-list li.is-skip { color: var(--ab-text-muted); }
+.admbud-mm-bulk-list img, .admbud-mm-bulk-noimg { width: 28px; height: 28px; flex: none; border-radius: var(--ab-radius-sm); object-fit: cover; background: var(--ab-surface-sunken); }
+.admbud-mm-bulk-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admbud-mm-bulk-options { margin-bottom: var(--ab-space-3); }
+.admbud-mm-bulk-options .ab-field { margin-top: var(--ab-space-2-5); }
+
+/* ===================================================================== */
+/*  8. Responsive                                                         */
+/* ===================================================================== */
+
+@media screen and (max-width: 782px) {
+	body.upload-php .wrap, body.upload-php.admbud-mm-collapsed .wrap { margin-left: 0; }
+	.admbud-mm-panel { position: static; width: auto; bottom: auto; margin: 0 0 var(--ab-space-3); max-height: 240px; border: 1px solid var(--ab-border); border-radius: var(--ab-radius-md); }
+	.admbud-mm-reopen { display: none !important; }
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .media-toolbar,
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .attachments,
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .attachments-wrapper,
+	.media-modal .attachments-browser.admbud-mm-has-sidebar .uploader-inline { left: 0 !important; }
+}

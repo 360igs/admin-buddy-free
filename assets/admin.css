@@ -1408,8 +1408,8 @@ details[open] .ab-accordion__trigger .ab-accordion__chevron {
 	inset:                0;
 	background:           rgba(0,0,0,0.45);
 	z-index:              -1;
-	backdrop-filter:      blur(2px);
-	-webkit-backdrop-filter: blur(2px);
+	backdrop-filter:      var(--ab-backdrop-blur);
+	-webkit-backdrop-filter: var(--ab-backdrop-blur);
 }
 
 /* The white dialog box */
@@ -1500,7 +1500,7 @@ details[open] .ab-accordion__trigger .ab-accordion__chevron {
 
 /* Confirm dialog variant - clean borderless interior, tighter spacing */
 .ab-modal--confirm .ab-modal__box {
-	max-width: 420px;
+	max-width: 480px;
 }
 
 .ab-modal--confirm .ab-modal__header {
@@ -1513,11 +1513,50 @@ details[open] .ab-accordion__trigger .ab-accordion__chevron {
 	color:       var(--ab-text-secondary);
 }
 
+.ab-modal--confirm .ab-modal__body ul {
+	color: var(--ab-text-body);
+}
+
 .ab-modal--confirm .ab-modal__actions {
 	border-top: none;
 	justify-content: flex-end;
 	gap: var(--ab-space-2);
 	padding-top: var(--ab-space-3);
+}
+
+/* Type-to-confirm: text input the user must type a literal string into
+   before the confirm button arms. Defeats Enter-key autopilot dismissal of
+   destructive modals. */
+.ab-modal__type-confirm {
+	padding: 0 var(--ab-space-6) var(--ab-space-4);
+}
+.ab-modal__type-label {
+	display: block;
+	margin-bottom: var(--ab-space-2);
+	font-size: var(--ab-text-sm);
+	color: var(--ab-text-secondary);
+}
+.ab-modal__type-label code {
+	background:    var(--ab-surface-raised, #f0f0f1);
+	border:        1px solid var(--ab-border-subtle, #dcdcde);
+	border-radius: var(--ab-radius-sm, 3px);
+	padding:       1px 6px;
+	font-weight:   600;
+	color:         var(--ab-danger, #b32d2e);
+}
+.ab-modal__type-input {
+	width: 100%;
+	padding: 8px 10px;
+	border: 1px solid var(--ab-border-default, #8c8f94);
+	border-radius: var(--ab-radius-sm, 3px);
+	font-family: var(--ab-font-mono, monospace);
+	font-size: 14px;
+	box-sizing: border-box;
+}
+.ab-modal__type-input:focus {
+	outline:      2px solid var(--ab-primary, #2271b1);
+	outline-offset: 0;
+	border-color: var(--ab-primary, #2271b1);
 }
 
 
@@ -1531,8 +1570,8 @@ details[open] .ab-accordion__trigger .ab-accordion__chevron {
 	background: rgba(0,0,0,0.4);
 	/* Soft blur behind the panel - matches the original Checklist look
 	 * and the Bricks Quick Settings overlay (.ab-qs-overlay). */
-	backdrop-filter:         blur(2px);
-	-webkit-backdrop-filter: blur(2px);
+	backdrop-filter:         var(--ab-backdrop-blur);
+	-webkit-backdrop-filter: var(--ab-backdrop-blur);
 	z-index:    var(--ab-z-backdrop);
 	opacity:    0;
 	pointer-events: none;
@@ -3399,6 +3438,12 @@ body.toplevel_page_admin-buddy .ab-canvas {
 	min-width:  52px;
 	font-size:  var(--ab-text-xs);
 	color:      var(--ab-text-secondary);
+}
+/* Native range sliders default to the OS/browser accent, which ignores the
+   active WP admin colour scheme. Pin them to AB's resolved accent so the
+   fill + thumb match the rest of the chrome (toggles, buttons, focus rings). */
+.ab-wrap input[type="range"] {
+	accent-color: var(--ab-accent);
 }
 .ab-img-size-row input[type="range"] {
 	width: 180px;

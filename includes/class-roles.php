@@ -379,6 +379,8 @@ class Roles {
         }
 
         $this->bust_role_cache( $slug );
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
+        do_action( 'admbud_role_caps_changed', $slug, $new_caps );
         wp_send_json_success( [ 'message' => __( 'Role saved.', 'admin-buddy' ) ] );
     }
 
@@ -415,6 +417,9 @@ class Roles {
         }
 
         add_role( $slug, $name, $caps );
+
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
+        do_action( 'admbud_role_created', $slug, $name, $clone_from );
 
         wp_send_json_success( [
             'slug'    => $slug,
@@ -465,6 +470,9 @@ class Roles {
         if ( ! $this->administrator_is_intact() ) {
             $this->force_repair_administrator();
         }
+
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
+        do_action( 'admbud_role_deleted', $slug, count( $users ) );
 
         wp_send_json_success( [
             'message'        => __( 'Role deleted.', 'admin-buddy' ),
@@ -540,6 +548,10 @@ class Roles {
                 'message' => __( 'Rename aborted: the write corrupted role data. The previous state has been restored.', 'admin-buddy' ),
             ] );
         }
+
+        $old_name = $snapshot[ $slug ]['name'] ?? '';
+        // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- admbud_ is the plugin prefix.
+        do_action( 'admbud_role_renamed', $slug, $old_name, $name );
 
         wp_send_json_success( [ 'message' => __( 'Role renamed.', 'admin-buddy' ) ] );
     }

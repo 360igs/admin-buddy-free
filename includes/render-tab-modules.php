@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
 /** @var \Admbud\Settings $settings */
 
 // Determine license state.
-$admbud_has_sdk    = file_exists( ADMBUD_DIR . 'licensing/src/Client.php' );
+$admbud_has_sdk    = function_exists( 'admbud_fs' );
 $admbud_is_licensed = true; // Modules page always accessible - pro features gated by admbud_is_pro() individually.
 $admbud_is_paid     = function_exists( 'admbud_is_paid' ) && admbud_is_paid();
 ?>

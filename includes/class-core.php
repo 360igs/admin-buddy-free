@@ -51,6 +51,12 @@ class Core {
             add_action( 'admin_enqueue_scripts', [ $this, 'inject_sidebar_logo_css' ] );
         }
 
+        // Sidebar width - always inject so the --admbud-sidebar-width custom
+        // property is defined for every consumer (this file, class-colours,
+        // sidebar logo cap). At the WP default (160px) the overrides are a
+        // no-op but the variable still resolves.
+        add_action( 'admin_enqueue_scripts', [ $this, 'inject_sidebar_width_css' ] );
+
         // -- Agency Name -------------------------------------------------------
         // Replaces "WordPress" in admin page <title> tags.
         $agency_name = admbud_get_option( 'admbud_wl_agency_name', '' );
@@ -210,8 +216,9 @@ class Core {
                 . '{box-shadow:0 0 0 2px var(--ab-accent,#7c3aed)!important;}'
                 . '.wp-switch-editor:focus'
                 . '{box-shadow:0 0 0 2px var(--ab-accent,#7c3aed)!important;}'
-                . '::selection{background:var(--ab-accent,#7c3aed)!important;color:#fff!important;}'
-                . '::-moz-selection{background:var(--ab-accent,#7c3aed)!important;color:#fff!important;}'
+                // ::selection is now emitted admin-wide in inject_sidebar_width_css()
+                // - no longer duplicated here (it only loaded on editor pages, which
+                // was the source of the accent-vs-default-blue inconsistency).
             );
         } );
 
@@ -234,8 +241,8 @@ class Core {
         // -- Status pills (always-on for admins) ------------------------------
         // Wrapped in init - calling current_user_can() during plugins_loaded
         // forces early user authentication which fires set_current_user.
-        // Third-party plugins (e.g. SureCart) hook set_current_user and call
-        // __() before their textdomain is loaded, triggering a WP 6.7 JIT
+        // Third-party plugins (e.g. licensing SDKs) hook set_current_user and
+        // call __() before their textdomain is loaded, triggering a WP 6.7 JIT
         // translation notice. Deferring to init ensures user setup has already
         // completed safely before we check capabilities.
         add_action( 'init', function () {
@@ -368,13 +375,16 @@ class Core {
         $width    = absint( admbud_get_option( 'admbud_wl_sidebar_logo_width',  84 ) );
         $height   = absint( admbud_get_option( 'admbud_wl_sidebar_logo_height',  0 ) );
 
-        // Cap at sidebar width - WP default sidebar is 160px.
-        $w_val  = min( $width, 160 );
-        $h_rule = $height > 0 ? 'height:' . (int) $height . 'px;' : 'height:' . (int) $w_val . 'px;';
+        // Cap at the active sidebar width via the shared --admbud-sidebar-width
+        // custom property (set by inject_sidebar_width_css). CSS min() picks
+        // the smaller of the configured logo width and the live sidebar width.
+        $h_rule = $height > 0
+            ? 'height:' . (int) $height . 'px;'
+            : 'height:min(' . (int) $width . 'px,var(--admbud-sidebar-width,160px));';
 
         $css = '#adminmenu::before{'
              . 'content:"";display:block;'
-             . 'width:' . (int) $w_val . 'px;'
+             . 'width:min(' . (int) $width . 'px,var(--admbud-sidebar-width,160px));'
              . 'max-width:calc(100% - 16px);'
              . $h_rule
              . 'margin:12px 8px 6px;'
@@ -384,6 +394,65 @@ class Core {
              . 'background-position:left center;'
              . '}'
              . '.folded #adminmenu::before{display:none;}';
+
+        wp_add_inline_style( 'admbud-icon-inject', $css );
+    }
+
+    public function inject_sidebar_width_css(): void {
+        $w = absint( admbud_get_option( 'admbud_wl_sidebar_width', 160 ) );
+        if ( $w < 160 || $w > 280 ) { $w = 160; }
+
+        // Define --admbud-sidebar-width once so every consumer references one
+        // source of truth. Match WP's own breakpoint - above 960px the menu
+        // is full-width; below that core auto-folds it to 36px and we leave
+        // it alone. Flyout submenus (`.wp-submenu`) are absolutely positioned
+        // at `left:160px` in core CSS; the current-page submenu uses `left:
+        // auto` so the override here only affects hover-flyouts on inactive
+        // items.
+        //
+        // The active-item left accent bar (which replaces WP's `:after`
+        // triangle) is emitted outside the media query so it applies at
+        // every viewport width. Sidebar position/overflow is left at WP
+        // defaults - earlier revisions pinned #adminmenuwrap fixed with
+        // overflow:auto for tall-menu internal scrolling, but that clipped
+        // WP's hover-flyout submenus. Reverted in favour of WP's default
+        // sticky-menu behaviour so flyouts work as WP intends.
+        $css = 'html{--admbud-sidebar-width:' . (int) $w . 'px;}'
+             . '@media only screen and (min-width:961px){'
+             . '#adminmenu,#adminmenuback,#adminmenuwrap{width:var(--admbud-sidebar-width);}'
+             . '#wpcontent,#wpfooter{margin-left:var(--admbud-sidebar-width);}'
+             . '#adminmenu .wp-submenu{left:var(--admbud-sidebar-width);}'
+             // The current (expanded) submenu shows inline inside the menu column,
+             // so its wrap must match the sidebar width - otherwise WP's default
+             // 160px wrap is narrower than a widened sidebar and the item hover /
+             // active background leaks past it. The Colours module emits this too,
+             // but width is a layout concern that must apply even when Colours is
+             // OFF, so the always-on source owns it.
+             . '#adminmenu li.wp-has-current-submenu .wp-submenu-wrap{width:var(--admbud-sidebar-width)!important;}'
+             . '}'
+             // Active-item left accent bar. Replaces WP's :after triangle.
+             // Uses --ab-primary (set by class-colours when Colours module
+             // is on, or by Settings::attach_scheme_accent when off), with
+             // a WP-blue fallback for completeness.
+             . '#adminmenu .wp-has-current-submenu>a.wp-has-current-submenu:after,'
+             . '#adminmenu>li.current>a.current:after{display:none!important;}'
+             . '#adminmenu .wp-has-current-submenu>a.wp-has-current-submenu,'
+             . '#adminmenu>li.current>a.current{position:relative;}'
+             . '#adminmenu .wp-has-current-submenu>a.wp-has-current-submenu::before,'
+             . '#adminmenu>li.current>a.current::before{'
+             . 'content:"";position:absolute;top:0;left:0;bottom:0;width:4px;'
+             . 'background:var(--ab-primary,#2271b1);'
+             . '}';
+
+        // Text selection across the WHOLE admin (not just AB's own .ab-wrap pages)
+        // uses the active accent. --ab-primary is defined globally when the Colours
+        // module is on; on plain admin pages with Colours off it is absent, so we
+        // inline the resolved scheme accent as the fallback (so the colour is right
+        // everywhere, not just on AB surfaces). --ab-text-on-accent falls back to
+        // white for legibility against the accent.
+        $sel_accent = esc_attr( \Admbud\Settings::scheme_accent_hex() );
+        $css .= '::selection{background:var(--ab-primary,' . $sel_accent . ');color:var(--ab-text-on-accent,#fff);}'
+              . '::-moz-selection{background:var(--ab-primary,' . $sel_accent . ');color:var(--ab-text-on-accent,#fff);}';
 
         wp_add_inline_style( 'admbud-icon-inject', $css );
     }
