@@ -252,10 +252,15 @@ trait Settings_Tools {
             // Table identifiers are plugin-owned constants composed from
             // $wpdb->prefix + a hardcoded suffix — no user input reaches here.
             // wpdb::prepare() does not support identifier placeholders for
-            // table names, so we escape via esc_sql() and interpolate. TRUNCATE
-            // is the canonical fast-clear operation for these custom tables.
+            // table names, so we escape via esc_sql() and interpolate.
+            // MySQL has no "TRUNCATE TABLE IF EXISTS" — check existence first
+            // (tables are absent when the module was never activated).
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-            $wpdb->query( sprintf( 'TRUNCATE TABLE IF EXISTS `%s`', esc_sql( $admbud_table ) ) ); // phpcs:ignore WordPress.DB
+            $exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $admbud_table ) ); // phpcs:ignore WordPress.DB
+            if ( $exists === $admbud_table ) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                $wpdb->query( sprintf( 'TRUNCATE TABLE `%s`', esc_sql( $admbud_table ) ) ); // phpcs:ignore WordPress.DB
+            }
         }
         $wpdb->suppress_errors( false ); // phpcs:ignore WordPress.DB
 

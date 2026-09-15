@@ -93,10 +93,46 @@
 		Array.prototype.forEach.call( opts, function ( opt ) {
 			if ( opt.getAttribute( 'data-value' ) === value ) {
 				opt.classList.add( 'is-selected' );
+				opt.setAttribute( 'aria-selected', 'true' );
 			} else {
 				opt.classList.remove( 'is-selected' );
+				opt.setAttribute( 'aria-selected', 'false' );
 			}
 		} );
+	}
+
+	var abDdIdSeq = 0;
+
+	function abDropdownOptions( dd ) {
+		return Array.prototype.slice.call( dd.querySelectorAll( '.ab-dropdown__option' ) );
+	}
+
+	function abDropdownSetActive( dd, opt ) {
+		// Keyboard "active" option: highlighted but not yet committed.
+		// `.is-highlighted` shares the :hover rule in admin.css, and
+		// aria-activedescendant on the trigger tells AT which option has
+		// the virtual focus (real focus stays on the trigger button).
+		var trigger = dd.querySelector( '.ab-dropdown__trigger' );
+		abDropdownOptions( dd ).forEach( function ( o ) {
+			o.classList.remove( 'is-highlighted' );
+		} );
+		if ( ! opt ) {
+			if ( trigger ) { trigger.removeAttribute( 'aria-activedescendant' ); }
+			return;
+		}
+		opt.classList.add( 'is-highlighted' );
+		if ( ! opt.id ) {
+			abDdIdSeq += 1;
+			opt.id = 'ab-dd-option-' + abDdIdSeq;
+		}
+		if ( trigger ) { trigger.setAttribute( 'aria-activedescendant', opt.id ); }
+		if ( opt.scrollIntoView ) {
+			opt.scrollIntoView( { block: 'nearest' } );
+		}
+	}
+
+	function abDropdownActiveOption( dd ) {
+		return dd.querySelector( '.ab-dropdown__option.is-highlighted' );
 	}
 
 	function abDropdownClose( dd ) {
@@ -106,6 +142,7 @@
 		if ( trigger ) {
 			trigger.setAttribute( 'aria-expanded', 'false' );
 		}
+		abDropdownSetActive( dd, null );
 		if ( menu ) {
 			menu.hidden       = true;
 			menu.style.top    = '';
@@ -162,6 +199,20 @@
 		dd._abReposition = function () { abDropdownPositionMenu( dd ); };
 		window.addEventListener( 'scroll', dd._abReposition, true );
 		window.addEventListener( 'resize', dd._abReposition );
+
+		// Start keyboard navigation from the current selection (or the
+		// first option) so ArrowDown/typeahead has an anchor.
+		abDropdownSetActive(
+			dd,
+			dd.querySelector( '.ab-dropdown__option.is-selected' ) || abDropdownOptions( dd )[0] || null
+		);
+	}
+
+	function abDropdownCommit( dd, opt ) {
+		abDropdownSetValue( dd, opt.getAttribute( 'data-value' ) || '', opt.textContent.trim() );
+		abDropdownClose( dd );
+		var trigger = dd.querySelector( '.ab-dropdown__trigger' );
+		if ( trigger ) { trigger.focus(); }
 	}
 
 	document.addEventListener( 'click', function ( e ) {
@@ -181,12 +232,7 @@
 		if ( opt ) {
 			var dd2 = opt.closest( '.ab-dropdown' );
 			if ( ! dd2 ) { return; }
-			abDropdownSetValue(
-				dd2,
-				opt.getAttribute( 'data-value' ) || '',
-				opt.textContent.trim()
-			);
-			abDropdownClose( dd2 );
+			abDropdownCommit( dd2, opt );
 			return;
 		}
 
@@ -207,6 +253,66 @@
 		abDropdownClose( open );
 		var trigger = open.querySelector( '.ab-dropdown__trigger' );
 		if ( trigger ) { trigger.focus(); }
+	} );
+
+	// Keyboard operation for the styled-select (WAI-ARIA listbox pattern).
+	// Focus stays on the trigger button; the "active" option is virtual
+	// (is-highlighted + aria-activedescendant). Enter/Space on a CLOSED
+	// trigger are left to the browser: a <button> fires click natively,
+	// which the click handler above turns into open.
+	document.addEventListener( 'keydown', function ( e ) {
+		var trigger = e.target.closest( '.ab-dropdown__trigger' );
+		if ( ! trigger ) { return; }
+		var dd = trigger.closest( '.ab-dropdown' );
+		if ( ! dd ) { return; }
+		var isOpen = dd.classList.contains( 'is-open' );
+		var opts, idx, active;
+
+		if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End' ) {
+			e.preventDefault();
+			if ( ! isOpen ) {
+				abDropdownOpen( dd );
+				if ( e.key === 'ArrowDown' || e.key === 'ArrowUp' ) { return; } // open at current selection
+			}
+			opts = abDropdownOptions( dd );
+			if ( ! opts.length ) { return; }
+			active = abDropdownActiveOption( dd );
+			idx    = opts.indexOf( active );
+			if ( e.key === 'Home' )           { idx = 0; }
+			else if ( e.key === 'End' )       { idx = opts.length - 1; }
+			else if ( e.key === 'ArrowDown' ) { idx = Math.min( opts.length - 1, idx + 1 ); }
+			else                              { idx = Math.max( 0, idx - 1 ); }
+			abDropdownSetActive( dd, opts[ idx ] );
+			return;
+		}
+
+		if ( ( e.key === 'Enter' || e.key === ' ' ) && isOpen ) {
+			e.preventDefault(); // suppress the native button click (would re-toggle)
+			active = abDropdownActiveOption( dd );
+			if ( active ) { abDropdownCommit( dd, active ); }
+			return;
+		}
+
+		if ( e.key === 'Tab' && isOpen ) {
+			abDropdownClose( dd ); // let focus move on naturally
+			return;
+		}
+
+		// Typeahead: jump the active option to the first label starting
+		// with the typed prefix. Buffer resets after a short pause.
+		if ( isOpen && e.key.length === 1 && ! e.ctrlKey && ! e.altKey && ! e.metaKey ) {
+			e.preventDefault();
+			dd._abTypeBuf = ( dd._abTypeBuf || '' ) + e.key.toLowerCase();
+			clearTimeout( dd._abTypeTimer );
+			dd._abTypeTimer = setTimeout( function () { dd._abTypeBuf = ''; }, 600 );
+			opts = abDropdownOptions( dd );
+			for ( idx = 0; idx < opts.length; idx++ ) {
+				if ( opts[ idx ].textContent.trim().toLowerCase().indexOf( dd._abTypeBuf ) === 0 ) {
+					abDropdownSetActive( dd, opts[ idx ] );
+					break;
+				}
+			}
+		}
 	} );
 
 } )();

@@ -2,15 +2,15 @@
 # This file is distributed under the same license as the Admin Buddy plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Admin Buddy 1.1.0\n"
+"Project-Id-Version: Admin Buddy 1.1.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/admin-buddy\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-06-08T16:01:54+00:00\n"
-"PO-Revision-Date: 2026-06-08T16:01:54+00:00\n"
+"POT-Creation-Date: 2026-09-15T10:14:44+00:00\n"
+"PO-Revision-Date: 2026-09-15T10:14:44+00:00\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: admin-buddy\n"
 
@@ -933,6 +933,11 @@ msgstr ""
 msgid "Role not found."
 msgstr ""
 
+#. translators: %s: capability slug
+#, php-format
+msgid "You cannot grant the \"%s\" capability: your own account does not have it."
+msgstr ""
+
 msgid "Save aborted: post-write integrity check failed. The administrator role has been repaired automatically."
 msgstr ""
 
@@ -1399,6 +1404,171 @@ msgid "Unknown error. Check your SMTP settings."
 msgstr ""
 
 msgid "Custom"
+msgstr ""
+
+msgid "Performance"
+msgstr ""
+
+msgid "Remove unnecessary scripts and markup WordPress loads by default."
+msgstr ""
+
+msgid "Disable emoji scripts"
+msgstr ""
+
+msgid "Removes the emoji detection script from every page load. Native browser emoji rendering still works."
+msgstr ""
+
+msgid "Remove jQuery Migrate"
+msgstr ""
+
+msgid "Dequeues jQuery Migrate on the frontend. Skip if your theme needs it."
+msgstr ""
+
+msgid "Remove feed links from &lt;head&gt;"
+msgstr ""
+
+msgid "Removes RSS/Atom discovery links from &lt;head&gt;. Feeds still work via direct URL."
+msgstr ""
+
+msgid "Remove RSD link"
+msgstr ""
+
+msgid "Removes the Really Simple Discovery link. Only needed by external blog editors like MarsEdit."
+msgstr ""
+
+msgid "Remove WLW manifest link"
+msgstr ""
+
+msgid "Removes the Windows Live Writer manifest link from the page source."
+msgstr ""
+
+msgid "Remove shortlink"
+msgstr ""
+
+msgid "Removes the shortlink tag from &lt;head&gt;. Not needed unless you use wp.me shortlinks."
+msgstr ""
+
+msgid "Remove REST API discovery link"
+msgstr ""
+
+msgid "Removes the REST API link tag from &lt;head&gt;. Does not disable the REST API itself."
+msgstr ""
+
+msgid "Disable WordPress embeds"
+msgstr ""
+
+msgid "Removes embed scripts and prevents your content from being embedded on other sites via oEmbed."
+msgstr ""
+
+msgid "Close off common attack vectors and restrict sensitive areas."
+msgstr ""
+
+msgid "Disable XML-RPC"
+msgstr ""
+
+msgid "Turns off the XML-RPC endpoint. Skip if you use Jetpack or mobile apps."
+msgstr ""
+
+msgid "Restrict REST API to logged-in users"
+msgstr ""
+
+msgid "Returns 401 for unauthenticated REST requests. Good for private sites."
+msgstr ""
+
+msgid "Removes the WordPress version number from HTML source and RSS feeds. Prevents version fingerprinting."
+msgstr ""
+
+msgid "Adjust WordPress content defaults that are rarely needed on most sites."
+msgstr ""
+
+msgid "Disable RSS and Atom feeds"
+msgstr ""
+
+msgid "Redirects all feed URLs to the homepage. Use on sites that don't need RSS."
+msgstr ""
+
+msgid "Disable self-pingbacks"
+msgstr ""
+
+msgid "Prevents WordPress pinging itself when you link between your own posts."
+msgstr ""
+
+msgid "Close comments on new posts by default"
+msgstr ""
+
+msgid "New posts start with comments closed. You can still enable per post."
+msgstr ""
+
+msgid "Admin"
+msgstr ""
+
+msgid "Enhancements to the WordPress admin editing experience."
+msgstr ""
+
+msgid "Suppress Plugin Promotional Notices"
+msgstr ""
+
+msgid "Hides upsell banners, review requests, and promotional notices from plugins. Core WordPress notices are preserved."
+msgstr ""
+
+msgid "Enable Duplicate Post"
+msgstr ""
+
+msgid "Adds a \"Duplicate\" row action to posts, pages and CPTs. Creates a draft copy with all meta and taxonomies."
+msgstr ""
+
+msgid "User Last Seen"
+msgstr ""
+
+msgid "Records login timestamps and adds a sortable \"Last Seen\" column to the Users list."
+msgstr ""
+
+msgid "Hide Admin Bar (Frontend)"
+msgstr ""
+
+msgid "Hides the WordPress admin bar on the frontend for selected roles."
+msgstr ""
+
+msgid "Hide Admin Bar (Backend)"
+msgstr ""
+
+msgid "Hides the WordPress admin bar inside the admin dashboard for selected roles."
+msgstr ""
+
+msgid "Hide Checklist pill from admin bar"
+msgstr ""
+
+msgid "Removes the Checklist indicator from the WordPress admin bar for selected roles. The pill stays in the Admin Buddy settings topbar."
+msgstr ""
+
+msgid "Hide Noindex pill from admin bar"
+msgstr ""
+
+msgid "Removes the \"Search Engines Blocked\" indicator from the WordPress admin bar for selected roles. The pill stays in the Admin Buddy settings topbar."
+msgstr ""
+
+msgid "Collapse Sidebar by Default"
+msgstr ""
+
+msgid "The WordPress admin sidebar starts collapsed (icon-only) for selected roles. Users can still expand it."
+msgstr ""
+
+msgid "Show User Menu in Sidebar"
+msgstr ""
+
+msgid "Adds a user avatar, name, and logout button at the top of the admin sidebar for selected roles. Collapses to icons when sidebar is folded."
+msgstr ""
+
+msgid "Media"
+msgstr ""
+
+msgid "Control file upload permissions and allowed formats."
+msgstr ""
+
+msgid "Allow SVG uploads"
+msgstr ""
+
+msgid "Enables SVG file uploads to the media library. Files are sanitised on upload. Scripts and event handlers are stripped automatically."
 msgstr ""
 
 msgid "Branding"
@@ -2333,171 +2503,6 @@ msgid "Enable the modules you need. Toggles apply instantly, no save needed. Onl
 msgstr ""
 
 msgid "Loading..."
-msgstr ""
-
-msgid "Performance"
-msgstr ""
-
-msgid "Remove unnecessary scripts and markup WordPress loads by default."
-msgstr ""
-
-msgid "Disable emoji scripts"
-msgstr ""
-
-msgid "Removes the emoji detection script from every page load. Native browser emoji rendering still works."
-msgstr ""
-
-msgid "Remove jQuery Migrate"
-msgstr ""
-
-msgid "Dequeues jQuery Migrate on the frontend. Skip if your theme needs it."
-msgstr ""
-
-msgid "Remove feed links from &lt;head&gt;"
-msgstr ""
-
-msgid "Removes RSS/Atom discovery links from &lt;head&gt;. Feeds still work via direct URL."
-msgstr ""
-
-msgid "Remove RSD link"
-msgstr ""
-
-msgid "Removes the Really Simple Discovery link. Only needed by external blog editors like MarsEdit."
-msgstr ""
-
-msgid "Remove WLW manifest link"
-msgstr ""
-
-msgid "Removes the Windows Live Writer manifest link from the page source."
-msgstr ""
-
-msgid "Remove shortlink"
-msgstr ""
-
-msgid "Removes the shortlink tag from &lt;head&gt;. Not needed unless you use wp.me shortlinks."
-msgstr ""
-
-msgid "Remove REST API discovery link"
-msgstr ""
-
-msgid "Removes the REST API link tag from &lt;head&gt;. Does not disable the REST API itself."
-msgstr ""
-
-msgid "Disable WordPress embeds"
-msgstr ""
-
-msgid "Removes embed scripts and prevents your content from being embedded on other sites via oEmbed."
-msgstr ""
-
-msgid "Close off common attack vectors and restrict sensitive areas."
-msgstr ""
-
-msgid "Disable XML-RPC"
-msgstr ""
-
-msgid "Turns off the XML-RPC endpoint. Skip if you use Jetpack or mobile apps."
-msgstr ""
-
-msgid "Restrict REST API to logged-in users"
-msgstr ""
-
-msgid "Returns 401 for unauthenticated REST requests. Good for private sites."
-msgstr ""
-
-msgid "Removes the WordPress version number from HTML source and RSS feeds. Prevents version fingerprinting."
-msgstr ""
-
-msgid "Adjust WordPress content defaults that are rarely needed on most sites."
-msgstr ""
-
-msgid "Disable RSS and Atom feeds"
-msgstr ""
-
-msgid "Redirects all feed URLs to the homepage. Use on sites that don't need RSS."
-msgstr ""
-
-msgid "Disable self-pingbacks"
-msgstr ""
-
-msgid "Prevents WordPress pinging itself when you link between your own posts."
-msgstr ""
-
-msgid "Close comments on new posts by default"
-msgstr ""
-
-msgid "New posts start with comments closed. You can still enable per post."
-msgstr ""
-
-msgid "Admin"
-msgstr ""
-
-msgid "Enhancements to the WordPress admin editing experience."
-msgstr ""
-
-msgid "Suppress Plugin Promotional Notices"
-msgstr ""
-
-msgid "Hides upsell banners, review requests, and promotional notices from plugins. Core WordPress notices are preserved."
-msgstr ""
-
-msgid "Enable Duplicate Post"
-msgstr ""
-
-msgid "Adds a \"Duplicate\" row action to posts, pages and CPTs. Creates a draft copy with all meta and taxonomies."
-msgstr ""
-
-msgid "User Last Seen"
-msgstr ""
-
-msgid "Records login timestamps and adds a sortable \"Last Seen\" column to the Users list."
-msgstr ""
-
-msgid "Hide Admin Bar (Frontend)"
-msgstr ""
-
-msgid "Hides the WordPress admin bar on the frontend for selected roles."
-msgstr ""
-
-msgid "Hide Admin Bar (Backend)"
-msgstr ""
-
-msgid "Hides the WordPress admin bar inside the admin dashboard for selected roles."
-msgstr ""
-
-msgid "Hide Checklist pill from admin bar"
-msgstr ""
-
-msgid "Removes the Checklist indicator from the WordPress admin bar for selected roles. The pill stays in the Admin Buddy settings topbar."
-msgstr ""
-
-msgid "Hide Noindex pill from admin bar"
-msgstr ""
-
-msgid "Removes the \"Search Engines Blocked\" indicator from the WordPress admin bar for selected roles. The pill stays in the Admin Buddy settings topbar."
-msgstr ""
-
-msgid "Collapse Sidebar by Default"
-msgstr ""
-
-msgid "The WordPress admin sidebar starts collapsed (icon-only) for selected roles. Users can still expand it."
-msgstr ""
-
-msgid "Show User Menu in Sidebar"
-msgstr ""
-
-msgid "Adds a user avatar, name, and logout button at the top of the admin sidebar for selected roles. Collapses to icons when sidebar is folded."
-msgstr ""
-
-msgid "Media"
-msgstr ""
-
-msgid "Control file upload permissions and allowed formats."
-msgstr ""
-
-msgid "Allow SVG uploads"
-msgstr ""
-
-msgid "Enables SVG file uploads to the media library. Files are sanitised on upload. Scripts and event handlers are stripped automatically."
 msgstr ""
 
 msgid "Allowed roles"

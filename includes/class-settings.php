@@ -2256,6 +2256,40 @@ class Settings {
     }
 
     /**
+     * The canonical Quick Settings section/toggle config.
+     *
+     * Loaded from the shared config file so the render template
+     * (render-tab-quick-settings.php) and the save handlers share one
+     * definition. Add or remove a toggle in includes/qs-sections.php and it
+     * propagates to the UI, the single-toggle save, and Enable/Disable all.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function qs_sections(): array {
+        return require ADMBUD_DIR . 'includes/qs-sections.php';
+    }
+
+    /**
+     * Canonical list of every Quick Settings option key.
+     *
+     * Derived from qs_sections() so it can never drift from the rendered
+     * toggles. Used by both the single-toggle handler (ajax_qs_toggle) and the
+     * bulk handler (ajax_qs_bulk). In the Free build the AB_PRO-wrapped items
+     * in qs-sections.php are stripped, so Pro-only keys fall out here too.
+     *
+     * @return string[]
+     */
+    private function qs_option_keys(): array {
+        $keys = [];
+        foreach ( $this->qs_sections() as $section ) {
+            foreach ( array_keys( $section['items'] ) as $key ) {
+                $keys[] = $key;
+            }
+        }
+        return $keys;
+    }
+
+    /**
      * AJAX: toggle a single Quick Setting on or off.
      * POST: nonce, key (option key), value ('1' or '0').
      */
@@ -2265,19 +2299,7 @@ class Settings {
             wp_send_json_error( [ 'message' => 'Unauthorized' ], 403 );
         }
 
-        $valid_keys = [
-            'admbud_qs_disable_emoji', 'admbud_qs_disable_jquery_migrate',
-            'admbud_qs_remove_feed_links', 'admbud_qs_remove_rsd', 'admbud_qs_remove_wlw',
-            'admbud_qs_remove_shortlink', 'admbud_qs_remove_restapi_link', 'admbud_qs_disable_embeds',
-            'admbud_qs_remove_version',
-            'admbud_qs_disable_xmlrpc', 'admbud_qs_disable_rest_api', 'admbud_qs_disable_file_edit',
-            'admbud_qs_disable_feeds', 'admbud_qs_disable_self_ping', 'admbud_qs_disable_comments_default',
-            'admbud_qs_duplicate_post', 'admbud_qs_user_last_seen', 'admbud_qs_allow_svg',
-            'admbud_qs_hide_adminbar_frontend', 'admbud_qs_hide_adminbar_backend', 'admbud_qs_collapse_menu',
-            'admbud_qs_hide_adminbar_checklist', 'admbud_qs_hide_adminbar_noindex',
-            'admbud_qs_sidebar_user_menu',
-            'admbud_notices_suppress',
-        ];
+        $valid_keys = $this->qs_option_keys();
 
         $key   = sanitize_key( wp_unslash( $_POST['key']   ?? '' ) );
         $value = ( sanitize_text_field( wp_unslash( $_POST['value'] ?? '0' ) ) === '1' ) ? '1' : '0';
@@ -2327,16 +2349,7 @@ class Settings {
         }
 
         $value = ( sanitize_text_field( wp_unslash( $_POST['value'] ?? '0' ) ) === '1' ) ? '1' : '0';
-        $keys  = [
-            'admbud_qs_disable_emoji', 'admbud_qs_disable_jquery_migrate',
-            'admbud_qs_remove_feed_links', 'admbud_qs_remove_rsd', 'admbud_qs_remove_wlw',
-            'admbud_qs_remove_shortlink', 'admbud_qs_remove_restapi_link', 'admbud_qs_disable_embeds',
-            'admbud_qs_remove_version',
-            'admbud_qs_disable_xmlrpc', 'admbud_qs_disable_rest_api', 'admbud_qs_disable_file_edit',
-            'admbud_qs_disable_feeds', 'admbud_qs_disable_self_ping', 'admbud_qs_disable_comments_default',
-            'admbud_qs_duplicate_post', 'admbud_qs_user_last_seen', 'admbud_qs_allow_svg',
-            'admbud_notices_suppress',
-        ];
+        $keys  = $this->qs_option_keys();
 
         foreach ( $keys as $key ) {
             update_option( $key, $value );

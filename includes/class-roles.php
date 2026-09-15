@@ -341,6 +341,26 @@ class Roles {
             wp_send_json_error( [ 'message' => __( 'Role not found.', 'admin-buddy' ) ] );
         }
 
+        // Privilege-boundary guard: admbud_manage_roles alone must not be a
+        // path to escalation. A user WITHOUT manage_options may only grant a
+        // capability the role doesn't already hold if their own account has
+        // it - otherwise they could add manage_options (or install_plugins,
+        // promote_users, ...) to their own role and become a full admin.
+        // Removals and caps the role already holds are unaffected.
+        if ( ! current_user_can( 'manage_options' ) ) {
+            foreach ( $new_caps as $cap ) {
+                if ( empty( $role->capabilities[ $cap ] ) && ! current_user_can( $cap ) ) {
+                    wp_send_json_error( [
+                        'message' => sprintf(
+                            /* translators: %s: capability slug */
+                            __( 'You cannot grant the "%s" capability: your own account does not have it.', 'admin-buddy' ),
+                            $cap
+                        ),
+                    ] );
+                }
+            }
+        }
+
         // Build the set of caps this handler is allowed to touch.
         $all_grouped  = $this->get_grouped_caps();
         $all_possible = [];
@@ -412,6 +432,17 @@ class Roles {
             if ( $clone_from === 'administrator' ) {
                 foreach ( self::ADMIN_PROTECTED as $cap ) {
                     unset( $caps[ $cap ] );
+                }
+            }
+            // Privilege-boundary guard (mirrors ajax_save): a user WITHOUT
+            // manage_options can only clone caps their own account has -
+            // cloning a high-cap custom role must not mint an escalation
+            // vehicle. Always keep 'read' so the role is usable.
+            if ( ! current_user_can( 'manage_options' ) ) {
+                foreach ( array_keys( $caps ) as $cap ) {
+                    if ( $cap !== 'read' && ! current_user_can( $cap ) ) {
+                        unset( $caps[ $cap ] );
+                    }
                 }
             }
         }

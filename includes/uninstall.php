@@ -13,6 +13,12 @@
 
 defined( 'ABSPATH' ) || exit;
 
+// All definitions are function_exists-guarded: this file is required above the
+// duplicate-plugin guard in admin-buddy.php, so when two copies of the plugin
+// are active the second copy's require would otherwise fatal on redeclare
+// before the guard can show its admin notice.
+
+if ( ! function_exists( 'admbud_uninstall_rmdir' ) ) :
 /**
  * Recursively delete a directory and all its contents.
  *
@@ -38,7 +44,9 @@ function admbud_uninstall_rmdir( string $dir ): void {
     }
     $wp_filesystem->rmdir( $dir );
 }
+endif;
 
+if ( ! function_exists( 'admbud_uninstall_site' ) ) :
 /**
  * Per-site cleanup: delete options, upload files, and tables.
  * On multisite this is called for every subsite in the network.
@@ -57,6 +65,14 @@ function admbud_uninstall_site( array $option_keys ): void {
         "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'admbud_ms_notice_dismissed_%'"
     );
 
+    // Safety-net sweep: the explicit key list above goes stale as modules add
+    // options (it had drifted ~36 keys by 1.1.0). Every plugin-owned option is
+    // admbud_-prefixed, so a prefix delete can never touch core options.
+    $wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+        "DELETE FROM {$wpdb->options} WHERE option_name LIKE 'admbud\\_%'"
+    );
+    wp_cache_delete( 'alloptions', 'options' );
+
     // Admin Buddy uploads directory (snippets + blueprints).
     $uploads = trailingslashit( wp_upload_dir()['basedir'] ) . 'admin-buddy';
     if ( is_dir( $uploads ) ) {
@@ -72,7 +88,9 @@ function admbud_uninstall_site( array $option_keys ): void {
     $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}admbud_svg_icons" );    // phpcs:ignore
     $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}admbud_activity_log" ); // phpcs:ignore
 }
+endif;
 
+if ( ! function_exists( 'admbud_uninstall_cleanup' ) ) :
 /**
  * Main uninstall cleanup. Idempotent.
  */
@@ -239,3 +257,4 @@ function admbud_uninstall_cleanup(): void {
     do_action( 'admbud_uninstall' );
 
 }
+endif;

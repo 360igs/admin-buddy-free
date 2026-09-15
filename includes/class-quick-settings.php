@@ -486,8 +486,14 @@ class QuickSettings {
             // WooCommerce's "Visit Store" without us hardcoding them.
             $sub_nodes = [];
             global $wp_admin_bar;
-            if ( is_object( $wp_admin_bar ) ) {
-                foreach ( $wp_admin_bar->get_nodes() as $bar_node ) {
+            // WP_Admin_Bar::get_nodes() returns null when the bar object exists
+            // but has no registered nodes. That happens when Hide Admin Bar
+            // (Backend) suppresses the bar and no plugin added a node, so the
+            // is_object() guard passes yet get_nodes() is still null. Coalesce to
+            // an empty array so foreach() doesn't warn on null (PHP 8.1+).
+            $bar_nodes = is_object( $wp_admin_bar ) ? $wp_admin_bar->get_nodes() : null;
+            if ( ! empty( $bar_nodes ) ) {
+                foreach ( $bar_nodes as $bar_node ) {
                     if ( ! empty( $bar_node->parent ) && $bar_node->parent === 'site-name' && ! empty( $bar_node->href ) ) {
                         $sub_nodes[] = $bar_node;
                     }

@@ -41,8 +41,11 @@ class Upgrade {
      *        primes them instead of every page-load hitting the DB.
      *   10 - delete the legacy admbud_source_allow_any option (removed in the
      *        Remote security hardening pass; whitelist is now mandatory).
+     *   11 - restore autoload=off on large options that step 8's bulk flip
+     *        turned on against their writers' intent (SVG library, menu
+     *        config, logs, page/collection definition stores).
      */
-    const DB_VERSION = 10;
+    const DB_VERSION = 11;
 
     /** wp_options key that stores the installed schema version. */
     const VERSION_OPT = 'admbud_db_version';
@@ -95,6 +98,10 @@ class Upgrade {
 
                 case 10:
                     self::upgrade_10_drop_legacy_source_options();
+                    break;
+
+                case 11:
+                    self::upgrade_11_autoload_off_large_options();
                     break;
             }
 
@@ -172,8 +179,10 @@ class Upgrade {
         global $wpdb;
 
         // Options that should stay NOT autoloaded (large, rarely read, or
-        // written frequently from write-only paths).
+        // written frequently from write-only paths). Their writers all pass
+        // autoload=false explicitly - keep this list in sync with them.
         $keep_off = [
+            'admbud_smtp_log',                // rolling log buffer
             'admbud_colours_css_version',     // only read on cache-miss
             'admbud_smtp_key_salt',           // read on SMTP send path only
             'admbud_dashboard_custom_widgets',// can grow large
@@ -297,6 +306,30 @@ class Upgrade {
             delete_option( $key );
         }
         // Bust the alloptions cache so cleared rows don't linger in object cache.
+        wp_cache_delete( 'alloptions', 'options' );
+    }
+
+    /**
+     * v11 - Restore autoload=off on large options that step 8's bulk flip
+     * turned ON. Step 8 flipped every non-autoloaded admbud_ option to
+     * autoload with a keep-off list of only 4 keys - so options whose
+     * writers deliberately pass autoload=false (SVG library markup, menu
+     * trees, definition stores, log buffers) ended up in alloptions on
+     * every request. Step 8's keep-off list is now complete; this step
+     * repairs installs that ran the old version of it.
+     *
+     * wp_set_option_autoload() is a no-op for options that don't exist,
+     * so this is safe on installs that never populated these features.
+     */
+    private static function upgrade_11_autoload_off_large_options(): void {
+        $large = [
+            'admbud_smtp_log',
+        ];
+        foreach ( $large as $key ) {
+            // wp_set_option_autoload() exists since WP 6.4 (plugin minimum).
+            wp_set_option_autoload( $key, false );
+        }
+        // Bust the alloptions cache so the flipped rows drop out of it.
         wp_cache_delete( 'alloptions', 'options' );
     }
 
